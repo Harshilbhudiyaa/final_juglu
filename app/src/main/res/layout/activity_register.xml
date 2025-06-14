@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Form Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:background="@drawable/form_card"
+            android:elevation="8dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="32dp">
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create Your Account"
+                android:textSize="24sp"
+                android:textColor="#333333"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Full Name -->
+            <EditText
+                android:id="@+id/etFullName"
+                style="@style/FormEditText"
+                android:layout_width="6dp"
+                android:layout_height="3dp"
+                android:hint="Full Name" />
+
+            <!-- Username -->
+            <EditText
+                android:id="@+id/etUsername"
+                style="@style/FormEditText"
+                android:hint="Username"/>
+
+            <!-- Email -->
+            <EditText
+                android:id="@+id/etEmail"
+                style="@style/FormEditText"
+                android:hint="Email"
+                android:inputType="textEmailAddress"/>
+
+            <!-- Mobile -->
+            <EditText
+                android:id="@+id/etMobile"
+                style="@style/FormEditText"
+                android:hint="Mobile"
+                android:inputType="phone"/>
+
+            <!-- Password -->
+            <EditText
+                android:id="@+id/etPassword"
+                style="@style/FormEditText"
+                android:hint="Password"
+                android:inputType="textPassword"/>
+
+            <!-- DOB -->
+            <EditText
+                android:id="@+id/etDOB"
+                style="@style/FormEditText"
+                android:hint="Date of Birth"
+                android:focusable="false"
+                android:clickable="true"/>
+
+            <!-- Gender -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gender"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioGroup
+                android:id="@+id/rgGender"
+                android:layout_width="match_parent"
+                android:padding="5dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rbMale"
+                    android:text="Male"
+                    android:textColor="@color/black"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"/>
+                <RadioButton
+                    android:id="@+id/rbFemale"
+                    android:textColor="@color/black"
+                    android:text="Female"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"/>
+                <RadioButton
+                    android:id="@+id/rbOther"
+                    android:textColor="@color/black"
+                    android:text="Other"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"/>
+            </RadioGroup>
+
+            <!-- Looking For -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Looking For"
+                android:textColor="#333333"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <RadioGroup
+                android:id="@+id/rgLookingFor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:textColor="@color/black"
+                    android:id="@+id/rbBoyfriend"
+                    android:text="Boyfriend"/>
+                <RadioButton
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:id="@+id/rbGirlfriend"
+                    android:textColor="@color/black"
+                    android:text="Girlfriend"/>
+            </RadioGroup>
+
+            <!-- Bio -->
+            <EditText
+                android:id="@+id/etBio"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:hint="Tell us about yourself"
+                android:background="@drawable/bio_background"
+                android:padding="16dp"
+                android:textColor="#333333"
+                android:textColorHint="#999999"
+                android:gravity="top"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"/>
+            <!-- Profile ImageView -->
+            <ImageView
+                android:id="@+id/imgProfilePreview"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/image_border"
+                android:scaleType="centerCrop"
+                />
+            <!-- Upload Profile -->
+            <Button
+                android:id="@+id/btnUploadProfile"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Upload Profile Photo"
+                android:layout_marginBottom="12dp"
+                android:backgroundTint="#FF4EC7"
+
+                android:textColor="@android:color/white"/>
+
+            <ImageView
+                android:id="@+id/imgIDPreview"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:background="@drawable/image_border"
+                android:layout_marginBottom="16dp"
+                android:scaleType="centerCrop"
+                />
+
+            <!-- Upload ID Proof -->
+            <Button
+                android:id="@+id/btnUploadID"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Upload ID Proof"
+                android:layout_marginBottom="20dp"
+                android:backgroundTint="#FF4EC7"
+                android:textColor="@android:color/white"/>
+
+
+            <!-- ID Proof ImageView -->
+
+            <!-- Register Button -->
+            <Button
+                android:id="@+id/btnRegister"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Register"
+                android:backgroundTint="#7F00FF"
+                android:textColor="@android:color/white"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
