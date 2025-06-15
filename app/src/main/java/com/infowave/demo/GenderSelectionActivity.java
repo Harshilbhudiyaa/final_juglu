@@ -2,7 +2,11 @@ package com.infowave.demo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
 import android.widget.Button;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
@@ -18,6 +22,22 @@ public class GenderSelectionActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gender_selection);
+
+        View decoreview = getWindow().getDecorView();
+        decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @NonNull
+            @Override
+            public WindowInsets onApplyWindowInsets(@NonNull View v, @NonNull WindowInsets insets) {
+                int left = insets.getSystemWindowInsetLeft();
+                int top = insets.getSystemWindowInsetTop();
+                int right = insets.getSystemWindowInsetRight();
+                int bottom = insets.getSystemWindowInsetBottom();
+                v.setPadding(left,top,right,bottom);
+                return insets.consumeSystemWindowInsets();
+
+            }
+        });
+
 
         cardMale = findViewById(R.id.cardMale);
         cardFemale = findViewById(R.id.cardFemale);
