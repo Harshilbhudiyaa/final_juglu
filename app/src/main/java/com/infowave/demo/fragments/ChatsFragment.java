@@ -8,14 +8,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.infowave.demo.R;
-import com.infowave.demo.model.Chat;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class ChatsFragment extends Fragment {
 

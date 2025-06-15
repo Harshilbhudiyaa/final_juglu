@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +15,8 @@ import com.infowave.demo.R;
 import com.infowave.demo.models.Post;
 
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
     private Context context;
@@ -39,6 +42,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.content.setText(post.getContent());
         holder.likesCount.setText(String.valueOf(post.getLikes()));
         holder.commentsCount.setText(String.valueOf(post.getComments()));
+        holder.postImage.setImageResource(post.getImageResId());
+        holder.profileImage.setImageResource(post.getProfileImageResId());
 
         holder.likeButton.setOnClickListener(v -> {
             // TODO: Implement like functionality
@@ -61,6 +66,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     static class PostViewHolder extends RecyclerView.ViewHolder {
         TextView authorName, timestamp, content, likesCount, commentsCount;
         ImageButton likeButton, commentButton, shareButton;
+        ImageView postImage;
+        CircleImageView profileImage;
 
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -72,6 +79,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             likeButton = itemView.findViewById(R.id.like_button);
             commentButton = itemView.findViewById(R.id.comment_button);
             shareButton = itemView.findViewById(R.id.share_button);
+            postImage = itemView.findViewById(R.id.post_image);
+            profileImage = itemView.findViewById(R.id.profile_image);
         }
     }
 } 
