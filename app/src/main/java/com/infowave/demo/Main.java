@@ -1,20 +1,91 @@
 package com.infowave.demo;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 
 public class Main extends AppCompatActivity {
+
+    private DrawerLayout drawerLayout;
+    private NavigationView navView;
+    private BottomNavigationView bottomNav;
+    private MaterialToolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navView = findViewById(R.id.nav_view);
+        bottomNav = findViewById(R.id.bottom_navigation);
+        toolbar = findViewById(R.id.toolbar);
 
+        // Hamburger icon opens drawer
+        toolbar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+
+        // Drawer toggle for hamburger sync (optional)
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        // Handle sidebar (drawer) item clicks (if-else version)
+        navView.setNavigationItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.drawer_edit_profile) {
+                Toast.makeText(this, "Edit Profile Clicked", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.drawer_privacy) {
+                Toast.makeText(this, "Privacy Clicked", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.drawer_blocked) {
+                Toast.makeText(this, "Blocked Users Clicked", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.drawer_settings) {
+                Toast.makeText(this, "Settings Clicked", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.drawer_logout) {
+                Toast.makeText(this, "Logout Clicked", Toast.LENGTH_SHORT).show();
+            } else if (itemId == R.id.drawer_delete_account) {
+                Toast.makeText(this, "Delete Account Clicked", Toast.LENGTH_SHORT).show();
+            }
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        });
+
+        // Bottom nav item clicks (if-else version)
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                Toast.makeText(this, "Home Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (itemId == R.id.nav_search) {
+                Toast.makeText(this, "Search Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (itemId == R.id.nav_chats) {
+                Toast.makeText(this, "Chats Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                Toast.makeText(this, "Profile Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Close drawer if open
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 }
