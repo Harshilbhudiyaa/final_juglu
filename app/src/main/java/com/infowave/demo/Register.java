@@ -1,165 +1,135 @@
 package com.infowave.demo;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.DatePickerDialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
+import android.util.Log;
+import android.util.Patterns;
 import android.widget.*;
-
-import com.infowave.demo.R;
-
+import androidx.appcompat.app.AppCompatActivity;
 import java.util.Calendar;
 
 public class Register extends AppCompatActivity {
 
-    EditText etFullName, etUsername, etEmail, etMobile, etPassword, etDOB, etBio;
-    RadioGroup rgGender, rgLookingFor;
-    Button btnUploadProfile, btnUploadID, btnRegister;
-    ImageView imgProfilePreview, imgIDPreview;
-
-    Uri profileImageUri = null;
-    Uri idProofUri = null;
-
-    ActivityResultLauncher<String> profilePickerLauncher;
-    ActivityResultLauncher<String> idProofPickerLauncher;
+    private EditText etUsername, etEmail, etMobile, etPassword, etDOB, etBio;
+    private Button btnNext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
+        setContentView(R.layout.activity_registration_basic);
 
-        initializeViews();
-        setupImagePickers();
-        setupDOBPicker();
-
-        btnRegister.setOnClickListener(view -> {
-            if (validateForm()) {
-                // You can proceed with your backend API submission here.
-                Toast.makeText(this, "Validation Success!", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void initializeViews() {
-        etFullName = findViewById(R.id.etFullName);
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etMobile = findViewById(R.id.etMobile);
         etPassword = findViewById(R.id.etPassword);
         etDOB = findViewById(R.id.etDOB);
         etBio = findViewById(R.id.etBio);
-        rgGender = findViewById(R.id.rgGender);
-        rgLookingFor = findViewById(R.id.rgLookingFor);
-        btnUploadProfile = findViewById(R.id.btnUploadProfile);
-        btnUploadID = findViewById(R.id.btnUploadID);
-        btnRegister = findViewById(R.id.btnRegister);
-        imgProfilePreview = findViewById(R.id.imgProfilePreview);
-        imgIDPreview = findViewById(R.id.imgIDPreview);
+        btnNext = findViewById(R.id.btnNext);
 
-        profilePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-            if (uri != null) {
-                profileImageUri = uri;
-                btnUploadProfile.setText("Profile Photo Selected");
-                imgProfilePreview.setImageURI(uri);  // show preview
+        // Date of Birth picker (no keyboard popup)
+        etDOB.setFocusable(false);
+        etDOB.setClickable(true);
+        etDOB.setOnClickListener(v -> showDatePickerDialog());
+
+        btnNext.setOnClickListener(v -> {
+            Log.d("BUTTON", "Next button clicked");
+            if (validateForm()) {
+                Log.d("NAVIGATION", "Validation passed, starting GenderSelectionActivity");
+                try {
+                    Intent intent = new Intent(Register.this, GenderSelectionActivity.class);
+                    intent.putExtra("username", etUsername.getText().toString());
+                    intent.putExtra("email", etEmail.getText().toString());
+                    intent.putExtra("mobile", etMobile.getText().toString());
+                    intent.putExtra("password", etPassword.getText().toString());
+                    intent.putExtra("dob", etDOB.getText().toString());
+                    intent.putExtra("bio", etBio.getText().toString());
+
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                } catch (Exception e) {
+                    Log.e("NAVIGATION", "Error starting activity", e);
+                    Toast.makeText(Register.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            } else {
+                Log.d("VALIDATION", "Validation failed");
+                Toast.makeText(Register.this, "Please fix the errors", Toast.LENGTH_SHORT).show();
             }
         });
-
-        idProofPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-            if (uri != null) {
-                idProofUri = uri;
-                btnUploadID.setText("ID Proof Selected");
-                imgIDPreview.setImageURI(uri);  // show preview
-            }
-        });
-
     }
 
-    private void setupImagePickers() {
-        profilePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-            if (uri != null) {
-                profileImageUri = uri;
-                btnUploadProfile.setText("Profile Photo Selected");
-                imgProfilePreview.setImageURI(uri);
-            }
-        });
+    private void showDatePickerDialog() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
 
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    String date = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
+                    etDOB.setText(date);
+                },
+                year, month, day
+        );
 
-        idProofPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-            if (uri != null) {
-                idProofUri = uri;
-                btnUploadID.setText("ID Proof Selected");
-            }
-        });
-
-        btnUploadProfile.setOnClickListener(view -> profilePickerLauncher.launch("image/*"));
-        btnUploadID.setOnClickListener(view -> idProofPickerLauncher.launch("image/*"));
-    }
-
-    private void setupDOBPicker() {
-        etDOB.setOnClickListener(v -> {
-            final Calendar calendar = Calendar.getInstance();
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-            DatePickerDialog dp = new DatePickerDialog(Register.this,
-                    (view, year1, month1, dayOfMonth) -> etDOB.setText(dayOfMonth + "/" + (month1 + 1) + "/" + year1),
-                    year, month, day);
-            dp.show();
-        });
+        // Set max date to today
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        datePickerDialog.show();
     }
 
     private boolean validateForm() {
-        if (TextUtils.isEmpty(etFullName.getText())) {
-            etFullName.setError("Enter full name");
-            return false;
+        boolean valid = true;
+        String email = etEmail.getText().toString().trim();
+        String mobile = etMobile.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        // Reset errors
+        etUsername.setError(null);
+        etEmail.setError(null);
+        etMobile.setError(null);
+        etPassword.setError(null);
+        etDOB.setError(null);
+
+        // Username validation
+        if (etUsername.getText().toString().trim().isEmpty()) {
+            etUsername.setError("Username is required");
+            valid = false;
         }
-        if (TextUtils.isEmpty(etUsername.getText())) {
-            etUsername.setError("Enter username");
-            return false;
+
+        // Email validation
+        if (email.isEmpty()) {
+            etEmail.setError("Email is required");
+            valid = false;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Valid email is required");
+            valid = false;
         }
-        if (TextUtils.isEmpty(etEmail.getText())) {
-            etEmail.setError("Enter email");
-            return false;
+
+        // Mobile validation
+        if (mobile.isEmpty()) {
+            etMobile.setError("Mobile number is required");
+            valid = false;
+        } else if (mobile.length() != 10) {
+            etMobile.setError("Valid 10-digit number required");
+            valid = false;
         }
-        if (TextUtils.isEmpty(etMobile.getText())) {
-            etMobile.setError("Enter mobile number");
-            return false;
+
+        // Password validation
+        if (password.isEmpty()) {
+            etPassword.setError("Password is required");
+            valid = false;
+        } else if (password.length() < 6) {
+            etPassword.setError("Password must be at least 6 characters");
+            valid = false;
         }
-        if (TextUtils.isEmpty(etPassword.getText())) {
-            etPassword.setError("Enter password");
-            return false;
+
+        // DOB validation
+        if (etDOB.getText().toString().trim().isEmpty()) {
+            etDOB.setError("Date of birth is required");
+            valid = false;
         }
-        if (TextUtils.isEmpty(etDOB.getText())) {
-            etDOB.setError("Select date of birth");
-            return false;
-        }
-        if (rgGender.getCheckedRadioButtonId() == -1) {
-            Toast.makeText(this, "Select gender", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (rgLookingFor.getCheckedRadioButtonId() == -1) {
-            Toast.makeText(this, "Select Looking For option", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (TextUtils.isEmpty(etBio.getText())) {
-            etBio.setError("Enter your bio");
-            return false;
-        }
-        if (profileImageUri == null) {
-            Toast.makeText(this, "Select profile photo", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        if (idProofUri == null) {
-            Toast.makeText(this, "Select ID proof", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        return true;
+
+        return valid;
     }
 }
