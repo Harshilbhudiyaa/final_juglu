@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verify Your Identity"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Please upload your profile photo and ID proof"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Profile Image Picker -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="@drawable/form_container_bg"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile Photo"
+                android:textSize="16sp"
+                android:textColor="#7F00FF"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <ImageView
+                android:id="@+id/imgProfile"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:src="@drawable/ic_profile_placeholder"
+                android:scaleType="centerCrop"
+
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Profile photo"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnPickProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload Profile Image"
+                android:textColor="@android:color/white"
+                android:background="@drawable/button_gradient"/>
+        </LinearLayout>
+
+        <!-- ID Proof Picker -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="@drawable/form_container_bg"
+            android:elevation="4dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID Proof (Aadhar, PAN, etc.)"
+                android:textSize="16sp"
+                android:textColor="#7F00FF"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <ImageView
+                android:id="@+id/imgIdProof"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:src="@drawable/ic_id_placeholder"
+                android:scaleType="centerCrop"
+
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="ID Proof"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnPickIdProof"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload ID Proof"
+                android:textColor="@android:color/white"
+                android:background="@drawable/button_gradient"/>
+        </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Note: We are asking this identity proof for only verifing your age and this will stay secure from our side."/>
+
+        <!-- Continue Button -->
+        <Button
+            android:id="@+id/btnContinue"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:text="Continue"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:layout_marginTop="20dp"
+            android:textColor="@android:color/white"
+            app:backgroundTint="#5288CF"
+            android:elevation="6dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.01"
+            android:enabled="false"
+            android:alpha="0.6"/>
+    </LinearLayout>
+</ScrollView>

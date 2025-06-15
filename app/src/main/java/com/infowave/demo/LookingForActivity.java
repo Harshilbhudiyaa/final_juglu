@@ -67,10 +67,14 @@ public class LookingForActivity extends AppCompatActivity {
     }
 
     private void navigateToHome(String selection) {
-        Intent intent = new Intent(LookingForActivity.this, Main.class);
-        intent.putExtra("lookingFor", selection);
+        Intent intent = new Intent(LookingForActivity.this, IdentityUploadActivity.class);
+        if (getIntent().getExtras() != null) {
+            intent.putExtras(getIntent().getExtras()); // chain all previous user info
+        }
+        intent.putExtra("lookingFor", selection); // add this step's info
         startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
     }
+
 }
