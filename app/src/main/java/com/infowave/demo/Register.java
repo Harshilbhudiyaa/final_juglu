@@ -2,21 +2,35 @@ package com.infowave.demo;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.util.Calendar;
 
 public class Register extends AppCompatActivity {
 
     private EditText etUsername, etEmail, etMobile, etPassword, etDOB, etBio;
     private Button btnNext;
+    private BottomSheetDialog otpBottomSheet;
+    private View dimView;
+    private WindowManager windowManager;
+    private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,9 +47,10 @@ public class Register extends AppCompatActivity {
                 int bottom = insets.getSystemWindowInsetBottom();
                 v.setPadding(left,top,right,bottom);
                 return insets.consumeSystemWindowInsets();
-
             }
         });
+
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
@@ -53,27 +68,144 @@ public class Register extends AppCompatActivity {
         btnNext.setOnClickListener(v -> {
             Log.d("BUTTON", "Next button clicked");
             if (validateForm()) {
-                Log.d("NAVIGATION", "Validation passed, starting GenderSelectionActivity");
-                try {
-                    Intent intent = new Intent(Register.this, GenderSelectionActivity.class);
-                    intent.putExtra("username", etUsername.getText().toString());
-                    intent.putExtra("email", etEmail.getText().toString());
-                    intent.putExtra("mobile", etMobile.getText().toString());
-                    intent.putExtra("password", etPassword.getText().toString());
-                    intent.putExtra("dob", etDOB.getText().toString());
-                    intent.putExtra("bio", etBio.getText().toString());
-
-                    startActivity(intent);
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                } catch (Exception e) {
-                    Log.e("NAVIGATION", "Error starting activity", e);
-                    Toast.makeText(Register.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                Log.d("NAVIGATION", "Validation passed, showing OTP bottom sheet");
+                showOtpBottomSheet();
             } else {
                 Log.d("VALIDATION", "Validation failed");
                 Toast.makeText(Register.this, "Please fix the errors", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showOtpBottomSheet() {
+        otpBottomSheet = new BottomSheetDialog(this);
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_otp, null);
+        otpBottomSheet.setContentView(bottomSheetView);
+
+        // Set up blur effect
+        dimView = new View(this);
+        dimView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.black));
+        dimView.setAlpha(0.6f);
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+        params.width = WindowManager.LayoutParams.MATCH_PARENT;
+        params.height = WindowManager.LayoutParams.MATCH_PARENT;
+        params.type = WindowManager.LayoutParams.TYPE_APPLICATION;
+        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        params.format = PixelFormat.TRANSLUCENT;
+
+        try {
+            windowManager.addView(dimView, params);
+        } catch (WindowManager.BadTokenException e) {
+            Log.e("Register", "Error adding dim view", e);
+            // If we can't add the dim view, continue without it
+        }
+
+        // Initialize OTP views
+        TextInputEditText[] otpInputs = new TextInputEditText[]{
+                bottomSheetView.findViewById(R.id.otp1),
+                bottomSheetView.findViewById(R.id.otp2),
+                bottomSheetView.findViewById(R.id.otp3),
+                bottomSheetView.findViewById(R.id.otp4),
+                bottomSheetView.findViewById(R.id.otp5),
+                bottomSheetView.findViewById(R.id.otp6)
+        };
+
+        TextView tvPhoneNumber = bottomSheetView.findViewById(R.id.tvPhoneNumber);
+        Button btnVerify = bottomSheetView.findViewById(R.id.btnVerify);
+        Button btnResendCode = bottomSheetView.findViewById(R.id.btnResendCode);
+        TextView tvTimer = bottomSheetView.findViewById(R.id.tvTimer);
+
+        // Set phone number
+        tvPhoneNumber.setText("+91 " + etMobile.getText().toString());
+
+        // Set up OTP input handling
+        setupOtpInputs(otpInputs);
+
+        // Set up button click listeners
+        btnVerify.setOnClickListener(v -> verifyOtp(otpInputs));
+        btnResendCode.setOnClickListener(v -> resendOtp(tvTimer, btnResendCode));
+
+        // Start timer
+        startTimer(tvTimer, btnResendCode);
+
+        // Show bottom sheet
+        otpBottomSheet.show();
+
+        // Handle dismiss
+        otpBottomSheet.setOnDismissListener(dialog -> {
+            if (dimView != null && dimView.getParent() != null) {
+                windowManager.removeView(dimView);
+            }
+        });
+    }
+
+    private void setupOtpInputs(TextInputEditText[] otpInputs) {
+        for (int i = 0; i < otpInputs.length; i++) {
+            final int currentIndex = i;
+            otpInputs[i].addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (s.length() == 1 && currentIndex < otpInputs.length - 1) {
+                        otpInputs[currentIndex + 1].requestFocus();
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {}
+            });
+        }
+    }
+
+    private void startTimer(TextView tvTimer, Button btnResendCode) {
+        btnResendCode.setEnabled(false);
+        new android.os.CountDownTimer(30000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tvTimer.setText("Resend code in: " + (millisUntilFinished / 1000) + "s");
+            }
+
+            @Override
+            public void onFinish() {
+                btnResendCode.setEnabled(true);
+                tvTimer.setText("");
+            }
+        }.start();
+    }
+
+    private void verifyOtp(TextInputEditText[] otpInputs) {
+        StringBuilder otp = new StringBuilder();
+        for (TextInputEditText input : otpInputs) {
+            otp.append(input.getText().toString());
+        }
+
+        if (otp.length() != 6) {
+            Toast.makeText(this, "Please enter complete OTP", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // TODO: Implement actual OTP verification logic here
+        // For now, we'll just proceed to the next screen
+        if (otpBottomSheet != null && otpBottomSheet.isShowing()) {
+            otpBottomSheet.dismiss();
+        }
+        Intent intent = new Intent(Register.this, GenderSelectionActivity.class);
+        intent.putExtra("username", etUsername.getText().toString());
+        intent.putExtra("email", etEmail.getText().toString());
+        intent.putExtra("mobile", etMobile.getText().toString());
+        intent.putExtra("password", etPassword.getText().toString());
+        intent.putExtra("dob", etDOB.getText().toString());
+        intent.putExtra("bio", etBio.getText().toString());
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    private void resendOtp(TextView tvTimer, Button btnResendCode) {
+        // TODO: Implement actual OTP resend logic here
+        Toast.makeText(this, "OTP resent to " + etMobile.getText().toString(), Toast.LENGTH_SHORT).show();
+        startTimer(tvTimer, btnResendCode);
     }
 
     private void showDatePickerDialog() {
@@ -149,5 +281,16 @@ public class Register extends AppCompatActivity {
         }
 
         return valid;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (otpBottomSheet != null && otpBottomSheet.isShowing()) {
+            otpBottomSheet.dismiss();
+        }
+        if (dimView != null && dimView.getParent() != null) {
+            windowManager.removeView(dimView);
+        }
     }
 }

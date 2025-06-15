@@ -10,10 +10,15 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.infowave.demo.fragments.ChatsFragment;
+import com.infowave.demo.fragments.HomeFragment;
+import com.infowave.demo.fragments.ProfileFragment;
+import com.infowave.demo.fragments.SearchFragment;
 
 public class Main extends AppCompatActivity {
 
@@ -38,7 +43,6 @@ public class Main extends AppCompatActivity {
                 int bottom = insets.getSystemWindowInsetBottom();
                 v.setPadding(left,top,right,bottom);
                 return insets.consumeSystemWindowInsets();
-
             }
         });
 
@@ -47,17 +51,22 @@ public class Main extends AppCompatActivity {
         bottomNav = findViewById(R.id.bottom_navigation);
         toolbar = findViewById(R.id.toolbar);
 
+        // Set default fragment
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment());
+        }
+
         // Hamburger icon opens drawer
         toolbar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        // Drawer toggle for hamburger sync (optional)
+        // Drawer toggle for hamburger sync
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        // Handle sidebar (drawer) item clicks (if-else version)
+        // Handle sidebar (drawer) item clicks
         navView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.drawer_edit_profile) {
@@ -77,29 +86,35 @@ public class Main extends AppCompatActivity {
             return true;
         });
 
-        // Bottom nav item clicks (if-else version)
+        // Bottom nav item clicks
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                Toast.makeText(this, "Home Clicked", Toast.LENGTH_SHORT).show();
+                loadFragment(new HomeFragment());
                 return true;
             } else if (itemId == R.id.nav_search) {
-                Toast.makeText(this, "Search Clicked", Toast.LENGTH_SHORT).show();
+                loadFragment(new SearchFragment());
                 return true;
             } else if (itemId == R.id.nav_chats) {
-                Toast.makeText(this, "Chats Clicked", Toast.LENGTH_SHORT).show();
+                loadFragment(new ChatsFragment());
                 return true;
             } else if (itemId == R.id.nav_profile) {
-                Toast.makeText(this, "Profile Clicked", Toast.LENGTH_SHORT).show();
+                loadFragment(new ProfileFragment());
                 return true;
             }
             return false;
         });
     }
 
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+    }
+
     @Override
     public void onBackPressed() {
-        // Close drawer if open
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         } else {
