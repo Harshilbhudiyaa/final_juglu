@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@drawable/sidebar_bg"
             android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-            app:title="Hi Bro"
+            app:title="Juglu"
             app:titleTextColor="@android:color/white"
             app:navigationIcon="@drawable/ic_menu"
             app:menu="@menu/toolbar_menu" />
