@@ -6,98 +6,112 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.infowave.demo.R;
-import com.infowave.demo.adapters.SearchAdapter;
-import com.infowave.demo.models.SearchItem;
+import com.infowave.demo.adapters.PersonNearbyAdapter;
+import com.infowave.demo.adapters.RecommendedUserAdapter;
+import com.infowave.demo.models.PersonNearby;
+import com.infowave.demo.models.RecommendedUser;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchFragment extends Fragment implements SearchAdapter.OnItemClickListener {
+// ChatsFragment.java
+public class SearchFragment extends Fragment {
 
-    private EditText searchInput;
-    private RecyclerView searchResultsRecyclerView;
-    private SearchAdapter searchAdapter;
-    private List<SearchItem> searchItems;
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_search, container, false);
-    }
+    private RecyclerView rvPeopleNearby, rvRecommended;
+    private PersonNearbyAdapter nearbyAdapter;
+    private RecommendedUserAdapter recommendedAdapter;
+    private TextInputEditText searchInput;
+    private ImageButton clearButton;
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        
-        initializeViews(view);
-        setupRecyclerView();
-        setupSearchInput();
-        loadInitialData();
-    }
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_search, container, false);
 
-    private void initializeViews(View view) {
+        // Initialize views
         searchInput = view.findViewById(R.id.search_input);
-        searchResultsRecyclerView = view.findViewById(R.id.search_results_recycler_view);
+        clearButton = view.findViewById(R.id.clear_button);
+        rvPeopleNearby = view.findViewById(R.id.rvPeopleNearby);
+        rvRecommended = view.findViewById(R.id.rvRecommended);
+
+        setupSearch();
+        setupAdapters();
+        setupRecyclerViews();
+        loadDummyData();
+
+        return view;
     }
 
-    private void setupRecyclerView() {
-        searchItems = new ArrayList<>();
-        searchAdapter = new SearchAdapter(requireContext(), searchItems, this);
-        searchResultsRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
-        searchResultsRecyclerView.setAdapter(searchAdapter);
-    }
-
-    private void setupSearchInput() {
+    private void setupSearch() {
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterSearchResults(s.toString());
+                clearButton.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
+
+        clearButton.setOnClickListener(v -> searchInput.setText(""));
     }
 
-    private void loadInitialData() {
-        // TODO: Load actual data from your data source
-        searchItems.clear();
-        searchItems.add(new SearchItem(R.drawable.image2, "John Doe", "johndoe"));
-        searchItems.add(new SearchItem(R.drawable.image1, "Jane Smith", "janesmith"));
-        searchItems.add(new SearchItem(R.drawable.image3, "Mike Johnson", "mikejohnson"));
-        searchItems.add(new SearchItem(R.drawable.image5, "Sarah Wilson", "sarahwilson"));
-        searchItems.add(new SearchItem(R.drawable.image4, "David Brown", "davidbrown"));
-        searchItems.add(new SearchItem(R.drawable.image2, "Emily Davis", "emilydavis"));
-        searchAdapter.notifyDataSetChanged();
+    private void setupAdapters() {
+        // Nearby adapter
+        nearbyAdapter = new PersonNearbyAdapter(new ArrayList<>(), position -> {
+            // Handle connect button click
+            Toast.makeText(getContext(), "Connect clicked: " + position, Toast.LENGTH_SHORT).show();
+        });
+
+        // Recommended adapter
+        recommendedAdapter = new RecommendedUserAdapter(new ArrayList<>(), position -> {
+            // Handle follow button click
+            Toast.makeText(getContext(), "Follow clicked: " + position, Toast.LENGTH_SHORT).show();
+        });
     }
 
-    private void filterSearchResults(String query) {
-        List<SearchItem> filteredList = new ArrayList<>();
-        for (SearchItem item : searchItems) {
-            if (item.getName().toLowerCase().contains(query.toLowerCase()) ||
-                item.getUsername().toLowerCase().contains(query.toLowerCase())) {
-                filteredList.add(item);
-            }
-        }
-        searchAdapter.updateData(filteredList);
+    private void setupRecyclerViews() {
+        // Nearby people (horizontal)
+        rvPeopleNearby.setLayoutManager(new LinearLayoutManager(
+                getContext(),
+                LinearLayoutManager.HORIZONTAL,
+                false
+        ));
+        rvPeopleNearby.setAdapter(nearbyAdapter);
+
+        // Recommended users (vertical)
+        rvRecommended.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvRecommended.setAdapter(recommendedAdapter);
     }
 
-    @Override
-    public void onItemClick(SearchItem item) {
-        // Handle item click
-        Toast.makeText(requireContext(), "Clicked: " + item.getName(), Toast.LENGTH_SHORT).show();
+    private void loadDummyData() {
+        // Nearby dummy data
+        List<PersonNearby> nearbyList = new ArrayList<>();
+        nearbyList.add(new PersonNearby("Alex", "1.2 km away", R.drawable.image1));
+        nearbyList.add(new PersonNearby("Taylor", "0.8 km away", R.drawable.image2));
+        nearbyList.add(new PersonNearby("Jordan", "2.1 km away", R.drawable.image3));
+        nearbyList.add(new PersonNearby("Morgan", "1.5 km away", R.drawable.image4));
+        nearbyAdapter.nearbyList = nearbyList;
+        nearbyAdapter.notifyDataSetChanged();
+
+        // Recommended dummy data
+        List<RecommendedUser> recommendedList = new ArrayList<>();
+        recommendedList.add(new RecommendedUser("Alex Johnson", "Travel, Photography", R.drawable.image5));
+        recommendedList.add(new RecommendedUser("Sam Wilson", "Music, Hiking", R.drawable.image1));
+        recommendedList.add(new RecommendedUser("Casey Lee", "Cooking, Art", R.drawable.image3));
+        recommendedAdapter.recommendedList = recommendedList;
+        recommendedAdapter.notifyDataSetChanged();
     }
-} 
+}

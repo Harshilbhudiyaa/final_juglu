@@ -1,41 +1,37 @@
 package com.infowave.demo.models;
 
 public class SearchItem {
+    private String sender;
+    private String message;
+    private String timestamp;
+    private boolean isReceived;
     private int profileImage;
-    private String name;
-    private String username;
 
-    public SearchItem(int profileImage, String name, String username) {
+    public SearchItem(String sender, String message, String timestamp, boolean isReceived, int profileImage) {
+        this.sender = sender;
+        this.message = message;
+        this.timestamp = timestamp;
+        this.isReceived = isReceived;
         this.profileImage = profileImage;
-        this.name = name;
-        this.username = username;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public boolean isReceived() {
+        return isReceived;
     }
 
     public int getProfileImage() {
         return profileImage;
-    }
-
-    public void setProfileImage(int profileImage) {
-        this.profileImage = profileImage;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getDescription() {
-        return "@" + username;
     }
 } 

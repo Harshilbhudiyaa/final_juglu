@@ -11,66 +11,66 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.infowave.demo.R;
-import com.infowave.demo.models.SearchItem;
+import com.infowave.demo.models.ChatMessage;
 
 import java.util.List;
 
-public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder> {
-    private List<SearchItem> searchItems;
+public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ChatViewHolder> {
     private Context context;
-    private OnItemClickListener listener;
+    private List<ChatMessage> messages;
 
-    public interface OnItemClickListener {
-        void onItemClick(SearchItem item);
-    }
-
-    public SearchAdapter(Context context, List<SearchItem> searchItems, OnItemClickListener listener) {
+    public SearchAdapter(Context context, List<ChatMessage> messages) {
         this.context = context;
-        this.searchItems = searchItems;
-        this.listener = listener;
+        this.messages = messages;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_search, parent, false);
-        return new ViewHolder(view);
+    public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_chat, parent, false);
+        return new ChatViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        SearchItem item = searchItems.get(position);
-        holder.profileImage.setImageResource(item.getProfileImage());
-        holder.name.setText(item.getName());
-        holder.username.setText(item.getUsername());
-        
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(item);
-            }
-        });
+    public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
+        ChatMessage message = messages.get(position);
+
+        if (message.isReceived()) {
+            holder.sentMessageLayout.setVisibility(View.GONE);
+            holder.receivedMessageLayout.setVisibility(View.VISIBLE);
+            holder.receivedProfileImage.setImageResource(message.getProfileImage());
+            holder.receivedMessage.setText(message.getMessage());
+            holder.receivedTimestamp.setText(message.getTimestamp());
+        } else {
+            holder.receivedMessageLayout.setVisibility(View.GONE);
+            holder.sentMessageLayout.setVisibility(View.VISIBLE);
+            holder.sentProfileImage.setImageResource(message.getProfileImage());
+            holder.sentMessage.setText(message.getMessage());
+            holder.sentTimestamp.setText(message.getTimestamp());
+        }
     }
 
     @Override
     public int getItemCount() {
-        return searchItems.size();
+        return messages.size();
     }
 
-    public void updateData(List<SearchItem> newItems) {
-        this.searchItems = newItems;
-        notifyDataSetChanged();
-    }
+    static class ChatViewHolder extends RecyclerView.ViewHolder {
+        View receivedMessageLayout, sentMessageLayout;
+        ImageView receivedProfileImage, sentProfileImage;
+        TextView receivedMessage, sentMessage;
+        TextView receivedTimestamp, sentTimestamp;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView profileImage;
-        TextView name;
-        TextView username;
-
-        public ViewHolder(@NonNull View itemView) {
+        ChatViewHolder(@NonNull View itemView) {
             super(itemView);
-            profileImage = itemView.findViewById(R.id.profileImage);
-            name = itemView.findViewById(R.id.name);
-            username = itemView.findViewById(R.id.username);
+            receivedMessageLayout = itemView.findViewById(R.id.received_message_layout);
+            sentMessageLayout = itemView.findViewById(R.id.sent_message_layout);
+            receivedProfileImage = itemView.findViewById(R.id.received_profile_image);
+            sentProfileImage = itemView.findViewById(R.id.sent_profile_image);
+            receivedMessage = itemView.findViewById(R.id.received_message);
+            sentMessage = itemView.findViewById(R.id.sent_message);
+            receivedTimestamp = itemView.findViewById(R.id.received_timestamp);
+            sentTimestamp = itemView.findViewById(R.id.sent_timestamp);
         }
     }
-} 
+}

@@ -60,7 +60,7 @@ public class ProfileFragment extends Fragment {
         ));
 
         features.add(new FeatureItem(
-                R.drawable.ic_platte,
+                R.drawable.platte,
                 "Theme Options",
                 "Light, dark, or system default"
         ));

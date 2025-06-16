@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_container">
+    android:background="@color/white"
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
-    <!-- App Bar with Search -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -74,81 +75,61 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+        <!-- People Nearby Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="15dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="People Nearby"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#222222"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvPeopleNearby"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:clipToPadding="false"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:orientation="horizontal"
+                tools:listitem="@layout/item_person_nearby" />
+        </LinearLayout>
+
+        <!-- Recommended Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="15dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recommended for you"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/poppins_semibold"
+                android:textColor="#222222"
+                android:layout_marginBottom="12dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecommended"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_recommended_user" />
+        </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Search Results -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/search_results_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="72dp"
-        android:scrollbars="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-    <!-- Empty State -->
-    <LinearLayout
-        android:id="@+id/empty_state"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp"
-        android:visibility="gone"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-
-            app:tint="?attr/colorOnSurfaceVariant" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="No results found"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="18sp"
-            android:fontFamily="@font/poppins_medium" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Try searching for something else"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="14sp"
-            android:fontFamily="@font/poppins_regular" />
-
-    </LinearLayout>
-
-    <!-- Recent Searches Chip Group -->
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/recent_searches_chip_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="16dp"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        app:singleLine="true"
-        app:singleSelection="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Recent:"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="14sp"
-            android:fontFamily="@font/poppins_medium"
-            android:layout_gravity="center_vertical"/>
-
-        <!-- Chips will be added programmatically -->
-    </com.google.android.material.chip.ChipGroup>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>
