@@ -15,8 +15,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.infowave.demo.R;
-import com.infowave.demo.adapters.PostAdapter;
-import com.infowave.demo.adapters.StatusAdapter;
+import com.infowave.demo.adapters.FeedAdapter;
 import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
 
@@ -25,11 +24,10 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    private RecyclerView postsRecyclerView, statusRecyclerView;
+    private RecyclerView feedRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton addPostFab;
-    private PostAdapter postAdapter;
-    private StatusAdapter statusAdapter;
+    private FeedAdapter feedAdapter;
     private List<Post> posts;
     private List<StatusItem> statusList;
 
@@ -43,38 +41,32 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        postsRecyclerView = view.findViewById(R.id.posts_recycler_view);
-        statusRecyclerView = view.findViewById(R.id.status_recycler_view);
+        feedRecyclerView = view.findViewById(R.id.feed_recycler_view);
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         addPostFab = view.findViewById(R.id.add_post_fab);
 
-        setupRecyclerViews();
+        setupFeedRecyclerView();
         setupSwipeRefresh();
         setupClickListeners();
     }
 
-    private void setupRecyclerViews() {
-        // Setup status recycler (horizontal)
+    private void setupFeedRecyclerView() {
+        // Status items
         statusList = new ArrayList<>();
         statusList.add(new StatusItem(R.drawable.image1, "Your Story", true));
         statusList.add(new StatusItem(R.drawable.image2, "John", false));
         statusList.add(new StatusItem(R.drawable.image3, "Emma", false));
         statusList.add(new StatusItem(R.drawable.image4, "Mike", false));
 
-        statusAdapter = new StatusAdapter(requireContext(), statusList);
-        LinearLayoutManager horizontalLayoutManager = new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false);
-        statusRecyclerView.setLayoutManager(horizontalLayoutManager);
-        statusRecyclerView.setAdapter(statusAdapter);
-
-        // Setup posts recycler (vertical)
+        // Posts
         posts = new ArrayList<>();
         posts.add(new Post("John Doe", "2 hours ago", "Beautiful sunset 🌅", 120, 30, R.drawable.image1, R.drawable.image1));
         posts.add(new Post("Emma", "4 hours ago", "Morning workout 💪", 80, 20, R.drawable.image2, R.drawable.image2));
         posts.add(new Post("Mike", "6 hours ago", "New project launched 🚀", 200, 40, R.drawable.image3, R.drawable.image3));
 
-        postAdapter = new PostAdapter(requireContext(), posts);
-        postsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        postsRecyclerView.setAdapter(postAdapter);
+        feedAdapter = new FeedAdapter(requireContext(), statusList, posts);
+        feedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        feedRecyclerView.setAdapter(feedAdapter);
     }
 
     private void setupSwipeRefresh() {
