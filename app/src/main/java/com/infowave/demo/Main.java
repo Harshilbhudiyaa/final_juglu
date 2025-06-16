@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
@@ -22,7 +22,7 @@ import com.infowave.demo.fragments.SearchFragment;
 
 public class Main extends AppCompatActivity {
 
-    private DrawerLayout drawerLayout;
+
     private NavigationView navView;
     private BottomNavigationView bottomNav;
     private MaterialToolbar toolbar;
@@ -46,7 +46,7 @@ public class Main extends AppCompatActivity {
             }
         });
 
-        drawerLayout = findViewById(R.id.drawer_layout);
+//        drawerLayout = findViewById(R.id.drawer_layout);
         navView = findViewById(R.id.nav_view);
         bottomNav = findViewById(R.id.bottom_navigation);
         toolbar = findViewById(R.id.toolbar);
@@ -57,34 +57,34 @@ public class Main extends AppCompatActivity {
         }
 
         // Hamburger icon opens drawer
-        toolbar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+//        toolbar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
         // Drawer toggle for hamburger sync
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
+//        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+//                this, drawerLayout, toolbar,
+//                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+//        drawerLayout.addDrawerListener(toggle);
+//        toggle.syncState();
 
         // Handle sidebar (drawer) item clicks
-        navView.setNavigationItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.drawer_edit_profile) {
-                Toast.makeText(this, "Edit Profile Clicked", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.drawer_privacy) {
-                Toast.makeText(this, "Privacy Clicked", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.drawer_blocked) {
-                Toast.makeText(this, "Blocked Users Clicked", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.drawer_settings) {
-                Toast.makeText(this, "Settings Clicked", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.drawer_logout) {
-                Toast.makeText(this, "Logout Clicked", Toast.LENGTH_SHORT).show();
-            } else if (itemId == R.id.drawer_delete_account) {
-                Toast.makeText(this, "Delete Account Clicked", Toast.LENGTH_SHORT).show();
-            }
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
-        });
+//        navView.setNavigationItemSelectedListener(item -> {
+//            int itemId = item.getItemId();
+//            if (itemId == R.id.drawer_edit_profile) {
+//                Toast.makeText(this, "Edit Profile Clicked", Toast.LENGTH_SHORT).show();
+//            } else if (itemId == R.id.drawer_privacy) {
+//                Toast.makeText(this, "Privacy Clicked", Toast.LENGTH_SHORT).show();
+//            } else if (itemId == R.id.drawer_blocked) {
+//                Toast.makeText(this, "Blocked Users Clicked", Toast.LENGTH_SHORT).show();
+//            } else if (itemId == R.id.drawer_settings) {
+//                Toast.makeText(this, "Settings Clicked", Toast.LENGTH_SHORT).show();
+//            } else if (itemId == R.id.drawer_logout) {
+//                Toast.makeText(this, "Logout Clicked", Toast.LENGTH_SHORT).show();
+//            } else if (itemId == R.id.drawer_delete_account) {
+//                Toast.makeText(this, "Delete Account Clicked", Toast.LENGTH_SHORT).show();
+//            }
+//            drawerLayout.closeDrawer(GravityCompat.START);
+//            return true;
+//        });
 
         // Bottom nav item clicks
         bottomNav.setOnItemSelectedListener(item -> {
@@ -113,12 +113,12 @@ public class Main extends AppCompatActivity {
                 .commit();
     }
 
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
+//    @Override
+//    public void onBackPressed() {
+//        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+//            drawerLayout.closeDrawer(GravityCompat.START);
+//        } else {
+//            super.onBackPressed();
+//        }
+//    }
 }
