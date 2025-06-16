@@ -3,16 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/user_card"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
-    android:layout_marginHorizontal="12dp"
-    android:layout_marginVertical="4dp"
+    android:layout_height="80dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="12dp"
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="1dp"
-    app:rippleColor="#10000000"
+    app:cardElevation="0.5dp"
     app:strokeColor="#E0E0E0"
     app:strokeWidth="0.5dp">
 
@@ -24,22 +21,21 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:scaleType="centerCrop"
-            android:contentDescription="Profile image"
-            app:shapeAppearanceOverlay="@style/CircleImageView"
+            app:shapeAppearanceOverlay="@style/CircleImageViews"
             app:srcCompat="@drawable/default_profile"
-            app:strokeColor="#EEEEEE"
+            app:strokeColor="#E0E0E0"
             app:strokeWidth="1dp"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/name"
@@ -48,29 +44,32 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins_semibold"
                 android:maxLines="1"
-                android:textColor="#212121"
+                android:textColor="#333333"
                 android:textSize="16sp"
                 tools:text="Alex Johnson"/>
 
             <TextView
-                android:id="@+id/username"
+                android:id="@+id/interests"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins_regular"
                 android:maxLines="1"
                 android:textColor="#757575"
                 android:textSize="14sp"
-                android:layout_marginTop="2dp"
-                tools:text="@alexjohnson"/>
+                tools:text="Travel, Photography"/>
         </LinearLayout>
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/actionButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
             android:layout_gravity="center"
-            android:layout_marginEnd="4dp"
-            android:src="@drawable/ic_chevron_right"
-            app:tint="#9E9E9E"/>
+            android:text="Follow"
+            android:textSize="14sp"
+            android:textColor="@color/white"
+            app:backgroundTint="#673AB7"/>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -17,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@drawable/toolbar_gradient"
+            android:background="@drawable/sidebar_bg"
             android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
             app:title="Hi Bro"
             app:titleTextColor="@android:color/white"

@@ -1,6 +1,7 @@
 package com.infowave.demo.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,8 +10,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.infowave.demo.CommentBottomSheet;
 import com.infowave.demo.R;
 import com.infowave.demo.models.Post;
 
@@ -45,16 +48,43 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.postImage.setImageResource(post.getImageResId());
         holder.profileImage.setImageResource(post.getProfileImageResId());
 
+        if (post.isLiked()) {
+            holder.likeButton.setColorFilter(context.getResources().getColor(R.color.error));
+        } else {
+            holder.likeButton.setColorFilter(context.getResources().getColor(android.R.color.white));
+        }
+
         holder.likeButton.setOnClickListener(v -> {
-            // TODO: Implement like functionality
+            if (!post.isLiked()) {
+                int currentLikes = post.getLikes() + 1;
+                post.setLikes(currentLikes);
+                post.setLiked(true);
+                holder.likesCount.setText(String.valueOf(currentLikes));
+                holder.likeButton.setColorFilter(context.getResources().getColor(R.color.error));
+            } else {
+                int currentLikes = post.getLikes() - 1;
+                post.setLikes(currentLikes);
+                post.setLiked(false);
+                holder.likesCount.setText(String.valueOf(currentLikes));
+                holder.likeButton.setColorFilter(context.getResources().getColor(android.R.color.white));
+            }
         });
 
         holder.commentButton.setOnClickListener(v -> {
-            // TODO: Implement comment functionality
+            CommentBottomSheet.newInstance().show(((AppCompatActivity)context).getSupportFragmentManager(), "Comments");
         });
 
         holder.shareButton.setOnClickListener(v -> {
-            // TODO: Implement share functionality
+            String shareLink = "https://myapp.com/post/" + position;
+
+            // Create the share intent
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this post!");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareLink);
+
+            // Start system share chooser
+            context.startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
     }
 
@@ -83,4 +113,5 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
             profileImage = itemView.findViewById(R.id.profile_image);
         }
     }
+
 } 

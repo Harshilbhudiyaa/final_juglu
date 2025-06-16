@@ -8,8 +8,9 @@ public class Post {
     private int comments;
     private int imageResId;
     private int profileImageResId;
-
+    private boolean isLiked = false;
     public Post(String author, String timestamp, String content, int likes, int comments, int imageResId, int profileImageResId) {
+
         this.author = author;
         this.timestamp = timestamp;
         this.content = content;
@@ -17,7 +18,11 @@ public class Post {
         this.comments = comments;
         this.imageResId = imageResId;
         this.profileImageResId = profileImageResId;
+
     }
+    public void setLiked(boolean liked) { this.isLiked = liked; }
+    public boolean isLiked() { return isLiked; }
+    public void setLikes(int likes) { this.likes = likes; }
 
     public String getAuthor() {
         return author;

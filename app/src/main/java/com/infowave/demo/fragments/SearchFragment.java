@@ -75,12 +75,12 @@ public class SearchFragment extends Fragment implements SearchAdapter.OnItemClic
     private void loadInitialData() {
         // TODO: Load actual data from your data source
         searchItems.clear();
-        searchItems.add(new SearchItem(R.drawable.profile1, "John Doe", "johndoe"));
-        searchItems.add(new SearchItem(R.drawable.profile1, "Jane Smith", "janesmith"));
-        searchItems.add(new SearchItem(R.drawable.profile1, "Mike Johnson", "mikejohnson"));
-        searchItems.add(new SearchItem(R.drawable.profile1, "Sarah Wilson", "sarahwilson"));
-        searchItems.add(new SearchItem(R.drawable.profile1, "David Brown", "davidbrown"));
-        searchItems.add(new SearchItem(R.drawable.profile1, "Emily Davis", "emilydavis"));
+        searchItems.add(new SearchItem(R.drawable.image2, "John Doe", "johndoe"));
+        searchItems.add(new SearchItem(R.drawable.image1, "Jane Smith", "janesmith"));
+        searchItems.add(new SearchItem(R.drawable.image3, "Mike Johnson", "mikejohnson"));
+        searchItems.add(new SearchItem(R.drawable.image5, "Sarah Wilson", "sarahwilson"));
+        searchItems.add(new SearchItem(R.drawable.image4, "David Brown", "davidbrown"));
+        searchItems.add(new SearchItem(R.drawable.image2, "Emily Davis", "emilydavis"));
         searchAdapter.notifyDataSetChanged();
     }
 

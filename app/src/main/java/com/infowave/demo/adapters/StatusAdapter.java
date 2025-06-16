@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.imageview.ShapeableImageView;
@@ -37,6 +38,7 @@ public class StatusAdapter extends RecyclerView.Adapter<StatusAdapter.StatusView
         StatusItem item = statusList.get(position);
         holder.statusImage.setImageResource(item.getImageResId());
         holder.statusLabel.setText(item.getLabel());
+        holder.statusLabel.setTextColor(ContextCompat.getColor(context, R.color.black));
         holder.statusAddIcon.setVisibility(item.isAdd() ? View.VISIBLE : View.GONE);
     }
 
