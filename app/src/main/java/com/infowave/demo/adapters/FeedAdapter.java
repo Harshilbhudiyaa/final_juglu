@@ -1,14 +1,19 @@
 package com.infowave.demo.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.infowave.demo.CommentBottomSheet;
 import com.infowave.demo.R;
 import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
@@ -52,11 +57,17 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof StatusSectionViewHolder) {
             StatusSectionViewHolder statusHolder = (StatusSectionViewHolder) holder;
             StatusAdapter statusAdapter = new StatusAdapter(context, statusList);
-            statusHolder.statusRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+            statusHolder.statusRecyclerView.setLayoutManager(new LinearLayoutManager(
+                    context,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+            ));
             statusHolder.statusRecyclerView.setAdapter(statusAdapter);
         } else if (holder instanceof PostViewHolder) {
             Post post = postList.get(position - 1); // -1 because 0 is status
             PostViewHolder postHolder = (PostViewHolder) holder;
+
+            // Bind post data
             postHolder.authorName.setText(post.getAuthor());
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
@@ -64,6 +75,35 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             postHolder.commentsCount.setText(String.valueOf(post.getComments()));
             postHolder.postImage.setImageResource(post.getImageResId());
             postHolder.profileImage.setImageResource(post.getProfileImageResId());
+
+            // Add comment click listeners
+            postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
+            postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
+
+            // Add share functionality
+            postHolder.shareButton.setOnClickListener(v -> {
+                // Create shareable link with post ID or position
+                String shareLink = "https://myapp.com/post/"+position;
+
+                // Create the share intent
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this post!");
+                shareIntent.putExtra(Intent.EXTRA_TEXT,
+                        "Look at this post by " + post.getAuthor() + ":\n\n"
+                                + post.getContent() + "\n\n"
+                                + shareLink);
+
+                // Start system share chooser
+                context.startActivity(Intent.createChooser(shareIntent, "Share via"));
+            });
+        }
+    }
+
+    private void showCommentBottomSheet() {
+        if (context instanceof AppCompatActivity) {
+            CommentBottomSheet bottomSheet = CommentBottomSheet.newInstance();
+            bottomSheet.show(((AppCompatActivity) context).getSupportFragmentManager(), "Comments");
         }
     }
 
@@ -74,6 +114,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class StatusSectionViewHolder extends RecyclerView.ViewHolder {
         RecyclerView statusRecyclerView;
+
         StatusSectionViewHolder(@NonNull View itemView) {
             super(itemView);
             statusRecyclerView = itemView.findViewById(R.id.status_horizontal_recycler);
@@ -83,14 +124,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static class PostViewHolder extends RecyclerView.ViewHolder {
         android.widget.ImageView postImage;
         de.hdodenhof.circleimageview.CircleImageView profileImage;
-        android.widget.TextView authorName;
-        android.widget.TextView timestamp;
-        android.widget.TextView content;
-        android.widget.TextView likesCount;
-        android.widget.TextView commentsCount;
-        android.widget.ImageButton likeButton;
-        android.widget.ImageButton commentButton;
-        android.widget.ImageButton shareButton;
+        TextView authorName;
+        TextView timestamp;
+        TextView content;
+        TextView likesCount;
+        TextView commentsCount;
+        ImageButton likeButton;
+        ImageButton commentButton;
+        ImageButton shareButton;
 
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -106,4 +147,4 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             shareButton = itemView.findViewById(R.id.share_button);
         }
     }
-} 
+}
