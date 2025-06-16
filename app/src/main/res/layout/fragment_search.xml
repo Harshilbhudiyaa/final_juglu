@@ -11,10 +11,9 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:elevation="0dp"
-        app:liftOnScroll="true">
+        app:liftOnScroll="true" android:layout_height="wrap_content">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
