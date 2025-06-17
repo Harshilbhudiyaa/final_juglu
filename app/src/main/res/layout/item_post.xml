@@ -92,11 +92,14 @@
 
                 <ImageButton
                     android:id="@+id/like_button"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:src="@drawable/ic_heart_outline"
-                    app:tint="@android:color/white"/>
+                    android:background="@android:color/transparent"
+                    android:scaleType="centerInside"
+
+                    app:tint="@null" />
+
 
                 <TextView
                     android:id="@+id/likes_count"

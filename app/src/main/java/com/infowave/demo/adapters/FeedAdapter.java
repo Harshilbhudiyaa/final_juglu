@@ -97,6 +97,24 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // Start system share chooser
                 context.startActivity(Intent.createChooser(shareIntent, "Share via"));
             });
+
+            final boolean[] isLiked = {false};
+            final int[] likeCount = {post.getLikes()};
+
+            // Set default outlined heart on load
+            postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
+
+            postHolder.likeButton.setOnClickListener(v -> {
+                isLiked[0] = !isLiked[0];
+                if (isLiked[0]) {
+                    postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
+                    likeCount[0]++;
+                } else {
+                    postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
+                    likeCount[0]--;
+                }
+                postHolder.likesCount.setText(String.valueOf(likeCount[0]));
+            });
         }
     }
 
