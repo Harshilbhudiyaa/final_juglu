@@ -59,11 +59,6 @@ public class ProfileFragment extends Fragment {
                 "Customize your experience"
         ));
 
-        features.add(new FeatureItem(
-                R.drawable.platte,
-                "Theme Options",
-                "Light, dark, or system default"
-        ));
 
         features.add(new FeatureItem(
                 R.drawable.ic_bell,

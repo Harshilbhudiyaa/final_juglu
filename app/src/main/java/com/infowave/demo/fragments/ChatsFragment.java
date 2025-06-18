@@ -63,7 +63,7 @@ public class ChatsFragment extends Fragment {
         list.add(new ChatListItem("Krunal Mandanka", "Sent a reel by the_gujumemess", "4d", R.drawable.image1, true));
         list.add(new ChatListItem("Dr. VIMARSH Raiyani", "Sent a post by go__nature", "Reply?", R.drawable.image5, false));
         list.add(new ChatListItem("VIMARSH", "Reacted 😂 to your message", "1d", R.drawable.image1, false));
-        list.add(new ChatListItem("harshil bhudiya", "Seen yesterday", "", R.drawable.image2, false));
+
         return list;
     }
 
