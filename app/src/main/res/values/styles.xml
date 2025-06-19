@@ -51,4 +51,44 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="ModernInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/input_box_states</item>
+        <item name="hintTextColor">@color/hint_color_states</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="startIconTint">@color/icon_gray</item>
+        <item name="endIconTint">@color/icon_gray</item>
+        <item name="counterOverflowTextColor">?attr/colorError</item>
+        <item name="counterTextColor">@color/text_secondary</item>
+        <item name="errorTextColor">?attr/colorError</item>
+        <item name="errorIconTint">?attr/colorError</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+    </style>
+
+
+    <style name="DarkInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/dark_input_box_states</item>
+        <item name="hintTextColor">@color/dark_hint_color_states</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="startIconTint">#9E9E9E</item>
+        <item name="endIconTint">#9E9E9E</item>
+        <item name="counterOverflowTextColor">?attr/colorError</item>
+<!--        <item name="counterTextColor">#BDBDBD</item>-->
+        <item name="errorTextColor">?attr/colorError</item>
+        <item name="errorIconTint">?attr/colorError</item>
+        <item name="android:textColorHint">#9E9E9E</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
 </resources> 

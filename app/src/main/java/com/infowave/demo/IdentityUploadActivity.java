@@ -49,9 +49,9 @@ public class IdentityUploadActivity extends AppCompatActivity {
 
 
         imgProfile = findViewById(R.id.imgProfile);
-        imgIdProof = findViewById(R.id.imgIdProof);
+//        imgIdProof = findViewById(R.id.imgIdProof);
         btnPickProfile = findViewById(R.id.btnPickProfile);
-        btnPickIdProof = findViewById(R.id.btnPickIdProof);
+//        btnPickIdProof = findViewById(R.id.btnPickIdProof);
         btnContinue = findViewById(R.id.btnContinue);
 
         // Start with Continue button disabled
@@ -59,7 +59,7 @@ public class IdentityUploadActivity extends AppCompatActivity {
         btnContinue.setAlpha(0.6f);
 
         btnPickProfile.setOnClickListener(v -> pickImage(PICK_PROFILE_IMAGE));
-        btnPickIdProof.setOnClickListener(v -> pickImage(PICK_ID_PROOF));
+//        btnPickIdProof.setOnClickListener(v -> pickImage(PICK_ID_PROOF));
 
         btnContinue.setOnClickListener(v -> {
             // On continue, move to MainActivity
@@ -85,12 +85,8 @@ public class IdentityUploadActivity extends AppCompatActivity {
                 if (requestCode == PICK_PROFILE_IMAGE) {
                     imgProfile.setImageBitmap(bitmap);
                     isProfileUploaded = true;
-                } else if (requestCode == PICK_ID_PROOF) {
-                    imgIdProof.setImageBitmap(bitmap);
-                    isIdUploaded = true;
                 }
-                // Enable the continue button if both images are uploaded
-                checkBothImagesUploaded();
+                checkImagesUploaded();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -98,9 +94,9 @@ public class IdentityUploadActivity extends AppCompatActivity {
         }
     }
 
-    private void checkBothImagesUploaded() {
-        boolean enabled = isProfileUploaded && isIdUploaded;
+    private void checkImagesUploaded() {
+        boolean enabled = isProfileUploaded;
         btnContinue.setEnabled(enabled);
-        btnContinue.setAlpha(enabled ? 1f : 0.6f);
+//        btnContinue.setAlpha(enabled ? 1f : 0.6f);
     }
 }

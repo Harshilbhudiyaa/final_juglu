@@ -8,9 +8,9 @@
     android:layout_marginBottom="8dp"
     app:cardCornerRadius="12dp"
     android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="@android:color/white"
+    app:cardBackgroundColor="#2E2E2E"
     app:cardElevation="0.5dp"
-    app:strokeColor="#E0E0E0"
+    app:strokeColor="#4D4D4D"
     app:strokeWidth="0.5dp">
 
     <LinearLayout
@@ -44,7 +44,7 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/poppins_semibold"
                 android:maxLines="1"
-                android:textColor="#333333"
+                android:textColor="@color/white"
                 android:textSize="16sp"
                 tools:text="Alex Johnson"/>
 

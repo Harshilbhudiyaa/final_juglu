@@ -31,8 +31,25 @@
 
     <color name="chat_received_background">#F5F5F5</color>
 
-
+    <color name="icon_gray">#9E9E9E</color>
     <color name="card_stroke">#1F000000</color>
     <color name="ripple_color">#10000000</color>
     <color name="image_border">#E0E0E0</color>
+
+
+
+
+
+    <!-- Input field states -->
+    <color name="input_box_normal">#E0E0E0</color>
+    <color name="input_box_focused">#212121</color>
+    <color name="icon_grays">#9E9E9E</color>
+    <color name="text_hint">#9E9E9E</color>
+    <color name="text_secondarys">#757575</color>
+
+    <!-- State list for input box border -->
+    <color name="input_box_states">@color/input_box_state_list</color>
+
+    <!-- State list for hint text -->
+    <color name="hint_color_states">@color/hint_color_state_list</color>
 </resources>

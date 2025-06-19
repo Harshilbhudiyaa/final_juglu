@@ -52,7 +52,7 @@ public class GenderSelectionActivity extends AppCompatActivity {
 
         btnContinue.setOnClickListener(v -> {
             if (!selectedGender.isEmpty()) {
-                Intent intent = new Intent(GenderSelectionActivity.this, LookingForActivity.class);
+                Intent intent = new Intent(GenderSelectionActivity.this, IdentityUploadActivity.class);
                 if (getIntent().getExtras() != null) {
                     intent.putExtras(getIntent().getExtras());
                 }

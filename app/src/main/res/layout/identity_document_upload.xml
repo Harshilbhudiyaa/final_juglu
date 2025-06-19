@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_background"
+
     android:fillViewport="true">
 
     <LinearLayout
@@ -73,47 +73,8 @@
         </LinearLayout>
 
         <!-- ID Proof Picker -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="12dp"
-            android:background="@drawable/form_container_bg"
-            android:elevation="4dp"
-            android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ID Proof (Aadhar, PAN, etc.)"
-                android:textSize="16sp"
-                android:textColor="#7F00FF"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
-
-            <ImageView
-                android:id="@+id/imgIdProof"
-                android:layout_width="110dp"
-                android:layout_height="110dp"
-                android:src="@drawable/ic_id_placeholder"
-                android:scaleType="centerCrop"
-
-                android:clickable="true"
-                android:focusable="true"
-                android:contentDescription="ID Proof"
-                android:layout_marginBottom="12dp"/>
-
-            <Button
-                android:id="@+id/btnPickIdProof"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Upload ID Proof"
-                android:textColor="@android:color/white"
-                android:background="@drawable/button_gradient"/>
-        </LinearLayout>
-
-    <TextView
+        <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Note: We are asking this identity proof for only verifing your age and this will stay secure from our side."/>

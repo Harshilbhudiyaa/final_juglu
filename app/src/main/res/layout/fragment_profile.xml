@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA">
+    android:background="#141218">
 
 
     <androidx.core.widget.NestedScrollView
@@ -27,9 +27,9 @@
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="1dp"
-                app:strokeColor="#F0F0F0"
+                app:strokeColor="#4D4D4D"
                 app:strokeWidth="0.5dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="#141218">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -64,7 +64,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="24dp"
                         android:text="vansh mandanka"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="24sp"
                         android:letterSpacing="-0.01"
                         android:fontFamily="@font/poppins_bold"/>
@@ -93,7 +93,7 @@
                         android:drawableStart="@drawable/ic_edit"
                         android:drawablePadding="8dp"
                         app:iconTint="#6750A4"
-                        app:strokeColor="#6750A4"
+                        app:strokeColor="#4D4D4D"
                         app:strokeWidth="1dp"
                         app:cornerRadius="12dp"
                         android:paddingVertical="8dp"
@@ -109,9 +109,9 @@
                 android:layout_marginBottom="24dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="1dp"
-                app:strokeColor="#F0F0F0"
+                app:strokeColor="#4D4D4D"
                 app:strokeWidth="0.5dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="#141218">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -133,7 +133,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="128"
-                            android:textColor="#212121"
+                            android:textColor="@color/white"
                             android:textSize="22sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins_bold"/>
@@ -167,7 +167,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="56"
-                            android:textColor="#212121"
+                            android:textColor="@color/white"
                             android:textSize="22sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins_bold"/>
@@ -201,7 +201,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="1.2K"
-                            android:textColor="#212121"
+                            android:textColor="@color/white"
                             android:textSize="22sp"
                             android:textStyle="bold"
                             android:fontFamily="@font/poppins_bold"/>
@@ -223,9 +223,9 @@
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="1dp"
-                app:strokeColor="#F0F0F0"
+                app:strokeColor="#4D4D4D"
                 app:strokeWidth="0.5dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="#141218">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -237,7 +237,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Settings"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="8dp"
@@ -273,7 +273,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Privacy Settings"
-                                android:textColor="#212121"
+                                android:textColor="@color/white"
                                 android:textSize="16sp"
                                 android:fontFamily="@font/poppins_regular"/>
 
@@ -306,7 +306,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="Blocked Users"
-                                android:textColor="#212121"
+                                android:textColor="@color/white"
                                 android:textSize="16sp"
                                 android:fontFamily="@font/poppins_regular"/>
 
@@ -325,7 +325,7 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal"
                             android:padding="8dp"
-                            android:background="?selectableItemBackground">
+                            app:cardBackgroundColor="#141218">
 
                             <ImageView
                                 android:layout_width="24dp"
@@ -360,9 +360,9 @@
                 android:layout_marginTop="24dp"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="1dp"
-                app:strokeColor="#F0F0F0"
+                app:strokeColor="#4D4D4D"
                 app:strokeWidth="0.5dp"
-                app:cardBackgroundColor="@android:color/white">
+                app:cardBackgroundColor="#141218">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -374,7 +374,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="More Features"
-                        android:textColor="#212121"
+                        android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="8dp"
