@@ -56,7 +56,7 @@ public class IdentityUploadActivity extends AppCompatActivity {
 
         // Start with Continue button disabled
         btnContinue.setEnabled(false);
-        btnContinue.setAlpha(0.6f);
+          btnContinue.setAlpha(0.6f);
 
         btnPickProfile.setOnClickListener(v -> pickImage(PICK_PROFILE_IMAGE));
 //        btnPickIdProof.setOnClickListener(v -> pickImage(PICK_ID_PROOF));

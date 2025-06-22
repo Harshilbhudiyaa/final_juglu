@@ -1,23 +1,21 @@
 package com.infowave.demo;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.View;
 import android.view.WindowInsets;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
-public class Splash extends AppCompatActivity {
+public class NotificationsActivity extends AppCompatActivity {
+
+    private SwitchCompat switchLikes, switchMatches, switchMessages, switchVibration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_splash);
-
+        setContentView(R.layout.activity_notifications);
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @NonNull
@@ -29,15 +27,21 @@ public class Splash extends AppCompatActivity {
                 int bottom = insets.getSystemWindowInsetBottom();
                 v.setPadding(left,top,right,bottom);
                 return insets.consumeSystemWindowInsets();
-
             }
         });
+        switchLikes = findViewById(R.id.switch_likes);
+        switchMatches = findViewById(R.id.switch_matches);
+        switchMessages = findViewById(R.id.switch_messages);
 
+        switchVibration = findViewById(R.id.switch_vibration);
 
-        Handler h = new Handler();
-        h.postDelayed(() -> {
-            Intent in = new Intent(Splash.this, Main.class);
-            startActivity(in);
-        },3000);
+        // Set default states or load from preferences
+        switchLikes.setChecked(true);
+        switchMatches.setChecked(true);
+        switchMessages.setChecked(true);
+
+        switchVibration.setChecked(true);
+
+        // You can add logic to save these in SharedPreferences or call an API
     }
 }

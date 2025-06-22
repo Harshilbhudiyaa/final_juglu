@@ -2,10 +2,13 @@ package com.infowave.demo.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -67,7 +70,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Post post = postList.get(position - 1); // -1 because 0 is status
             PostViewHolder postHolder = (PostViewHolder) holder;
 
-            // Bind post data
             postHolder.authorName.setText(post.getAuthor());
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
@@ -76,16 +78,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             postHolder.postImage.setImageResource(post.getImageResId());
             postHolder.profileImage.setImageResource(post.getProfileImageResId());
 
-            // Add comment click listeners
             postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
             postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
 
-            // Add share functionality
             postHolder.shareButton.setOnClickListener(v -> {
-                // Create shareable link with post ID or position
-                String shareLink = "https://myapp.com/post/"+position;
-
-                // Create the share intent
+                String shareLink = "https://myapp.com/post/" + position;
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this post!");
@@ -93,15 +90,12 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         "Look at this post by " + post.getAuthor() + ":\n\n"
                                 + post.getContent() + "\n\n"
                                 + shareLink);
-
-                // Start system share chooser
                 context.startActivity(Intent.createChooser(shareIntent, "Share via"));
             });
 
             final boolean[] isLiked = {false};
             final int[] likeCount = {post.getLikes()};
 
-            // Set default outlined heart on load
             postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
 
             postHolder.likeButton.setOnClickListener(v -> {
@@ -114,6 +108,43 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     likeCount[0]--;
                 }
                 postHolder.likesCount.setText(String.valueOf(likeCount[0]));
+            });
+
+            // 👇 Double-tap heart animation logic
+            GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+                    if (!isLiked[0]) {
+                        isLiked[0] = true;
+                        postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
+                        likeCount[0]++;
+                        postHolder.likesCount.setText(String.valueOf(likeCount[0]));
+                    }
+
+                    postHolder.doubleTapHeart.setScaleX(0f);
+                    postHolder.doubleTapHeart.setScaleY(0f);
+                    postHolder.doubleTapHeart.setAlpha(0.8f);
+                    postHolder.doubleTapHeart.setVisibility(View.VISIBLE);
+
+                    postHolder.doubleTapHeart.animate()
+                            .scaleX(3.5f)
+                            .scaleY(3.5f)
+                            .alpha(1f)
+                            .setDuration(300)
+                            .withEndAction(() -> postHolder.doubleTapHeart.animate()
+                                    .alpha(0f)
+                                    .setDuration(500)
+                                    .withEndAction(() -> postHolder.doubleTapHeart.setVisibility(View.GONE))
+                                    .start())
+                            .start();
+
+                    return true;
+                }
+            });
+
+            postHolder.postImage.setOnTouchListener((v, event) -> {
+                gestureDetector.onTouchEvent(event);
+                return true;
             });
         }
     }
@@ -140,7 +171,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
-        android.widget.ImageView postImage;
+        ImageView postImage;
+        ImageView doubleTapHeart;
         de.hdodenhof.circleimageview.CircleImageView profileImage;
         TextView authorName;
         TextView timestamp;
@@ -154,6 +186,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
             postImage = itemView.findViewById(R.id.post_image);
+            doubleTapHeart = itemView.findViewById(R.id.double_tap_heart);
             profileImage = itemView.findViewById(R.id.profile_image);
             authorName = itemView.findViewById(R.id.author_name);
             timestamp = itemView.findViewById(R.id.timestamp);

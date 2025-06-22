@@ -62,7 +62,7 @@ public class HomeFragment extends Fragment {
         posts = new ArrayList<>();
         posts.add(new Post("John Doe", "2 hours ago", "Beautiful sunset 🌅", 120, 30, R.drawable.image1, R.drawable.image1));
         posts.add(new Post("Emma", "4 hours ago", "Morning workout 💪", 80, 20, R.drawable.image2, R.drawable.image2));
-        posts.add(new Post("Mike", "6 hours ago", "New project launched 🚀", 200, 40, R.drawable.image3, R.drawable.image3));
+        posts.add(new Post("Mike", "6 hours ago", "New project launched 🚀", 200, 40, R.drawable.image4, R.drawable.image4));
 
         feedAdapter = new FeedAdapter(requireContext(), statusList, posts);
         feedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <TextView
+            android:text="Privacy Center"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- Card Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_dark"
+            android:padding="16dp"
+            android:elevation="2dp">
+
+            <!-- Show in Search -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="6dp"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Show me in search"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switch_search_visibility"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Let others discover your profile through search and explore sections."
+                android:textSize="13sp"
+                android:textColor="#BBBBBB"
+                android:layout_marginBottom="12dp" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Read Receipts -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="6dp"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Read Receipts"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switch_read_receipts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Allow others to see when you’ve read their messages."
+                android:textSize="13sp"
+                android:textColor="#BBBBBB"
+                android:layout_marginBottom="12dp" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Activity Status -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="6dp"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Show Activity Status"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switch_activity_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Let your matches know when you were last active."
+                android:textSize="13sp"
+                android:textColor="#BBBBBB"
+                android:layout_marginBottom="12dp" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Who Can See My Profile -->
+            <LinearLayout
+                android:id="@+id/privacy_visibility_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="6dp"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Who can see my profile"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF" />
+                <TextView
+                    android:id="@+id/tv_profile_visibility"
+                    android:text="Everyone"
+                    android:textSize="14sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Control whether everyone or only your matches can view your profile."
+                android:textSize="13sp"
+                android:textColor="#BBBBBB"
+                android:layout_marginBottom="12dp" />
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Blocked Users -->
+            <LinearLayout
+                android:id="@+id/blocked_users_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="12dp"
+                android:paddingBottom="6dp"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+                <TextView
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Blocked Users"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF" />
+                <TextView
+                    android:text="View"
+                    android:textSize="14sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Manage the list of people you’ve blocked from contacting you."
+                android:textSize="13sp"
+                android:textColor="#BBBBBB" />
+        </LinearLayout>
+
+        <!-- Delete Account -->
+        <TextView
+            android:id="@+id/delete_account"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete Account"
+            android:textColor="#FF5555"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:paddingTop="24dp"
+            android:paddingBottom="12dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+</ScrollView>

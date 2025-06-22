@@ -251,38 +251,7 @@
                         android:divider="@drawable/divider_horizontal"
                         android:showDividers="middle">
 
-                        <!-- Privacy Settings -->
-                        <LinearLayout
-                            android:id="@+id/privacy_settings_button"
-                            android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:padding="8dp"
-                            android:background="?selectableItemBackground">
 
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:layout_marginEnd="16dp"
-                                android:src="@drawable/ic_privacy"
-                                app:tint="#9E9E9E"/>
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Privacy Settings"
-                                android:textColor="@color/white"
-                                android:textSize="16sp"
-                                android:fontFamily="@font/poppins_regular"/>
-
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:src="@drawable/ic_chevron_right"
-                                app:tint="#BDBDBD"/>
-                        </LinearLayout>
 
                         <!-- Blocked Users -->
                         <LinearLayout

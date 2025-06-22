@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <TextView
+            android:text="Help Center"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- Help Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_dark"
+            android:elevation="2dp"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <!-- FAQ Section -->
+            <LinearLayout
+                android:id="@+id/layout_faq"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="14dp"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:text="Frequently Asked Questions"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Quick answers to common queries"
+                    android:textSize="12sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- FAQ Content -->
+            <LinearLayout
+                android:id="@+id/faq_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/question1"
+                    android:text="1. How do I create an account on Juglu?"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingTop="8dp"
+                    android:textSize="15sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/answer1"
+                    android:text="Simply sign up using your phone number or email, and complete your profile to start matching."
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/question2"
+                    android:text="2. How can I reset my password?"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingTop="8dp"
+                    android:textSize="15sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/answer2"
+                    android:text="Go to the login screen, tap ‘Forgot Password’, and follow the instructions."
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/question3"
+                    android:text="3. How do I block or report a user?"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingTop="8dp"
+                    android:textSize="15sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/answer3"
+                    android:text="Tap the three-dot menu on the user's profile and select ‘Block’ or ‘Report’."
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/question4"
+                    android:text="4. Why can’t I see some profiles anymore?"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingTop="8dp"
+                    android:textSize="15sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/answer4"
+                    android:text="That user may have unmatched you or deleted their account."
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/question5"
+                    android:text="5. How do I delete my account permanently?"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingTop="8dp"
+                    android:textSize="15sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/answer5"
+                    android:text="Navigate to ‘Privacy Center’, scroll to the bottom, and tap ‘Delete Account’."
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Privacy and Safety -->
+            <LinearLayout
+                android:id="@+id/layout_privacy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="14dp"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:text="Privacy and Safety Tips"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Stay safe while connecting with people"
+                    android:textSize="12sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Community Guidelines -->
+            <LinearLayout
+                android:id="@+id/layout_guidelines"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="14dp"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:text="Community Guidelines"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Learn the rules for respectful behavior"
+                    android:textSize="12sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Contact Support -->
+            <LinearLayout
+                android:id="@+id/layout_contact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="14dp"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:text="Contact Support"
+                    android:textSize="16sp"
+                    android:textColor="#FFFFFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Need help? We're just an email away."
+                    android:textSize="12sp"
+                    android:textColor="#AAAAAA"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#333333" />
+
+            <!-- Report a Problem -->
+            <LinearLayout
+                android:id="@+id/layout_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="14dp"
+                android:background="?attr/selectableItemBackground">
+
+                <TextView
+                    android:text="Report a Problem"
+                    android:textSize="16sp"
+                    android:textColor="#FF5252"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:text="Let us know if something’s not right"
+                    android:textSize="12sp"
+                    android:textColor="#FF8A80"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

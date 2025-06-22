@@ -3,5 +3,11 @@
     <!-- res/values/strings.xml -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="like">Like</string>
+    <string name="comment">Comment</string>
+    <string name="share">Share</string>
+    <string name="save">Save</string>
+    <string name="post_image">Post Image</string>
+    <string name="more_option">More options</string>
 
 </resources>

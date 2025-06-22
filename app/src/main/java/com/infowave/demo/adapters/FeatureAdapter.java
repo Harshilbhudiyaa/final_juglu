@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,6 +31,11 @@ public class FeatureAdapter extends RecyclerView.Adapter<FeatureAdapter.FeatureV
     public void updateData(List<FeatureItem> newFeatures) {
         this.featureItems = newFeatures;
         notifyDataSetChanged();
+    }
+
+    // ✅ Method to get a FeatureItem at a specific position (used in ProfileFragment)
+    public FeatureItem getItem(int position) {
+        return featureItems.get(position);
     }
 
     @NonNull
@@ -58,9 +64,6 @@ public class FeatureAdapter extends RecyclerView.Adapter<FeatureAdapter.FeatureV
     @Override
     public int getItemCount() {
         return featureItems.size();
-    }
-    public FeatureItem getItemAt(int position) {
-        return featureItems.get(position);
     }
 
     static class FeatureViewHolder extends RecyclerView.ViewHolder {
