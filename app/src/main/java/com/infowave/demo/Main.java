@@ -19,6 +19,7 @@ import com.infowave.demo.fragments.ChatsFragment;
 import com.infowave.demo.fragments.HomeFragment;
 import com.infowave.demo.fragments.ProfileFragment;
 import com.infowave.demo.fragments.SearchFragment;
+import com.infowave.demo.supabase.SupabaseClient;
 
 public class Main extends AppCompatActivity {
 
@@ -31,6 +32,17 @@ public class Main extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SupabaseClient db = SupabaseClient.getInstance(this);
+
+        db.getTable("users", // or your table name
+                response -> {
+                    android.util.Log.d("SUPABASE", "Data: " + response);
+                },
+                error -> {
+                    android.util.Log.e("SUPABASE", "Error: " + error.toString());
+                }
+        );
 
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {

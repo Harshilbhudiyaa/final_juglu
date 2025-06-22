@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -42,7 +43,8 @@
 
         <activity
             android:name=".LookingForActivity"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="MissingClass" />
         <activity
             android:name=".GenderSelectionActivity"
             android:exported="false" />
