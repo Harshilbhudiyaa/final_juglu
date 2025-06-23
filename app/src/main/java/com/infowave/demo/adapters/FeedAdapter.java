@@ -1,5 +1,8 @@
 package com.infowave.demo.adapters;
 
+import static android.view.GestureDetector.*;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.GestureDetector;
@@ -55,6 +58,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof StatusSectionViewHolder) {
@@ -111,7 +115,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             });
 
             // 👇 Double-tap heart animation logic
-            GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            GestureDetector gestureDetector = new GestureDetector(context, new SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     if (!isLiked[0]) {

@@ -1,12 +1,10 @@
 package com.infowave.demo;
 
+import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
@@ -77,6 +75,7 @@ public class Register extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("SetTextI18n")
     private void showOtpBottomSheet() {
         otpBottomSheet = new BottomSheetDialog(this);
         View bottomSheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_otp, null);
@@ -162,6 +161,7 @@ public class Register extends AppCompatActivity {
     private void startTimer(TextView tvTimer, Button btnResendCode) {
         btnResendCode.setEnabled(false);
         new android.os.CountDownTimer(30000, 1000) {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onTick(long millisUntilFinished) {
                 tvTimer.setText("Resend code in: " + (millisUntilFinished / 1000) + "s");

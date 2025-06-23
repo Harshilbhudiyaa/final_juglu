@@ -19,14 +19,12 @@ public class SupabaseClient {
     private SupabaseClient(Context context) {
         requestQueue = Volley.newRequestQueue(context.getApplicationContext());
     }
-
     public static synchronized SupabaseClient getInstance(Context context) {
         if (instance == null) {
             instance = new SupabaseClient(context);
         }
         return instance;
     }
-
     // Generic GET from any table
     public void getTable(String tableName, Response.Listener<String> listener, Response.ErrorListener errorListener) {
         String url = SUPABASE_URL + "/rest/v1/" + tableName + "?select=*";

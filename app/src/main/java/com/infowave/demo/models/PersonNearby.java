@@ -18,3 +18,4 @@ public class PersonNearby {
     public int getProfileImageRes() { return profileImageRes; }
 }
 
+
