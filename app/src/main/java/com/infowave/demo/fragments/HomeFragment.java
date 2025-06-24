@@ -1,11 +1,16 @@
 package com.infowave.demo.fragments;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
 import com.infowave.demo.supabase.StoriesRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,9 +27,12 @@ import com.infowave.demo.R;
 import com.infowave.demo.adapters.FeedAdapter;
 import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
+import com.infowave.demo.supabase.SupabaseClient;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HomeFragment extends Fragment {
 
@@ -55,10 +63,18 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupFeedRecyclerView() {
-        // -------------------- DYNAMIC STORIES (statusList) --------------------
         statusList = new ArrayList<>();
-        // Fetch from Supabase and fill statusList dynamically:
-        StoriesRepository.getAllStories(requireContext(), new StoriesRepository.AllStoriesCallback() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
+        String currentUserId = prefs.getString("user_id", null);
+
+        if (currentUserId == null) {
+            Toast.makeText(requireContext(), "No user selected!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // ONLY THIS: delegate logic to repository!
+        StoriesRepository.getStoriesForMeAndFriends(requireContext(), currentUserId, new StoriesRepository.AllStoriesCallback() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onStoriesLoaded(JSONArray storiesArr) {
                 statusList.clear();
@@ -66,21 +82,19 @@ public class HomeFragment extends Fragment {
                     JSONObject obj = storiesArr.optJSONObject(i);
                     if (obj != null) {
                         String imageUrl = obj.optString("media_url", "");
-                        String username = obj.optString("caption", "Story"); // Replace with username if available
+                        String username = obj.optString("caption", "Story");
                         String storyId = obj.optString("id", "");
                         statusList.add(new StatusItem(imageUrl, username, false, storyId));
                     }
                 }
                 if (feedAdapter != null) feedAdapter.notifyDataSetChanged();
-
             }
             @Override
             public void onError(String message) {
                 Toast.makeText(getContext(), "Error loading stories: " + message, Toast.LENGTH_SHORT).show();
             }
         });
-
-        // -------------------- STATIC POSTS/FEED --------------------
+        // Static posts/feed logic (unchanged)
         posts = new ArrayList<>();
         posts.add(new Post("John Doe", "2 hours ago", "Beautiful sunset 🌅", 120, 30, R.drawable.image1, R.drawable.image1));
         posts.add(new Post("Emma", "4 hours ago", "Morning workout 💪", 80, 20, R.drawable.image2, R.drawable.image2));
@@ -93,7 +107,7 @@ public class HomeFragment extends Fragment {
 
     private void setupSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            setupFeedRecyclerView(); // refresh both stories (dynamic) and posts (static)
+            setupFeedRecyclerView();
             swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(getContext(), "Feed Refreshed", Toast.LENGTH_SHORT).show();
         });

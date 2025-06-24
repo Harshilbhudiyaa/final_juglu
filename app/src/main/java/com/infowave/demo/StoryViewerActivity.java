@@ -40,6 +40,8 @@ public class StoryViewerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story_viewer);
+
+        // Edge insets for a modern look
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @NonNull
@@ -62,7 +64,7 @@ public class StoryViewerActivity extends AppCompatActivity {
         commentEditText = findViewById(R.id.comment_edittext);
         progressBar = findViewById(R.id.progress_bar);
 
-        // === DYNAMIC: get story id from intent and fetch story ===
+        // --- DYNAMIC STORY LOADING ---
         String storyId = getIntent().getStringExtra("story_id");
         if (storyId == null) {
             Toast.makeText(this, "No story found", Toast.LENGTH_SHORT).show();
@@ -73,23 +75,22 @@ public class StoryViewerActivity extends AppCompatActivity {
         StoriesRepository.getStoryById(this, storyId, new StoriesRepository.StoryCallback() {
             @Override
             public void onStoryLoaded(JSONObject story) {
-                // Media (image/video)
+                // Load media (image/video)
                 String mediaUrl = story.optString("media_url", "");
                 long now = System.currentTimeMillis() / 1000L;
-                long rounded = (now / 15) * 15; // For 15 seconds
+                long rounded = (now / 15) * 15; // Cache busting every 15s
                 String bustUrl = mediaUrl + "?ts=" + rounded;
 
                 Glide.with(StoryViewerActivity.this)
                         .load(bustUrl)
                         .placeholder(R.drawable.ic_profile_placeholder)
-                        .into(storyImage); // or .into(storyImage) in activity
+                        .into(storyImage);
 
-
-                // Username or caption (choose what you want to show)
+                // Show caption as username (customize if you want real username)
                 String cap = story.optString("caption", "Story");
                 username.setText(cap);
 
-                // You can set a static profile image or fetch user info (next step)
+                // Placeholder profile image
                 profileImage.setImageResource(R.drawable.image3);
             }
 
@@ -127,9 +128,8 @@ public class StoryViewerActivity extends AppCompatActivity {
                 int progress = (int) ((5000 - millisUntilFinished) * 100 / 5000);
                 progressBar.setProgress(progress);
             }
-
             public void onFinish() {
-                finish();  // Close activity after 5 sec
+                finish();
             }
         }.start();
     }
@@ -158,7 +158,6 @@ public class StoryViewerActivity extends AppCompatActivity {
                 startActivity(Intent.createChooser(shareIntent, "Share via"));
             }
         });
-
         builder.show();
     }
 }

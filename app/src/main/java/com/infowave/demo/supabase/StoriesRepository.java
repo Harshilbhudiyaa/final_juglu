@@ -17,6 +17,7 @@ public class StoriesRepository {
         void onError(String message);
     }
 
+    // Get a single story by its ID (for story viewer)
     public static void getStoryById(Context context, String storyId, StoryCallback callback) {
         String url = SupabaseClient.getBaseUrl() + "/rest/v1/stories?id=eq." + storyId + "&select=*";
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, response -> {
@@ -39,9 +40,10 @@ public class StoriesRepository {
         SupabaseClient.getInstance(context).getRequestQueue().add(stringRequest);
     }
 
-    public static void getAllStories(Context context, AllStoriesCallback callback) {
-        String url = SupabaseClient.getBaseUrl() + "/rest/v1/stories?select=*";
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, response -> {
+    // Universal: fetch stories using any custom filter (used for self+friends)
+    public static void getAllStoriesCustom(Context context, String url, AllStoriesCallback callback) {
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.GET, url, response -> {
             try {
                 JSONArray arr = new JSONArray(response);
                 callback.onStoriesLoaded(arr);
@@ -56,4 +58,56 @@ public class StoriesRepository {
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(stringRequest);
     }
+    public static void getStoriesForMeAndFriends(Context context, String currentUserId, AllStoriesCallback callback) {
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/friendships"
+                + "?or=(user_one.eq." + currentUserId + ",user_two.eq." + currentUserId + ")"
+                + "&status=eq.accepted&select=user_one,user_two";
+
+        com.android.volley.toolbox.StringRequest request = new com.android.volley.toolbox.StringRequest(
+                com.android.volley.Request.Method.GET, url, response -> {
+            // Step 1: Build userId set
+            java.util.Set<String> userIdSet = new java.util.HashSet<>();
+            userIdSet.add(currentUserId);
+
+            try {
+                org.json.JSONArray arr = new org.json.JSONArray(response);
+                for (int i = 0; i < arr.length(); i++) {
+                    org.json.JSONObject obj = arr.optJSONObject(i);
+                    if (obj != null) {
+                        String userOne = obj.optString("user_one");
+                        String userTwo = obj.optString("user_two");
+                        if (userOne.equals(currentUserId) && !userTwo.equals(currentUserId)) {
+                            userIdSet.add(userTwo);
+                        } else if (userTwo.equals(currentUserId) && !userOne.equals(currentUserId)) {
+                            userIdSet.add(userOne);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                callback.onError("Friend parse error");
+                return;
+            }
+
+            // Step 2: Fetch stories for all those users
+            if (!userIdSet.isEmpty()) {
+                StringBuilder inList = new StringBuilder();
+                for (String id : userIdSet) {
+                    if (inList.length() > 0) inList.append(",");
+                    inList.append(id);
+                }
+                String storiesUrl = SupabaseClient.getBaseUrl()
+                        + "/rest/v1/stories?user_id=in.(" + inList + ")&select=*";
+
+                getAllStoriesCustom(context, storiesUrl, callback);
+            }
+        }, error -> callback.onError("Network error: " + error.getMessage())) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders();
+            }
+        };
+        SupabaseClient.getInstance(context).getRequestQueue().add(request);
+    }
+
+
 }

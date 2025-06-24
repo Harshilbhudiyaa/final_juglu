@@ -32,6 +32,10 @@ public class Main extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Only do this ONCE, for testing. Change the user ID to whatever you want for different tests.
+        android.content.SharedPreferences prefs = getSharedPreferences("juglu_prefs", MODE_PRIVATE); // Or requireContext() in a Fragment
+        prefs.edit().putString("user_id", "11111111-1111-1111-1111-111111111111").apply();
+
 
         SupabaseClient db = SupabaseClient.getInstance(this);
 
