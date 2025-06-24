@@ -84,6 +84,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop" />
+            <ImageView
+                android:id="@+id/play_icon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_playu"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
+
+            <VideoView
+                android:id="@+id/post_video"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
 
             <ImageView
                 android:id="@+id/double_tap_heart"
@@ -95,6 +108,7 @@
                 android:scaleType="centerInside"
                 android:alpha="0.8"/>
         </FrameLayout>
+
         <!-- Engagement Bar (Instagram style: icons with numbers beside) -->
         <LinearLayout
             android:layout_width="match_parent"

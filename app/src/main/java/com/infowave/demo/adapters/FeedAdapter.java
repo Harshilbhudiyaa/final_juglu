@@ -5,6 +5,7 @@ import static android.view.GestureDetector.*;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -13,12 +14,14 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.infowave.demo.CommentBottomSheet;
 import com.infowave.demo.R;
 import com.infowave.demo.models.Post;
@@ -42,8 +45,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) return TYPE_STATUS;
-        return TYPE_POST;
+        return (position == 0) ? TYPE_STATUS : TYPE_POST;
     }
 
     @NonNull
@@ -64,23 +66,92 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof StatusSectionViewHolder) {
             StatusSectionViewHolder statusHolder = (StatusSectionViewHolder) holder;
             StatusAdapter statusAdapter = new StatusAdapter(context, statusList);
-            statusHolder.statusRecyclerView.setLayoutManager(new LinearLayoutManager(
-                    context,
-                    LinearLayoutManager.HORIZONTAL,
-                    false
-            ));
+            statusHolder.statusRecyclerView.setLayoutManager(
+                    new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            );
             statusHolder.statusRecyclerView.setAdapter(statusAdapter);
         } else if (holder instanceof PostViewHolder) {
-            Post post = postList.get(position - 1); // -1 because 0 is status
+            Post post = postList.get(position - 1); // -1: first item is status
             PostViewHolder postHolder = (PostViewHolder) holder;
 
+            // Set static fields
             postHolder.authorName.setText(post.getAuthor());
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
             postHolder.likesCount.setText(String.valueOf(post.getLikes()));
             postHolder.commentsCount.setText(String.valueOf(post.getComments()));
-            postHolder.postImage.setImageResource(post.getImageResId());
-            postHolder.profileImage.setImageResource(post.getProfileImageResId());
+
+            // Set profile image (from URL or fallback)
+            if (post.getProfileUrl() != null && !post.getProfileUrl().isEmpty()) {
+                Glide.with(context)
+                        .load(post.getProfileUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(postHolder.profileImage);
+            } else if (post.getProfileImageResId() != 0) {
+                postHolder.profileImage.setImageResource(post.getProfileImageResId());
+            } else {
+                postHolder.profileImage.setImageResource(R.drawable.ic_profile_placeholder);
+            }
+
+            // --- IMAGE or VIDEO LOGIC ---
+            String mediaUrl = post.getImageUrl();
+            boolean isVideo = mediaUrl != null && mediaUrl.toLowerCase().endsWith(".mp4");
+
+            // Always reset views first!
+            postHolder.postImage.setVisibility(View.GONE);
+            postHolder.postVideo.setVisibility(View.GONE);
+
+            if (isVideo) {
+                // --- 1. Show thumbnail as poster (FAST) ---
+                postHolder.postImage.setVisibility(View.VISIBLE);
+                Glide.with(context)
+                        .load(mediaUrl) // Most CDNs generate a still on ".mp4" (if not: add your own thumbnail endpoint)
+                        .frame(1000000) // Get frame at 1 sec
+                        .placeholder(R.drawable.ic_id_placeholder)
+                        .into(postHolder.postImage);
+
+                // 2. Click poster to open VideoView
+                postHolder.postImage.setOnClickListener(v -> {
+                    postHolder.postImage.setVisibility(View.GONE);
+                    postHolder.postVideo.setVisibility(View.VISIBLE);
+                    postHolder.postVideo.setVideoURI(Uri.parse(mediaUrl));
+                    postHolder.postVideo.seekTo(1); // Show preview
+                    postHolder.postVideo.start();
+                });
+
+                // 3. Tap video to pause/resume
+                postHolder.postVideo.setOnClickListener(v -> {
+                    if (postHolder.postVideo.isPlaying()) {
+                        postHolder.postVideo.pause();
+                    } else {
+                        postHolder.postVideo.start();
+                    }
+                });
+
+                // Optional: Reset video (when scrolling out)
+                postHolder.postVideo.setOnCompletionListener(mp -> {
+                    postHolder.postVideo.seekTo(1);
+                    postHolder.postVideo.pause();
+                    postHolder.postVideo.setVisibility(View.GONE);
+                    postHolder.postImage.setVisibility(View.VISIBLE);
+                });
+            } else {
+                // --- IMAGE ONLY ---
+                postHolder.postImage.setVisibility(View.VISIBLE);
+                if (mediaUrl != null && !mediaUrl.isEmpty()) {
+                    Glide.with(context)
+                            .load(mediaUrl)
+                            .placeholder(R.drawable.ic_profile_placeholder)
+                            .into(postHolder.postImage);
+                } else if (post.getImageResId() != 0) {
+                    postHolder.postImage.setImageResource(post.getImageResId());
+                } else {
+                    postHolder.postImage.setImageResource(R.drawable.ic_profile_placeholder);
+                }
+                postHolder.postImage.setOnClickListener(null); // Remove video logic!
+            }
+
+            // --- Engagement Logic (Like, Comment, Share, Double-Tap) ---
 
             postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
             postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
@@ -97,13 +168,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 context.startActivity(Intent.createChooser(shareIntent, "Share via"));
             });
 
-            final boolean[] isLiked = {false};
+            final boolean[] isLiked = {post.isLiked()};
             final int[] likeCount = {post.getLikes()};
 
-            postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
+            postHolder.likeButton.setImageResource(isLiked[0] ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
 
             postHolder.likeButton.setOnClickListener(v -> {
                 isLiked[0] = !isLiked[0];
+                post.setLiked(isLiked[0]);
                 if (isLiked[0]) {
                     postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
                     likeCount[0]++;
@@ -111,17 +183,20 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
                     likeCount[0]--;
                 }
+                post.setLikes(likeCount[0]);
                 postHolder.likesCount.setText(String.valueOf(likeCount[0]));
             });
 
-            // 👇 Double-tap heart animation logic
+            // --- Double-tap Heart Animation ---
             GestureDetector gestureDetector = new GestureDetector(context, new SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     if (!isLiked[0]) {
                         isLiked[0] = true;
+                        post.setLiked(true);
                         postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
                         likeCount[0]++;
+                        post.setLikes(likeCount[0]);
                         postHolder.likesCount.setText(String.valueOf(likeCount[0]));
                     }
 
@@ -176,6 +251,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView postImage;
+        VideoView postVideo;
         ImageView doubleTapHeart;
         de.hdodenhof.circleimageview.CircleImageView profileImage;
         TextView authorName;
@@ -190,6 +266,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
             postImage = itemView.findViewById(R.id.post_image);
+            postVideo = itemView.findViewById(R.id.post_video);
             doubleTapHeart = itemView.findViewById(R.id.double_tap_heart);
             profileImage = itemView.findViewById(R.id.profile_image);
             authorName = itemView.findViewById(R.id.author_name);

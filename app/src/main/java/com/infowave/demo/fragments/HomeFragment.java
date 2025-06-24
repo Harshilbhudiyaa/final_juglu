@@ -9,9 +9,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
 import com.infowave.demo.supabase.StoriesRepository;
+import com.infowave.demo.supabase.PostsRepository;
+import com.infowave.demo.supabase.SupabaseClient;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -27,7 +28,6 @@ import com.infowave.demo.R;
 import com.infowave.demo.adapters.FeedAdapter;
 import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
-import com.infowave.demo.supabase.SupabaseClient;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,8 +40,8 @@ public class HomeFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private FloatingActionButton addPostFab;
     private FeedAdapter feedAdapter;
-    private List<Post> posts;
-    private List<StatusItem> statusList;
+    private List<Post> posts = new ArrayList<>();
+    private List<StatusItem> statusList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -57,13 +57,19 @@ public class HomeFragment extends Fragment {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         addPostFab = view.findViewById(R.id.add_post_fab);
 
+        feedAdapter = new FeedAdapter(requireContext(), statusList, posts);
+        feedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        feedRecyclerView.setAdapter(feedAdapter);
+
         setupFeedRecyclerView();
         setupSwipeRefresh();
         setupClickListeners();
     }
 
     private void setupFeedRecyclerView() {
-        statusList = new ArrayList<>();
+        statusList.clear();
+        posts.clear();
+
         SharedPreferences prefs = requireContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
         String currentUserId = prefs.getString("user_id", null);
 
@@ -72,37 +78,98 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // ONLY THIS: delegate logic to repository!
-        StoriesRepository.getStoriesForMeAndFriends(requireContext(), currentUserId, new StoriesRepository.AllStoriesCallback() {
-            @SuppressLint("NotifyDataSetChanged")
-            @Override
-            public void onStoriesLoaded(JSONArray storiesArr) {
-                statusList.clear();
-                for (int i = 0; i < storiesArr.length(); i++) {
-                    JSONObject obj = storiesArr.optJSONObject(i);
+        // 1. Get all user IDs (me + friends)
+        Set<String> userIdSet = new HashSet<>();
+        userIdSet.add(currentUserId);
+
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/friendships"
+                + "?or=(user_one.eq." + currentUserId + ",user_two.eq." + currentUserId + ")"
+                + "&status=eq.accepted&select=user_one,user_two";
+
+        com.android.volley.toolbox.StringRequest request = new com.android.volley.toolbox.StringRequest(
+                com.android.volley.Request.Method.GET, url, response -> {
+            try {
+                JSONArray arr = new JSONArray(response);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject obj = arr.optJSONObject(i);
                     if (obj != null) {
-                        String imageUrl = obj.optString("media_url", "");
-                        String username = obj.optString("caption", "Story");
-                        String storyId = obj.optString("id", "");
-                        statusList.add(new StatusItem(imageUrl, username, false, storyId));
+                        String userOne = obj.optString("user_one");
+                        String userTwo = obj.optString("user_two");
+                        if (userOne.equals(currentUserId) && !userTwo.equals(currentUserId)) {
+                            userIdSet.add(userTwo);
+                        } else if (userTwo.equals(currentUserId) && !userOne.equals(currentUserId)) {
+                            userIdSet.add(userOne);
+                        }
                     }
                 }
-                if (feedAdapter != null) feedAdapter.notifyDataSetChanged();
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "Friend parse error", Toast.LENGTH_SHORT).show();
             }
-            @Override
-            public void onError(String message) {
-                Toast.makeText(getContext(), "Error loading stories: " + message, Toast.LENGTH_SHORT).show();
-            }
-        });
-        // Static posts/feed logic (unchanged)
-        posts = new ArrayList<>();
-        posts.add(new Post("John Doe", "2 hours ago", "Beautiful sunset 🌅", 120, 30, R.drawable.image1, R.drawable.image1));
-        posts.add(new Post("Emma", "4 hours ago", "Morning workout 💪", 80, 20, R.drawable.image2, R.drawable.image2));
-        posts.add(new Post("Mike", "6 hours ago", "New project launched 🚀", 200, 40, R.drawable.image4, R.drawable.image4));
 
-        feedAdapter = new FeedAdapter(requireContext(), statusList, posts);
-        feedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        feedRecyclerView.setAdapter(feedAdapter);
+            // 2. Fetch stories for all these users
+            StoriesRepository.getAllStoriesCustom(requireContext(),
+                    SupabaseClient.getBaseUrl()
+                            + "/rest/v1/stories?user_id=in.(" + String.join(",", userIdSet) + ")&select=*",
+                    new StoriesRepository.AllStoriesCallback() {
+                        @SuppressLint("NotifyDataSetChanged")
+                        @Override
+                        public void onStoriesLoaded(JSONArray storiesArr) {
+                            statusList.clear();
+                            for (int i = 0; i < storiesArr.length(); i++) {
+                                JSONObject obj = storiesArr.optJSONObject(i);
+                                if (obj != null) {
+                                    String imageUrl = obj.optString("media_url", "");
+                                    String username = obj.optString("caption", "Story");
+                                    String storyId = obj.optString("id", "");
+                                    statusList.add(new StatusItem(imageUrl, username, false, storyId));
+                                }
+                            }
+                            feedAdapter.notifyDataSetChanged();
+                        }
+                        @Override
+                        public void onError(String message) {
+                            Toast.makeText(getContext(), "Error loading stories: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+            // 3. Fetch posts for all these users
+            List<String> userIdList = new ArrayList<>(userIdSet);
+            PostsRepository.getPostsForUsers(requireContext(), userIdList, new PostsRepository.AllPostsCallback() {
+                @SuppressLint("NotifyDataSetChanged")
+                @Override
+                public void onPostsLoaded(JSONArray postsArr) {
+                    posts.clear();
+                    for (int i = 0; i < postsArr.length(); i++) {
+                        JSONObject obj = postsArr.optJSONObject(i);
+                        if (obj != null) {
+                            // Join result: user data inside "users"
+                            JSONObject user = obj.optJSONObject("users");
+                            String author = user != null ? user.optString("full_name", "User") : "User";
+                            String profileImage = user != null ? user.optString("profile_image", "") : "";
+
+                            String caption = obj.optString("caption", "");
+                            String createdAt = obj.optString("created_at", "");
+                            String mediaUrl = obj.optString("media_url", "");
+
+                            posts.add(new Post(author, createdAt, caption, 120, 30, mediaUrl, profileImage));
+                        }
+                    }
+                    feedAdapter.notifyDataSetChanged();
+                }
+                @Override
+                public void onError(String message) {
+                    Toast.makeText(getContext(), "Error loading posts: " + message, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }, error -> Toast.makeText(requireContext(), "Network error: " + error.getMessage(), Toast.LENGTH_SHORT).show()) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders();
+            }
+        };
+
+        SupabaseClient.getInstance(requireContext()).getRequestQueue().add(request);
     }
 
     private void setupSwipeRefresh() {

@@ -6,11 +6,14 @@ public class Post {
     private String content;
     private int likes;
     private int comments;
-    private int imageResId;
-    private int profileImageResId;
+    private int imageResId; // fallback for local images
+    private int profileImageResId; // fallback for local images
+    private String imageUrl;      // NEW: post image URL (from Supabase)
+    private String profileUrl;    // NEW: profile image URL (from Supabase)
     private boolean isLiked = false;
-    public Post(String author, String timestamp, String content, int likes, int comments, int imageResId, int profileImageResId) {
 
+    // Constructor for static demo data (local drawables)
+    public Post(String author, String timestamp, String content, int likes, int comments, int imageResId, int profileImageResId) {
         this.author = author;
         this.timestamp = timestamp;
         this.content = content;
@@ -18,53 +21,41 @@ public class Post {
         this.comments = comments;
         this.imageResId = imageResId;
         this.profileImageResId = profileImageResId;
-
+        this.imageUrl = null;
+        this.profileUrl = null;
     }
-    public void setLiked(boolean liked) { this.isLiked = liked; }
-    public boolean isLiked() { return isLiked; }
+
+    // Constructor for dynamic data (Supabase, network images)
+    public Post(String author, String timestamp, String content, int likes, int comments, String imageUrl, String profileUrl) {
+        this.author = author;
+        this.timestamp = timestamp;
+        this.content = content;
+        this.likes = likes;
+        this.comments = comments;
+        this.imageResId = 0;
+        this.profileImageResId = 0;
+        this.imageUrl = imageUrl;
+        this.profileUrl = profileUrl;
+    }
+
+    // Getters & Setters
+    public String getAuthor() { return author; }
+    public String getTimestamp() { return timestamp; }
+    public String getContent() { return content; }
+    public int getLikes() { return likes; }
     public void setLikes(int likes) { this.likes = likes; }
+    public int getComments() { return comments; }
+    public boolean isLiked() { return isLiked; }
+    public void setLiked(boolean liked) { this.isLiked = liked; }
 
-    public String getAuthor() {
-        return author;
-    }
+    // For fallback to local images if needed
+    public int getImageResId() { return imageResId; }
+    public int getProfileImageResId() { return profileImageResId; }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
+    // For network images
+    public String getImageUrl() { return imageUrl; }
+    public String getProfileUrl() { return profileUrl; }
 
-    public String getContent() {
-        return content;
-    }
-
-    public int getLikes() {
-        return likes;
-    }
-
-    public int getComments() {
-        return comments;
-    }
-
-    public int getImageResId() {
-        return imageResId;
-    }
-
-    public int getProfileImageResId() {
-        return profileImageResId;
-    }
-
-    public static class Chat {
-        public String name;
-        public String message;
-        public String time;
-        public int imageResId;
-        public boolean isUnread;
-
-        public Chat(String name, String message, String time, int imageResId, boolean isUnread) {
-            this.name = name;
-            this.message = message;
-            this.time = time;
-            this.imageResId = imageResId;
-            this.isUnread = isUnread;
-        }
-    }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setProfileUrl(String profileUrl) { this.profileUrl = profileUrl; }
 }
