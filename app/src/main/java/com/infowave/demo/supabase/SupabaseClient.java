@@ -14,7 +14,7 @@ public class SupabaseClient {
     private static final String ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJscGZlanplbnlhbXBpbHlxemJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNjEyNjcsImV4cCI6MjA2NTYzNzI2N30.HOi6OqNqR-oteYyttL9i4GcpHj_ndJ1kPXVMFDxIvXs"; // <-- your anon key
 
     private static SupabaseClient instance;
-    private RequestQueue requestQueue;
+    protected RequestQueue requestQueue;
 
     private SupabaseClient(Context context) {
         requestQueue = Volley.newRequestQueue(context.getApplicationContext());
@@ -40,4 +40,21 @@ public class SupabaseClient {
         };
         requestQueue.add(stringRequest);
     }
+
+    public static String getBaseUrl() {
+        return SUPABASE_URL;
+    }
+
+    public static Map<String, String> getHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("apikey", ANON_KEY);
+        headers.put("Authorization", "Bearer " + ANON_KEY);
+        headers.put("Content-Type", "application/json");
+        return headers;
+    }
+    public RequestQueue getRequestQueue() {
+        return requestQueue;
+    }
+
+
 }

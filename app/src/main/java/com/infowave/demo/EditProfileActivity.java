@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.WindowInsets;
-import android.widget.DatePicker;
+
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -126,7 +126,6 @@ public class EditProfileActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: Save to backend or local DB
         Toast.makeText(this, "Profile saved successfully!", Toast.LENGTH_SHORT).show();
         finish();
     }

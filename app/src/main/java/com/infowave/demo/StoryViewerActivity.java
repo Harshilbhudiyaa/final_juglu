@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.EditText;
@@ -20,6 +19,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.infowave.demo.supabase.StoriesRepository;
+
+import org.json.JSONObject;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -51,6 +53,7 @@ public class StoryViewerActivity extends AppCompatActivity {
                 return insets.consumeSystemWindowInsets();
             }
         });
+
         storyImage = findViewById(R.id.story_image);
         profileImage = findViewById(R.id.profile_image);
         username = findViewById(R.id.username);
@@ -59,15 +62,43 @@ public class StoryViewerActivity extends AppCompatActivity {
         commentEditText = findViewById(R.id.comment_edittext);
         progressBar = findViewById(R.id.progress_bar);
 
-        // Receive data from intent
-        int imageRes = getIntent().getIntExtra("image", R.drawable.image1);
-        String userName = getIntent().getStringExtra("name");
-        int profileRes = getIntent().getIntExtra("profile", R.drawable.image3);
+        // === DYNAMIC: get story id from intent and fetch story ===
+        String storyId = getIntent().getStringExtra("story_id");
+        if (storyId == null) {
+            Toast.makeText(this, "No story found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
-        username.setText(userName);
-        profileImage.setImageResource(profileRes);
-        storyImage.setImageResource(imageRes);
+        StoriesRepository.getStoryById(this, storyId, new StoriesRepository.StoryCallback() {
+            @Override
+            public void onStoryLoaded(JSONObject story) {
+                // Media (image/video)
+                String mediaUrl = story.optString("media_url", "");
+                long now = System.currentTimeMillis() / 1000L;
+                long rounded = (now / 15) * 15; // For 15 seconds
+                String bustUrl = mediaUrl + "?ts=" + rounded;
 
+                Glide.with(StoryViewerActivity.this)
+                        .load(bustUrl)
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(storyImage); // or .into(storyImage) in activity
+
+
+                // Username or caption (choose what you want to show)
+                String cap = story.optString("caption", "Story");
+                username.setText(cap);
+
+                // You can set a static profile image or fetch user info (next step)
+                profileImage.setImageResource(R.drawable.image3);
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(StoryViewerActivity.this, "Failed to load story.", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
 
         likeIcon.setOnClickListener(v -> {
             isLiked = !isLiked;
@@ -130,5 +161,4 @@ public class StoryViewerActivity extends AppCompatActivity {
 
         builder.show();
     }
-
 }
