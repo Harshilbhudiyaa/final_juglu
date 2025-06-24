@@ -142,16 +142,14 @@ public class HomeFragment extends Fragment {
                     for (int i = 0; i < postsArr.length(); i++) {
                         JSONObject obj = postsArr.optJSONObject(i);
                         if (obj != null) {
-                            // Join result: user data inside "users"
                             JSONObject user = obj.optJSONObject("users");
                             String author = user != null ? user.optString("full_name", "User") : "User";
                             String profileImage = user != null ? user.optString("profile_image", "") : "";
-
                             String caption = obj.optString("caption", "");
                             String createdAt = obj.optString("created_at", "");
                             String mediaUrl = obj.optString("media_url", "");
-
-                            posts.add(new Post(author, createdAt, caption, 120, 30, mediaUrl, profileImage));
+                            String postId = obj.optString("id", ""); // <-- Get post id!
+                            posts.add(new Post(postId, author, createdAt, caption, 0, 00, mediaUrl, profileImage));
                         }
                     }
                     feedAdapter.notifyDataSetChanged();

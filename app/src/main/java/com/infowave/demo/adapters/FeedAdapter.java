@@ -5,6 +5,7 @@ import static android.view.GestureDetector.*;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -26,6 +27,10 @@ import com.infowave.demo.CommentBottomSheet;
 import com.infowave.demo.R;
 import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
+import com.infowave.demo.supabase.PostsRepository;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -36,11 +41,15 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Context context;
     private final List<StatusItem> statusList;
     private final List<Post> postList;
+    private final String currentUserId;
 
     public FeedAdapter(Context context, List<StatusItem> statusList, List<Post> postList) {
         this.context = context;
         this.statusList = statusList;
         this.postList = postList;
+        // Get currentUserId from SharedPreferences
+        SharedPreferences prefs = context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
+        currentUserId = prefs.getString("user_id", "");
     }
 
     @Override
@@ -62,7 +71,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         if (holder instanceof StatusSectionViewHolder) {
             StatusSectionViewHolder statusHolder = (StatusSectionViewHolder) holder;
             StatusAdapter statusAdapter = new StatusAdapter(context, statusList);
@@ -71,17 +80,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             );
             statusHolder.statusRecyclerView.setAdapter(statusAdapter);
         } else if (holder instanceof PostViewHolder) {
-            Post post = postList.get(position - 1); // -1: first item is status
+            Post post = postList.get(position - 1);
             PostViewHolder postHolder = (PostViewHolder) holder;
 
-            // Set static fields
             postHolder.authorName.setText(post.getAuthor());
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
-            postHolder.likesCount.setText(String.valueOf(post.getLikes()));
-            postHolder.commentsCount.setText(String.valueOf(post.getComments()));
 
-            // Set profile image (from URL or fallback)
+            // Profile image (URL or fallback)
             if (post.getProfileUrl() != null && !post.getProfileUrl().isEmpty()) {
                 Glide.with(context)
                         .load(post.getProfileUrl())
@@ -93,33 +99,35 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 postHolder.profileImage.setImageResource(R.drawable.ic_profile_placeholder);
             }
 
-            // --- IMAGE or VIDEO LOGIC ---
+            // --- MEDIA LOGIC ---
             String mediaUrl = post.getImageUrl();
             boolean isVideo = mediaUrl != null && mediaUrl.toLowerCase().endsWith(".mp4");
 
-            // Always reset views first!
             postHolder.postImage.setVisibility(View.GONE);
+            postHolder.playIcon.setVisibility(View.GONE);
             postHolder.postVideo.setVisibility(View.GONE);
 
             if (isVideo) {
-                // --- 1. Show thumbnail as poster (FAST) ---
                 postHolder.postImage.setVisibility(View.VISIBLE);
+                postHolder.playIcon.setVisibility(View.VISIBLE);
+
                 Glide.with(context)
-                        .load(mediaUrl) // Most CDNs generate a still on ".mp4" (if not: add your own thumbnail endpoint)
-                        .frame(1000000) // Get frame at 1 sec
-                        .placeholder(R.drawable.ic_id_placeholder)
+                        .load(mediaUrl)
+                        .frame(1000000)
+                        .placeholder(R.drawable.ic_profile_placeholder)
                         .into(postHolder.postImage);
 
-                // 2. Click poster to open VideoView
-                postHolder.postImage.setOnClickListener(v -> {
+                View.OnClickListener playListener = v -> {
                     postHolder.postImage.setVisibility(View.GONE);
+                    postHolder.playIcon.setVisibility(View.GONE);
                     postHolder.postVideo.setVisibility(View.VISIBLE);
                     postHolder.postVideo.setVideoURI(Uri.parse(mediaUrl));
-                    postHolder.postVideo.seekTo(1); // Show preview
+                    postHolder.postVideo.seekTo(1);
                     postHolder.postVideo.start();
-                });
+                };
+                postHolder.postImage.setOnClickListener(playListener);
+                postHolder.playIcon.setOnClickListener(playListener);
 
-                // 3. Tap video to pause/resume
                 postHolder.postVideo.setOnClickListener(v -> {
                     if (postHolder.postVideo.isPlaying()) {
                         postHolder.postVideo.pause();
@@ -128,16 +136,16 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
                 });
 
-                // Optional: Reset video (when scrolling out)
                 postHolder.postVideo.setOnCompletionListener(mp -> {
-                    postHolder.postVideo.seekTo(1);
                     postHolder.postVideo.pause();
                     postHolder.postVideo.setVisibility(View.GONE);
                     postHolder.postImage.setVisibility(View.VISIBLE);
+                    postHolder.playIcon.setVisibility(View.VISIBLE);
                 });
             } else {
-                // --- IMAGE ONLY ---
                 postHolder.postImage.setVisibility(View.VISIBLE);
+                postHolder.playIcon.setVisibility(View.GONE);
+
                 if (mediaUrl != null && !mediaUrl.isEmpty()) {
                     Glide.with(context)
                             .load(mediaUrl)
@@ -148,58 +156,70 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 } else {
                     postHolder.postImage.setImageResource(R.drawable.ic_profile_placeholder);
                 }
-                postHolder.postImage.setOnClickListener(null); // Remove video logic!
+                postHolder.postImage.setOnClickListener(null);
             }
 
-            // --- Engagement Logic (Like, Comment, Share, Double-Tap) ---
+            // --------- DYNAMIC LIKES/COMMENTS ---------
+            // Set a temporary value first (while loading from server)
+            postHolder.likesCount.setText(String.valueOf(post.getLikes()));
+            postHolder.commentsCount.setText(String.valueOf(post.getComments()));
+            postHolder.likeButton.setImageResource(post.isLiked() ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
 
-            postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
-            postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
-
-            postHolder.shareButton.setOnClickListener(v -> {
-                String shareLink = "https://myapp.com/post/" + position;
-                Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this post!");
-                shareIntent.putExtra(Intent.EXTRA_TEXT,
-                        "Look at this post by " + post.getAuthor() + ":\n\n"
-                                + post.getContent() + "\n\n"
-                                + shareLink);
-                context.startActivity(Intent.createChooser(shareIntent, "Share via"));
+            // 1. Query dynamic likes/comments and isLiked
+            PostsRepository.getPostEngagements(context, post.getId(), currentUserId, (likeCount, commentCount, likedByMe) -> {
+                postHolder.likesCount.setText(String.valueOf(likeCount));
+                postHolder.commentsCount.setText(String.valueOf(commentCount));
+                postHolder.likeButton.setImageResource(likedByMe ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
+                post.setLikes(likeCount);
+                post.setComments(commentCount);
+                post.setLiked(likedByMe);
             });
 
-            final boolean[] isLiked = {post.isLiked()};
-            final int[] likeCount = {post.getLikes()};
-
-            postHolder.likeButton.setImageResource(isLiked[0] ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
-
+            // 2. Like/Unlike functionality
             postHolder.likeButton.setOnClickListener(v -> {
-                isLiked[0] = !isLiked[0];
-                post.setLiked(isLiked[0]);
-                if (isLiked[0]) {
-                    postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
-                    likeCount[0]++;
+                boolean willLike = !post.isLiked();
+                // Optimistic UI
+                int newCount = post.getLikes() + (willLike ? 1 : -1);
+                post.setLiked(willLike);
+                post.setLikes(newCount);
+                postHolder.likesCount.setText(String.valueOf(newCount));
+                postHolder.likeButton.setImageResource(willLike ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
+
+                // Hit API
+                if (willLike) {
+                    PostsRepository.likePost(context, post.getId(), currentUserId, () -> {}, new Runnable() {
+                        @Override
+                        public void run() {
+                        }
+                    });
                 } else {
-                    postHolder.likeButton.setImageResource(R.drawable.ic_heart_outline);
-                    likeCount[0]--;
+                    PostsRepository.unlikePost(context, post.getId(), currentUserId, () -> {}, new Runnable() {
+                        @Override
+                        public void run() {
+                        }
+                    });
                 }
-                post.setLikes(likeCount[0]);
-                postHolder.likesCount.setText(String.valueOf(likeCount[0]));
             });
 
-            // --- Double-tap Heart Animation ---
+            // Double-tap Heart Animation
             GestureDetector gestureDetector = new GestureDetector(context, new SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
-                    if (!isLiked[0]) {
-                        isLiked[0] = true;
+                    if (!post.isLiked()) {
                         post.setLiked(true);
+                        post.setLikes(post.getLikes() + 1);
                         postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
-                        likeCount[0]++;
-                        post.setLikes(likeCount[0]);
-                        postHolder.likesCount.setText(String.valueOf(likeCount[0]));
+                        postHolder.likesCount.setText(String.valueOf(post.getLikes()));
+                        PostsRepository.likePost(context,
+                                post.getId(),
+                                currentUserId,
+                                () -> {},
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                    }
+                                });
                     }
-
                     postHolder.doubleTapHeart.setScaleX(0f);
                     postHolder.doubleTapHeart.setScaleY(0f);
                     postHolder.doubleTapHeart.setAlpha(0.8f);
@@ -220,10 +240,25 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     return true;
                 }
             });
-
             postHolder.postImage.setOnTouchListener((v, event) -> {
                 gestureDetector.onTouchEvent(event);
                 return true;
+            });
+
+            // Comments (tap to open bottom sheet)
+            postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
+            postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
+
+            postHolder.shareButton.setOnClickListener(v -> {
+                String shareLink = "https://myapp.com/post/" + position;
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out this post!");
+                shareIntent.putExtra(Intent.EXTRA_TEXT,
+                        "Look at this post by " + post.getAuthor() + ":\n\n"
+                                + post.getContent() + "\n\n"
+                                + shareLink);
+                context.startActivity(Intent.createChooser(shareIntent, "Share via"));
             });
         }
     }
@@ -242,7 +277,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class StatusSectionViewHolder extends RecyclerView.ViewHolder {
         RecyclerView statusRecyclerView;
-
         StatusSectionViewHolder(@NonNull View itemView) {
             super(itemView);
             statusRecyclerView = itemView.findViewById(R.id.status_horizontal_recycler);
@@ -251,6 +285,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView postImage;
+        ImageView playIcon;
         VideoView postVideo;
         ImageView doubleTapHeart;
         de.hdodenhof.circleimageview.CircleImageView profileImage;
@@ -262,10 +297,10 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ImageButton likeButton;
         ImageButton commentButton;
         ImageButton shareButton;
-
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
             postImage = itemView.findViewById(R.id.post_image);
+            playIcon = itemView.findViewById(R.id.play_icon);
             postVideo = itemView.findViewById(R.id.post_video);
             doubleTapHeart = itemView.findViewById(R.id.double_tap_heart);
             profileImage = itemView.findViewById(R.id.profile_image);
