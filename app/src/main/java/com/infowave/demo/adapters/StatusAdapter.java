@@ -22,7 +22,6 @@ import java.util.List;
 public class StatusAdapter extends RecyclerView.Adapter<StatusAdapter.StatusViewHolder> {
     private List<StatusItem> statusList;
     private Context context;
-
     public StatusAdapter(Context context, List<StatusItem> statusList) {
         this.context = context;
         this.statusList = statusList;
