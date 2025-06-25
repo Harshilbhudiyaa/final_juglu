@@ -16,6 +16,12 @@
         android:theme="@style/Theme.MyApp"
         tools:targetApi="31">
 
+        <activity android:name=".LoginActivity"
+            android:exported="false"/>
+
+        <activity android:name=".NewPostActivity"
+            android:exported="false"/>
+
         <activity android:name=".OwnPostActivity"
             android:exported="false"/>
 

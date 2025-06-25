@@ -2,6 +2,7 @@ package com.infowave.demo.fragments;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.infowave.demo.NewPostActivity;
 import com.infowave.demo.supabase.StoriesRepository;
 import com.infowave.demo.supabase.PostsRepository;
 import com.infowave.demo.supabase.SupabaseClient;
@@ -38,10 +40,13 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView feedRecyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private FloatingActionButton addPostFab;
+
     private FeedAdapter feedAdapter;
     private List<Post> posts = new ArrayList<>();
     private List<StatusItem> statusList = new ArrayList<>();
+    private FloatingActionButton fabMain, fabPost, fabStory;
+    private View layoutFabPost, layoutFabStory;
+    private boolean isFabMenuOpen = false;
 
     @Nullable
     @Override
@@ -55,11 +60,26 @@ public class HomeFragment extends Fragment {
 
         feedRecyclerView = view.findViewById(R.id.feed_recycler_view);
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
-        addPostFab = view.findViewById(R.id.add_post_fab);
-
+        fabMain = view.findViewById(R.id.add_post_fab);
+        fabPost = view.findViewById(R.id.fab_post);
+        fabStory = view.findViewById(R.id.fab_story);
+        layoutFabPost = view.findViewById(R.id.layout_fab_post);
+        layoutFabStory = view.findViewById(R.id.layout_fab_story);
         feedAdapter = new FeedAdapter(requireContext(), statusList, posts);
         feedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         feedRecyclerView.setAdapter(feedAdapter);
+
+        fabMain.setOnClickListener(v -> toggleFabMenu());
+
+        fabPost.setOnClickListener(v -> {
+            toggleFabMenu();
+            startActivity(new Intent(requireContext(), NewPostActivity.class));
+        });
+
+        fabStory.setOnClickListener(v -> {
+            toggleFabMenu();
+            Toast.makeText(requireContext(), "Story Clicked", Toast.LENGTH_SHORT).show();
+        });
 
         setupFeedRecyclerView();
         setupSwipeRefresh();
@@ -78,7 +98,6 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // 1. Get all user IDs (me + friends)
         Set<String> userIdSet = new HashSet<>();
         userIdSet.add(currentUserId);
 
@@ -106,7 +125,6 @@ public class HomeFragment extends Fragment {
                 Toast.makeText(requireContext(), "Friend parse error", Toast.LENGTH_SHORT).show();
             }
 
-            // 2. Fetch stories for all these users
             StoriesRepository.getAllStoriesCustom(requireContext(),
                     SupabaseClient.getBaseUrl()
                             + "/rest/v1/stories?user_id=in.(" + String.join(",", userIdSet) + ")&select=*",
@@ -126,13 +144,13 @@ public class HomeFragment extends Fragment {
                             }
                             feedAdapter.notifyDataSetChanged();
                         }
+
                         @Override
                         public void onError(String message) {
                             Toast.makeText(getContext(), "Error loading stories: " + message, Toast.LENGTH_SHORT).show();
                         }
                     });
 
-            // 3. Fetch posts for all these users
             List<String> userIdList = new ArrayList<>(userIdSet);
             PostsRepository.getPostsForUsers(requireContext(), userIdList, new PostsRepository.AllPostsCallback() {
                 @SuppressLint("NotifyDataSetChanged")
@@ -148,12 +166,13 @@ public class HomeFragment extends Fragment {
                             String caption = obj.optString("caption", "");
                             String createdAt = obj.optString("created_at", "");
                             String mediaUrl = obj.optString("media_url", "");
-                            String postId = obj.optString("id", ""); // <-- Get post id!
+                            String postId = obj.optString("id", "");
                             posts.add(new Post(postId, author, createdAt, caption, 0, 00, mediaUrl, profileImage));
                         }
                     }
                     feedAdapter.notifyDataSetChanged();
                 }
+
                 @Override
                 public void onError(String message) {
                     Toast.makeText(getContext(), "Error loading posts: " + message, Toast.LENGTH_SHORT).show();
@@ -179,6 +198,54 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupClickListeners() {
-        addPostFab.setOnClickListener(v -> Toast.makeText(getContext(), "Add Post Clicked", Toast.LENGTH_SHORT).show());
+        fabMain.setOnClickListener(v -> toggleFabMenu());
+
+    }
+
+    private void toggleFabMenu() {
+        if (layoutFabPost == null || layoutFabStory == null || fabMain == null) return;
+
+        if (isFabMenuOpen) {
+            layoutFabPost.animate().translationY(0f).alpha(0f).setDuration(200)
+                    .withEndAction(() -> layoutFabPost.setVisibility(View.GONE)).start();
+
+            layoutFabStory.animate().translationY(0f).alpha(0f).setDuration(200)
+                    .withEndAction(() -> layoutFabStory.setVisibility(View.GONE)).start();
+
+            try {
+                fabMain.setImageResource(R.drawable.ic_add);
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "ic_add not found", Toast.LENGTH_SHORT).show();
+            }
+
+//            fabMain.animate().rotation(0f).setDuration(200).start();
+        } else {
+            layoutFabPost.setVisibility(View.VISIBLE);
+            layoutFabStory.setVisibility(View.VISIBLE);
+
+            layoutFabPost.setAlpha(0f);
+            layoutFabStory.setAlpha(0f);
+
+            layoutFabPost.setTranslationY(0f);
+            layoutFabStory.setTranslationY(0f);
+
+            layoutFabPost.animate().translationY(-dpToPx(20)).alpha(1f).setDuration(200).start();
+            layoutFabStory.animate().translationY(-dpToPx(40)).alpha(1f).setDuration(200).start();
+
+            try {
+                fabMain.setImageResource(R.drawable.ic_cross);
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "ic_cross not found", Toast.LENGTH_SHORT).show();
+            }
+
+//            fabMain.animate().rotation(45f).setDuration(200).start();
+        }
+
+        isFabMenuOpen = !isFabMenuOpen;
+    }
+
+
+    private float dpToPx(int dp) {
+        return dp * getResources().getDisplayMetrics().density;
     }
 }

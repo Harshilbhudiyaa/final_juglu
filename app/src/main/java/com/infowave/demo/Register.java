@@ -26,6 +26,7 @@ public class Register extends AppCompatActivity {
     private EditText etUsername, etEmail, etMobile, etPassword, etDOB, etBio;
     private Button btnNext;
     private BottomSheetDialog otpBottomSheet;
+    TextView login_txt;
     private View dimView;
     private WindowManager windowManager;
     private static final int OVERLAY_PERMISSION_REQ_CODE = 1234;
@@ -57,6 +58,7 @@ public class Register extends AppCompatActivity {
         etDOB = findViewById(R.id.etDOB);
         etBio = findViewById(R.id.etBio);
         btnNext = findViewById(R.id.btnNext);
+        login_txt = findViewById(R.id.login);
 
         // Date of Birth picker (no keyboard popup)
         etDOB.setFocusable(false);
@@ -72,6 +74,11 @@ public class Register extends AppCompatActivity {
                 Log.d("VALIDATION", "Validation failed");
                 Toast.makeText(Register.this, "Please fix the errors", Toast.LENGTH_SHORT).show();
             }
+        });
+
+        login_txt.setOnClickListener(V->{
+            Intent i = new Intent(Register.this, LoginActivity.class);
+            startActivity(i);
         });
     }
 

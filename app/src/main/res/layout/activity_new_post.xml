@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#121212"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Top Bar - Modern design with subtle shadow -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="4dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#1F1F1F">
+
+            <ImageView
+                android:id="@+id/btn_back"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_vector_back"
+                android:layout_gravity="center"
+                app:tint="#FFFFFF"/>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:layout_marginStart="16dp"
+            android:text="Create Post"
+            android:textSize="20sp"
+            android:letterSpacing="0.01"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="#FFFFFF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_share"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Share"
+            android:textAllCaps="false"
+            android:textColor="#121212"
+            android:fontFamily="sans-serif-medium"
+            app:cornerRadius="18dp"
+            app:backgroundTint="#FF4081"
+            app:rippleColor="#E91E63"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+    </LinearLayout>
+
+    <!-- Post Image Preview with rounded corners -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="12dp"
+        app:strokeColor="#252525"
+        app:strokeWidth="1dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:id="@+id/image_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_boyfriend"
+            android:contentDescription="Post image"/>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Caption Input with modern text field -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/caption_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        app:boxBackgroundMode="none"
+        app:hintTextColor="#AAAAAA"
+        app:boxStrokeColor="#2A2A2A"
+        app:boxStrokeWidthFocused="1dp"
+        app:boxStrokeWidth="0.5dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Add a creative caption..."
+            android:textColor="#FFFFFF"
+            android:textColorHint="#AAAAAA"
+            android:textSize="16sp"
+            android:inputType="textMultiLine"
+            android:maxLines="4"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Options Section with modern list items -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="24dp"
+        android:background="#1F1F1F"
+        android:paddingVertical="8dp"
+        android:paddingHorizontal="4dp"
+        android:clipToPadding="false"
+        app:cornerRadius="12dp">
+
+        <!-- Music Option -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingHorizontal="12dp"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_music"
+                app:tint="#FF4081"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <TextView
+                android:id="@+id/icon_music"
+                android:layout_width="187dp"
+                android:layout_height="46dp"
+                android:layout_margin="20dp"
+                android:layout_marginStart="192dp"
+                android:fontFamily="sans-serif"
+                android:text="Add music"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/icon_music"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#AAAAAA"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Location Option -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="12dp"
+            android:background="#252525"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:paddingHorizontal="12dp"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/location"
+                app:tint="#4CAF50"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Add location"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif"
+                app:layout_constraintStart_toEndOf="@id/icon_location"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="16dp"
+                android:id="@+id/icon_location"/>
+
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="None"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/chevron_location"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginEnd="8dp"/>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#AAAAAA"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:id="@+id/chevron_location"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Add other options similarly with different icon colors -->
+    </LinearLayout>
+
+    <!-- Advanced Options -->
+<!--    <TextView-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Advanced Settings"-->
+<!--        android:textColor="#FF4081"-->
+<!--        android:textSize="14sp"-->
+<!--        android:fontFamily="sans-serif-medium"-->
+<!--        android:layout_marginTop="24dp"-->
+<!--        android:paddingStart="8dp"-->
+<!--        android:drawablePadding="8dp"-->
+<!--        android:drawableEnd="@drawable/ic_expand_more"-->
+<!--        android:drawableTint="#FF4081"/>-->
+</LinearLayout>
