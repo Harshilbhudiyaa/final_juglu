@@ -4,7 +4,7 @@
 
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
+        android:required="true" />
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -29,15 +29,16 @@
         <activity android:name=".LoginActivity"
             android:exported="false"/>
 
-
+        <activity android:name=".StoryUploadActivity"
+            android:exported="false"/>
         <activity android:name=".NewPostActivity"
             android:exported="false"/>
 
         <activity android:name=".OwnPostActivity"
             android:exported="false"/>
 
-        <activity android:name=".PostDetailActivity"
-            android:exported="false"/>
+<!--        <activity android:name=".PostDetailActivity"-->
+<!--            android:exported="false"/>-->
 
         <activity android:name=".FriendsActivity"
             android:exported="false"/>

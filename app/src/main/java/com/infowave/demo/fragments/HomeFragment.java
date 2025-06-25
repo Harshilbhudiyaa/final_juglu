@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.infowave.demo.NewPostActivity;
+import com.infowave.demo.StoryUploadActivity;
 import com.infowave.demo.supabase.StoriesRepository;
 import com.infowave.demo.supabase.PostsRepository;
 import com.infowave.demo.supabase.SupabaseClient;
@@ -76,10 +77,10 @@ public class HomeFragment extends Fragment {
             startActivity(new Intent(requireContext(), NewPostActivity.class));
         });
 
-//        fabStory.setOnClickListener(v -> {
-//            toggleFabMenu();
-//            startActivity(new Intent(requireContext(), StoryUploadActivity.class));
-//        });
+        fabStory.setOnClickListener(v -> {
+            toggleFabMenu();
+            startActivity(new Intent(requireContext(), StoryUploadActivity.class));
+        });
 
         setupFeedRecyclerView();
         setupSwipeRefresh();

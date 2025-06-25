@@ -85,11 +85,7 @@ public class OwnPostActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull HVH h, int i) {
             Own_posts p = list.get(i);
             Glide.with(ctx).load(p.getImageUrl()).into(h.iv);
-            h.iv.setOnClickListener(v -> {
-                Intent intent = new Intent(ctx, PostDetailActivity.class);
-                intent.putExtra("POST_ID", p.getId());
-                ctx.startActivity(intent);
-            });
+
         }
 
         @Override public int getItemCount() { return list.size(); }
