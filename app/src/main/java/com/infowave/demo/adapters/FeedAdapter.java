@@ -201,14 +201,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // Like/Unlike functionality
             postHolder.likeButton.setOnClickListener(v -> {
                 boolean willLike = !post.isLiked();
+                int newCount = post.getLikes() + (willLike ? 1 : -1);
                 post.setLiked(willLike);
-                post.setLikes(post.getLikes() + (willLike ? 1 : -1));
-                postHolder.likesCount.setText(String.valueOf(post.getLikes()));
-
-                // ✅ Apply the correct icon here
-                postHolder.likeButton.setImageResource(
-                        willLike ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline
-                );
+                post.setLikes(newCount);
+                postHolder.likesCount.setText(String.valueOf(newCount));
+                postHolder.likeButton.setImageResource(willLike ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
 
                 if (willLike) {
                     PostsRepository.likePost(context, post.getId(), currentUserId, () -> {}, () -> {});
@@ -216,7 +213,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     PostsRepository.unlikePost(context, post.getId(), currentUserId, () -> {}, () -> {});
                 }
             });
-
 
             // Double-tap Heart Animation
             GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {

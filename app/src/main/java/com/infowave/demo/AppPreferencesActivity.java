@@ -16,7 +16,7 @@ public class AppPreferencesActivity extends AppCompatActivity {
 
     private TextView selectedLanguageTextView;
     private final String[] languages = {
-            "English", "Hindi", "Gujarati", "Spanish", "French", "German", "Chinese"
+            "English", "Hindi", "Gujarati"
     };
 
     @Override

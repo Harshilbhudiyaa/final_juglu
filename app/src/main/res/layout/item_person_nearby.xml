@@ -1,66 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="120dp"
-    android:layout_height="140dp"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="#2E2E2E"
-    app:cardElevation="1dp"
-    app:strokeColor="#4D4D4D"
-    app:strokeWidth="0.5dp">
+    android:layout_width="150dp"
+    android:layout_height="220dp"
+    android:layout_margin="10dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="#18181B"
+    app:strokeColor="#FFFFFF"
+    app:strokeWidth="0.2dp"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:padding="12dp">
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="@android:color/transparent">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/profileImage"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="center_horizontal"
             android:scaleType="centerCrop"
             app:shapeAppearanceOverlay="@style/CircleImageView"
+            app:strokeColor="#FFFFFF"
+            app:strokeWidth="2dp"
             app:srcCompat="@drawable/default_profile"
-            app:strokeColor="#E0E0E0"
-            app:strokeWidth="1dp"/>
+            android:background="@drawable/profile_image_bg"
+            android:elevation="2dp"
+            />
 
         <TextView
             android:id="@+id/name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
             android:ellipsize="end"
-            android:fontFamily="@font/poppins_medium"
             android:maxLines="1"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            tools:text="Alex"/>
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:fontFamily="@font/poppins_semibold"
+            tools:text="Alex" />
 
         <TextView
             android:id="@+id/distance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
             android:fontFamily="@font/poppins_regular"
-            android:textColor="#757575"
-            android:textSize="12sp"
-            tools:text="1.2 km away"/>
+            android:textColor="#E0E0E0"
+            android:textSize="13sp"
+            tools:text="1.2 km away" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/connectButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:layout_marginTop="8dp"
-            android:text="Connect"
-            android:textSize="12sp"
-            app:strokeColor="#673AB7"
-            app:strokeWidth="1dp"/>
+            android:layout_height="38dp"
+            android:layout_marginTop="5dp"
+            android:backgroundTint="#FF4081"
+            app:strokeColor="#FF4081"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="19dp"
+            app:icon="@drawable/ic_person_add"
+            app:iconGravity="textStart"
+            app:iconTint="@color/white"
+            app:iconPadding="8dp"
+            android:text="Follow"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:fontFamily="@font/poppins_medium"
+            android:letterSpacing="0.01"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

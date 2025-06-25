@@ -49,7 +49,7 @@ public class StatusAdapter extends RecyclerView.Adapter<StatusAdapter.StatusView
                 .into(holder.statusImage);
 
         holder.statusLabel.setText(item.getLabel());
-        holder.statusLabel.setTextColor(ContextCompat.getColor(context, R.color.black));
+        holder.statusLabel.setTextColor(ContextCompat.getColor(context, R.color.white));
         holder.statusAddIcon.setVisibility(item.isAdd() ? View.VISIBLE : View.GONE);
 
         holder.itemView.setOnClickListener(v -> {
