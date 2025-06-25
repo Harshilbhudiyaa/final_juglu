@@ -76,10 +76,10 @@ public class HomeFragment extends Fragment {
             startActivity(new Intent(requireContext(), NewPostActivity.class));
         });
 
-        fabStory.setOnClickListener(v -> {
-            toggleFabMenu();
-            Toast.makeText(requireContext(), "Story Clicked", Toast.LENGTH_SHORT).show();
-        });
+//        fabStory.setOnClickListener(v -> {
+//            toggleFabMenu();
+//            startActivity(new Intent(requireContext(), StoryUploadActivity.class));
+//        });
 
         setupFeedRecyclerView();
         setupSwipeRefresh();

@@ -49,7 +49,7 @@
 
     <!-- State list for input box border -->
     <color name="input_box_states">@color/input_box_state_list</color>
-
+    <color name="purple_500">#9C27B0</color>
     <!-- State list for hint text -->
     <color name="hint_color_states">@color/hint_color_state_list</color>
 </resources>
