@@ -84,19 +84,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop" />
+
             <ImageView
                 android:id="@+id/play_icon"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
                 android:src="@drawable/ic_playu"
                 android:layout_gravity="center"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
-            <VideoView
-                android:id="@+id/post_video"
+            <!-- Updated to use androidx.media3.ui.PlayerView -->
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/post_player_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone" />
+                android:visibility="gone"
+                app:show_buffering="when_playing"
+                app:use_controller="true"
+                app:resize_mode="fit" />
 
             <ImageView
                 android:id="@+id/double_tap_heart"
@@ -108,6 +113,7 @@
                 android:scaleType="centerInside"
                 android:alpha="0.8"/>
         </FrameLayout>
+
 
         <!-- Engagement Bar (Instagram style: icons with numbers beside) -->
         <LinearLayout

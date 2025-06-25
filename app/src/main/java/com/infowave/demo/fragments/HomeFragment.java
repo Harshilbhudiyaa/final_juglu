@@ -86,7 +86,6 @@ public class HomeFragment extends Fragment {
         setupSwipeRefresh();
         setupClickListeners();
     }
-
     private void setupFeedRecyclerView() {
         statusList.clear();
         posts.clear();

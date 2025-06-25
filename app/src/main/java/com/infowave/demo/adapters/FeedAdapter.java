@@ -1,12 +1,9 @@
 package com.infowave.demo.adapters;
 
-import static android.view.GestureDetector.*;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -15,7 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.VideoView;
+
+import androidx.media3.common.Player;
+import androidx.media3.common.MediaItem;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,10 +30,12 @@ import com.infowave.demo.models.Post;
 import com.infowave.demo.models.StatusItem;
 import com.infowave.demo.supabase.PostsRepository;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.List;
+
+// Import media3 ExoPlayer classes
+import androidx.media3.common.MediaItem;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
 
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_STATUS = 0;
@@ -47,7 +50,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.context = context;
         this.statusList = statusList;
         this.postList = postList;
-        // Get currentUserId from SharedPreferences
         SharedPreferences prefs = context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
         currentUserId = prefs.getString("user_id", "");
     }
@@ -87,7 +89,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
 
-            // Profile image (URL or fallback)
+            // Profile image logic
             if (post.getProfileUrl() != null && !post.getProfileUrl().isEmpty()) {
                 Glide.with(context)
                         .load(post.getProfileUrl())
@@ -103,9 +105,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             String mediaUrl = post.getImageUrl();
             boolean isVideo = mediaUrl != null && mediaUrl.toLowerCase().endsWith(".mp4");
 
+            // Always clean up old player instance
+            if (postHolder.exoPlayer != null) {
+                postHolder.exoPlayer.release();
+                postHolder.exoPlayer = null;
+            }
             postHolder.postImage.setVisibility(View.GONE);
             postHolder.playIcon.setVisibility(View.GONE);
-            postHolder.postVideo.setVisibility(View.GONE);
+            postHolder.postPlayerView.setVisibility(View.GONE);
 
             if (isVideo) {
                 postHolder.postImage.setVisibility(View.VISIBLE);
@@ -120,28 +127,42 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 View.OnClickListener playListener = v -> {
                     postHolder.postImage.setVisibility(View.GONE);
                     postHolder.playIcon.setVisibility(View.GONE);
-                    postHolder.postVideo.setVisibility(View.VISIBLE);
-                    postHolder.postVideo.setVideoURI(Uri.parse(mediaUrl));
-                    postHolder.postVideo.seekTo(1);
-                    postHolder.postVideo.start();
+                    postHolder.postPlayerView.setVisibility(View.VISIBLE);
+
+                    postHolder.exoPlayer = new ExoPlayer.Builder(context).build();
+                    postHolder.postPlayerView.setPlayer(postHolder.exoPlayer);
+
+                    MediaItem mediaItem = MediaItem.fromUri(mediaUrl);
+                    postHolder.exoPlayer.setMediaItem(mediaItem);
+                    postHolder.exoPlayer.prepare();
+                    postHolder.exoPlayer.setPlayWhenReady(true);
+
+                    postHolder.exoPlayer.addListener(new Player.Listener() {
+                        @Override
+                        public void onPlaybackStateChanged(int state) {
+                            if (state == ExoPlayer.STATE_ENDED) {
+                                postHolder.exoPlayer.release();
+                                postHolder.exoPlayer = null;
+                                postHolder.postPlayerView.setVisibility(View.GONE);
+                                postHolder.postImage.setVisibility(View.VISIBLE);
+                                postHolder.playIcon.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    });
                 };
                 postHolder.postImage.setOnClickListener(playListener);
                 postHolder.playIcon.setOnClickListener(playListener);
 
-                postHolder.postVideo.setOnClickListener(v -> {
-                    if (postHolder.postVideo.isPlaying()) {
-                        postHolder.postVideo.pause();
-                    } else {
-                        postHolder.postVideo.start();
+                postHolder.postPlayerView.setOnClickListener(v -> {
+                    if (postHolder.exoPlayer != null) {
+                        if (postHolder.exoPlayer.isPlaying()) {
+                            postHolder.exoPlayer.pause();
+                        } else {
+                            postHolder.exoPlayer.play();
+                        }
                     }
                 });
 
-                postHolder.postVideo.setOnCompletionListener(mp -> {
-                    postHolder.postVideo.pause();
-                    postHolder.postVideo.setVisibility(View.GONE);
-                    postHolder.postImage.setVisibility(View.VISIBLE);
-                    postHolder.playIcon.setVisibility(View.VISIBLE);
-                });
             } else {
                 postHolder.postImage.setVisibility(View.VISIBLE);
                 postHolder.playIcon.setVisibility(View.GONE);
@@ -160,12 +181,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
 
             // --------- DYNAMIC LIKES/COMMENTS ---------
-            // Set a temporary value first (while loading from server)
             postHolder.likesCount.setText(String.valueOf(post.getLikes()));
             postHolder.commentsCount.setText(String.valueOf(post.getComments()));
             postHolder.likeButton.setImageResource(post.isLiked() ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
 
-            // 1. Query dynamic likes/comments and isLiked
+            // Query dynamic likes/comments and isLiked
             PostsRepository.getPostEngagements(context, post.getId(), currentUserId, (likeCount, commentCount, likedByMe) -> {
                 postHolder.likesCount.setText(String.valueOf(likeCount));
                 postHolder.commentsCount.setText(String.valueOf(commentCount));
@@ -175,34 +195,24 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 post.setLiked(likedByMe);
             });
 
-            // 2. Like/Unlike functionality
+            // Like/Unlike functionality
             postHolder.likeButton.setOnClickListener(v -> {
                 boolean willLike = !post.isLiked();
-                // Optimistic UI
                 int newCount = post.getLikes() + (willLike ? 1 : -1);
                 post.setLiked(willLike);
                 post.setLikes(newCount);
                 postHolder.likesCount.setText(String.valueOf(newCount));
                 postHolder.likeButton.setImageResource(willLike ? R.drawable.ic_heart_red : R.drawable.ic_heart_outline);
 
-                // Hit API
                 if (willLike) {
-                    PostsRepository.likePost(context, post.getId(), currentUserId, () -> {}, new Runnable() {
-                        @Override
-                        public void run() {
-                        }
-                    });
+                    PostsRepository.likePost(context, post.getId(), currentUserId, () -> {}, () -> {});
                 } else {
-                    PostsRepository.unlikePost(context, post.getId(), currentUserId, () -> {}, new Runnable() {
-                        @Override
-                        public void run() {
-                        }
-                    });
+                    PostsRepository.unlikePost(context, post.getId(), currentUserId, () -> {}, () -> {});
                 }
             });
 
             // Double-tap Heart Animation
-            GestureDetector gestureDetector = new GestureDetector(context, new SimpleOnGestureListener() {
+            GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     if (!post.isLiked()) {
@@ -210,15 +220,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         post.setLikes(post.getLikes() + 1);
                         postHolder.likeButton.setImageResource(R.drawable.ic_heart_red);
                         postHolder.likesCount.setText(String.valueOf(post.getLikes()));
-                        PostsRepository.likePost(context,
-                                post.getId(),
-                                currentUserId,
-                                () -> {},
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                    }
-                                });
+                        PostsRepository.likePost(context, post.getId(), currentUserId, () -> {}, () -> {});
                     }
                     postHolder.doubleTapHeart.setScaleX(0f);
                     postHolder.doubleTapHeart.setScaleY(0f);
@@ -245,7 +247,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 return true;
             });
 
-            // Comments (tap to open bottom sheet)
+            // Comments
             postHolder.commentsCount.setOnClickListener(v -> showCommentBottomSheet());
             postHolder.commentButton.setOnClickListener(v -> showCommentBottomSheet());
 
@@ -283,10 +285,23 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    @Override
+    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+        super.onViewRecycled(holder);
+        if (holder instanceof PostViewHolder) {
+            PostViewHolder postHolder = (PostViewHolder) holder;
+            if (postHolder.exoPlayer != null) {
+                postHolder.exoPlayer.release();
+                postHolder.exoPlayer = null;
+            }
+        }
+    }
+
     static class PostViewHolder extends RecyclerView.ViewHolder {
         ImageView postImage;
         ImageView playIcon;
-        VideoView postVideo;
+        PlayerView postPlayerView;
+        ExoPlayer exoPlayer;
         ImageView doubleTapHeart;
         de.hdodenhof.circleimageview.CircleImageView profileImage;
         TextView authorName;
@@ -301,7 +316,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             super(itemView);
             postImage = itemView.findViewById(R.id.post_image);
             playIcon = itemView.findViewById(R.id.play_icon);
-            postVideo = itemView.findViewById(R.id.post_video);
+            postPlayerView = itemView.findViewById(R.id.post_player_view);
             doubleTapHeart = itemView.findViewById(R.id.double_tap_heart);
             profileImage = itemView.findViewById(R.id.profile_image);
             authorName = itemView.findViewById(R.id.author_name);
@@ -312,6 +327,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             likeButton = itemView.findViewById(R.id.like_button);
             commentButton = itemView.findViewById(R.id.comment_button);
             shareButton = itemView.findViewById(R.id.share_button);
+            exoPlayer = null;
         }
     }
 }

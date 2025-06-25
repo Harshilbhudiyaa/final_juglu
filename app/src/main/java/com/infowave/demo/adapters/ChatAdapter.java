@@ -5,36 +5,40 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.infowave.demo.R;
-import com.infowave.demo.models.Message;
+import com.infowave.demo.models.ChatMessage;
+
 import java.util.List;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    // View type constants
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
 
-    private final List<Message> messages;
+    private final List<ChatMessage> messages;
+    private final String currentUserId; // Now required for robust detection
 
-    public ChatAdapter(List<Message> messages) {
+    public ChatAdapter(List<ChatMessage> messages, String currentUserId) {
         this.messages = messages;
+        this.currentUserId = currentUserId;
     }
 
     @Override
     public int getItemViewType(int position) {
-        // Determine view type based on message sender
-        return messages.get(position).isSent() ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
+        ChatMessage msg = messages.get(position);
+        // Use currentUserId for robust, future-proof detection
+        return msg.getSenderId().equals(currentUserId) ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflate appropriate layout based on view type
         if (viewType == VIEW_TYPE_SENT) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_sent, parent, false);
@@ -48,12 +52,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Message message = messages.get(position);
+        ChatMessage message = messages.get(position);
 
-        // Bind data to appropriate view holder
-        if (holder.getItemViewType() == VIEW_TYPE_SENT) {
+        if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message);
-        } else {
+        } else if (holder instanceof ReceivedMessageViewHolder) {
             ((ReceivedMessageViewHolder) holder).bind(message);
         }
     }
@@ -63,35 +66,33 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
-    // ViewHolder for sent messages (appear on right side)
+    // ViewHolder for Sent Messages (right side)
     static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        private final TextView messageText;
-        private final TextView timeText;
-        private final LinearLayout messageLayout;
+        TextView messageText, timeText;
+        LinearLayout messageLayout;
 
-        public SentMessageViewHolder(@NonNull View itemView) {
+        SentMessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.sent_message_text);
             timeText = itemView.findViewById(R.id.sent_time_text);
             messageLayout = itemView.findViewById(R.id.sent_message_layout);
         }
 
-        public void bind(Message message) {
-            messageText.setText(message.getContent());
-            timeText.setText(message.getTimestamp());
+        void bind(ChatMessage message) {
+            messageText.setText(message.getMessage());
+            timeText.setText(message.getCreatedAt());
 
-            // Add any additional styling or logic here
+            // Add extra styling if needed
         }
     }
 
-    // ViewHolder for received messages (appear on left side)
+    // ViewHolder for Received Messages (left side)
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        private final TextView messageText;
-        private final TextView timeText;
-        private final CircleImageView profileImage;
-        private final LinearLayout messageLayout;
+        TextView messageText, timeText;
+        CircleImageView profileImage;
+        LinearLayout messageLayout;
 
-        public ReceivedMessageViewHolder(@NonNull View itemView) {
+        ReceivedMessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.received_message_text);
             timeText = itemView.findViewById(R.id.received_time_text);
@@ -99,17 +100,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             messageLayout = itemView.findViewById(R.id.received_message_layout);
         }
 
-        public void bind(Message message) {
-            messageText.setText(message.getContent());
-            timeText.setText(message.getTimestamp());
+        void bind(ChatMessage message) {
+            messageText.setText(message.getMessage());
+            timeText.setText(message.getCreatedAt());
 
-//             Set profile image - you can use Glide/Picasso here
-//             profileImage.setImageResource(R.drawable.user_profile);
-
-            // Add any additional styling or logic here
+            if (profileImage != null) {
+                // For now, use placeholder. If you want to load from URL:
+                // Glide.with(profileImage.getContext()).load(message.getProfileUrl()).placeholder(R.drawable.ic_profile_placeholder).into(profileImage);
+                profileImage.setImageResource(message.getProfileImage());
+            }
         }
     }
-
-
-
 }

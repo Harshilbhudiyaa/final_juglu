@@ -1,43 +1,35 @@
 package com.infowave.demo.fragments;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.*;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.textfield.TextInputEditText;
+import com.bumptech.glide.Glide;
 import com.infowave.demo.R;
-import com.infowave.demo.adapters.PersonNearbyAdapter;
-import com.infowave.demo.adapters.RecommendedUserAdapter;
-import com.infowave.demo.models.PersonNearby;
-import com.infowave.demo.models.RecommendedUser;
+import com.infowave.demo.activities.ChatActivity;
+import com.infowave.demo.supabase.ChatRepository;
+import com.infowave.demo.models.ChatMessage;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import android.widget.TextView;
-import android.view.View.OnClickListener;
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.content.Intent;
-import com.infowave.demo.activities.ChatActivity;
 
-// ChatsFragment.java
 public class ChatsFragment extends Fragment {
     private RecyclerView chatListRecycler;
     private ChatListAdapter chatListAdapter;
-    private List<ChatListItem> chatList;
+    private List<ChatRepository.ChatPersonPreview> chatList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -45,81 +37,90 @@ public class ChatsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
         chatListRecycler = view.findViewById(R.id.chat_list_recycler);
         chatListRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        chatList = getSampleChatList();
-        chatListAdapter = new ChatListAdapter(chatList);
+        chatListAdapter = new ChatListAdapter(chatList, getContext(), getCurrentUserId());
         chatListRecycler.setAdapter(chatListAdapter);
+
+        loadChatList();
         return view;
     }
 
-    private List<ChatListItem> getSampleChatList() {
-        List<ChatListItem> list = new ArrayList<>();
-        list.add(new ChatListItem("VIMARSH", "3 new messages", "25m", R.drawable.image1, true));
-        list.add(new ChatListItem("Keval Kumbhani", "Reacted ❤️ to your message", "11h", R.drawable.image3, false));
-        list.add(new ChatListItem("VIMARSH hetanshi", "Ohh", "14h", R.drawable.image2, false));
-        list.add(new ChatListItem("KUNJ PATEL", "Sent a reel by saurabh.singhh18", "16h", R.drawable.image5, true));
-        list.add(new ChatListItem("unseen_amity", "Sent a reel by unseen_amity", "16h", R.drawable.image1, true));
-        list.add(new ChatListItem("Jenil Donga", "Reacted 😮 to your message", "21h", R.drawable.image4, false));
-        list.add(new ChatListItem("Abhi Tadhani", "Reacted 😂 to your message", "24h", R.drawable.image2, false));
-        list.add(new ChatListItem("Krunal Mandanka", "Sent a reel by the_gujumemess", "4d", R.drawable.image1, true));
-        list.add(new ChatListItem("Dr. VIMARSH Raiyani", "Sent a post by go__nature", "Reply?", R.drawable.image5, false));
-        list.add(new ChatListItem("VIMARSH", "Reacted 😂 to your message", "1d", R.drawable.image1, false));
-
-        return list;
+    private String getCurrentUserId() {
+        // Get from shared prefs or your session logic
+        return getContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE).getString("user_id", "");
     }
 
-    // ChatListItem model
-    public static class ChatListItem {
-        private String userName;
-        private String lastMessage;
-        private String time;
-        private int profileImageRes;
-        private boolean unread;
+    private void loadChatList() {
+        ChatRepository.fetchChatPeople(getContext(), getCurrentUserId(), new ChatRepository.ChatCallback<List<ChatRepository.ChatPersonPreview>>() {
+            @SuppressLint("NotifyDataSetChanged")
+            @Override
+            public void onSuccess(List<ChatRepository.ChatPersonPreview> result) {
+                chatList.clear();
+                chatList.addAll(result);
+                chatListAdapter.notifyDataSetChanged();
+            }
 
-        public ChatListItem(String userName, String lastMessage, String time, int profileImageRes, boolean unread) {
-            this.userName = userName;
-            this.lastMessage = lastMessage;
-            this.time = time;
-            this.profileImageRes = profileImageRes;
-            this.unread = unread;
-        }
-        public String getUserName() { return userName; }
-        public String getLastMessage() { return lastMessage; }
-        public String getTime() { return time; }
-        public int getProfileImageRes() { return profileImageRes; }
-        public boolean isUnread() { return unread; }
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(getContext(), "Failed to load chats: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    // ChatListAdapter for RecyclerView
+    // Adapter for RecyclerView
     public static class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHolder> {
-        private List<ChatListItem> chatList;
-        public ChatListAdapter(List<ChatListItem> chatList) { this.chatList = chatList; }
+        private final List<ChatRepository.ChatPersonPreview> chatList;
+        private final Context context;
+        private final String currentUserId;
+
+        public ChatListAdapter(List<ChatRepository.ChatPersonPreview> chatList, Context context, String currentUserId) {
+            this.chatList = chatList;
+            this.context = context;
+            this.currentUserId = currentUserId;
+        }
+
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_list, parent, false);
             return new ViewHolder(view);
         }
+
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            ChatListItem item = chatList.get(position);
-            holder.userName.setText(item.getUserName());
-            holder.lastMessage.setText(item.getLastMessage());
-            holder.time.setText(item.getTime());
-            holder.profileImage.setImageResource(item.getProfileImageRes());
-            holder.unreadDot.setVisibility(item.isUnread() ? View.VISIBLE : View.GONE);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, ChatActivity.class);
-                    intent.putExtra("username", item.getUserName());
-                    intent.putExtra("profileRes", item.getProfileImageRes());
-                    context.startActivity(intent);
-                }
+            ChatRepository.ChatPersonPreview preview = chatList.get(position);
+            ChatRepository.FriendProfile person = preview.friendProfile;
+            ChatMessage lastMsg = preview.lastMessage;
+
+            holder.userName.setText(person.fullName != null && !person.fullName.isEmpty() ? person.fullName : person.username);
+            holder.lastMessage.setText(lastMsg != null && lastMsg.getContent() != null ? lastMsg.getContent() : "");
+            holder.time.setText(lastMsg != null && lastMsg.getCreatedAt() != null ? lastMsg.getCreatedAt() : "");
+
+            // Load actual profile image
+            if (person.profileImage != null && !person.profileImage.isEmpty()) {
+                Glide.with(context)
+                        .load(person.profileImage)
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(holder.profileImage);
+            } else {
+                holder.profileImage.setImageResource(R.drawable.ic_profile_placeholder);
+            }
+
+            // Optional: logic for unread dot (example, always false)
+            holder.unreadDot.setVisibility(View.GONE);
+
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, ChatActivity.class);
+                intent.putExtra("username", person.fullName != null ? person.fullName : person.username);
+                intent.putExtra("otherUserId", person.id);
+                intent.putExtra("profileRes", R.drawable.ic_profile_placeholder);
+                // Pass image URL too if needed!
+                context.startActivity(intent);
             });
         }
+
         @Override
         public int getItemCount() { return chatList.size(); }
+
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView userName, lastMessage, time;
             View unreadDot;

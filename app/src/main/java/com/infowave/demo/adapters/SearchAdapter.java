@@ -40,13 +40,16 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ChatViewHo
             holder.receivedMessageLayout.setVisibility(View.VISIBLE);
             holder.receivedProfileImage.setImageResource(message.getProfileImage());
             holder.receivedMessage.setText(message.getMessage());
-            holder.receivedTimestamp.setText(message.getTimestamp());
+            holder.sentTimestamp.setText(message.getCreatedAt());
+
         } else {
             holder.receivedMessageLayout.setVisibility(View.GONE);
             holder.sentMessageLayout.setVisibility(View.VISIBLE);
             holder.sentProfileImage.setImageResource(message.getProfileImage());
             holder.sentMessage.setText(message.getMessage());
-            holder.sentTimestamp.setText(message.getTimestamp());
+            holder.sentTimestamp.setText(message.getCreatedAt());
+
+
         }
     }
 
