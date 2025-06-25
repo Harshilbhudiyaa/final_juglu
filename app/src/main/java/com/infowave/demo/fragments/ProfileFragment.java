@@ -18,6 +18,7 @@ import com.google.android.material.button.MaterialButton;
 import com.infowave.demo.AppPreferencesActivity;
 import com.infowave.demo.HelpCenterActivity;
 import com.infowave.demo.NotificationsActivity;
+import com.infowave.demo.OwnPostActivity;
 import com.infowave.demo.PrivacyCenterActivity;
 import com.infowave.demo.R;
 import com.infowave.demo.adapters.FeatureAdapter;
@@ -46,7 +47,7 @@ public class ProfileFragment extends Fragment {
         LinearLayout logout_button = view.findViewById(R.id.logout_button);
         editProfileButton = view.findViewById(R.id.edit_profile_button);
         TextView friendsCount = view.findViewById(R.id.friends_count);
-
+        TextView postsCount = view.findViewById(R.id.posts_count);
         if (blockedUsersButton != null) {
             blockedUsersButton.setOnClickListener(v -> {
                 Intent intent = new Intent(getActivity(), BlockedUsersActivity.class);
@@ -73,6 +74,14 @@ public class ProfileFragment extends Fragment {
             Intent intent = new Intent(getActivity(), FriendsActivity.class);
             startActivity(intent);
         });
+
+        postsCount.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), OwnPostActivity.class);
+            // if you need to pass the user ID, you can do:
+            // intent.putExtra("USER_ID", currentUserId);
+            startActivity(intent);
+        });
+
 
         return view;
     }
