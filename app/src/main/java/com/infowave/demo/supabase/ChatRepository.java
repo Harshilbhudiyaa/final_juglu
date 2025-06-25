@@ -1,7 +1,10 @@
 package com.infowave.demo.supabase;
 
 import android.content.Context;
+import android.util.Log;
+
 import com.android.volley.Request;
+import com.android.volley.Response;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONArray;
@@ -32,33 +35,78 @@ public class ChatRepository {
             body.put("sender_id", senderId);
             body.put("receiver_id", receiverId);
             body.put("content", content);
-            // created_at handled by backend
+            Log.d("SEND_MESSAGE", "Request body: " + body.toString());
         } catch (JSONException e) {
+            Log.e("SEND_MESSAGE", "JSONException in request body: " + e.getMessage());
             callback.onFailure(e.getMessage());
             return;
         }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
                 response -> {
+                    Log.d("SEND_MESSAGE", "Volley onResponse (JSONObject): " + response.toString());
                     try {
                         ChatMessage msg = ChatMessage.fromJson(response, senderId);
+                        Log.d("SEND_MESSAGE", "Parsed message in onResponse: " + msg.toString());
                         callback.onSuccess(msg);
                     } catch (JSONException e) {
-                        callback.onFailure(e.getMessage());
+                        Log.e("SEND_MESSAGE", "JSONException in onResponse: " + e.getMessage());
+                        callback.onFailure("JSON Error: " + e.getMessage());
                     }
                 },
-                error -> callback.onFailure(error.toString())
+                error -> {
+                    Log.e("SEND_MESSAGE", "Volley onErrorResponse: " + error.toString());
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        String errorBody = new String(error.networkResponse.data);
+                        Log.e("SEND_MESSAGE", "Body: " + errorBody);
+                    }
+                    callback.onFailure(error.toString());
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = SupabaseClient.getHeaders();
                 headers.put("Prefer", "return=representation");
+                Log.d("SEND_MESSAGE", "Request headers: " + headers.toString());
                 return headers;
+            }
+
+            // 👇 THIS IS THE IMPORTANT PART!
+            @Override
+            protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
+                try {
+                    String jsonString = new String(response.data, com.android.volley.toolbox.HttpHeaderParser.parseCharset(response.headers, "utf-8"));
+                    Log.d("SEND_MESSAGE", "parseNetworkResponse jsonString: " + jsonString);
+                    // If response is a JSON array, parse the first object
+                    if (jsonString.trim().startsWith("[")) {
+                        JSONArray arr = new JSONArray(jsonString);
+                        if (arr.length() > 0) {
+                            JSONObject obj = arr.getJSONObject(0);
+                            Log.d("SEND_MESSAGE", "parseNetworkResponse: returning first object of array: " + obj.toString());
+                            return Response.success(obj, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        } else {
+                            Log.e("SEND_MESSAGE", "parseNetworkResponse: empty array returned from server.");
+                            // Return empty object if nothing found (should not happen)
+                            return Response.success(new JSONObject(), com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        }
+                    } else {
+                        // Normal object as expected
+                        JSONObject jsonObject = new JSONObject(jsonString);
+                        return Response.success(jsonObject, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                    }
+                } catch (Exception e) {
+                    Log.e("SEND_MESSAGE", "parseNetworkResponse exception: " + e.getMessage());
+                    return Response.error(new com.android.volley.ParseError(e));
+                }
             }
         };
 
+        Log.d("SEND_MESSAGE", "Adding request to Volley queue: " + url);
         SupabaseClient.getInstance(context).getRequestQueue().add(request);
     }
+
+
+
 
     // ========= 2️⃣ Fetch all messages between two users =========
     public static void fetchMessagesBetweenUsers(
