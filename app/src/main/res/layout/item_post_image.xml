@@ -5,11 +5,12 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/tools"
     card:cardCornerRadius="4dp"
-    android:layout_margin="2dp"
+    android:layout_margin="5dp"
     app:ignore="NamespaceTypo">
 
     <FrameLayout
         android:layout_width="match_parent"
+
         android:layout_height="200dp">
 
         <!-- Post Image -->

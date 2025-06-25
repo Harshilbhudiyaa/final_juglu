@@ -10,6 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity=""
         android:orientation="vertical">
 
         <!-- Title -->
@@ -42,9 +43,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            app:boxStrokeColor="#AAAAAA"
+            app:startIconDrawable="@drawable/ic_phone"
+            app:startIconTint="#AAAAAA"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/focused_border_color"
             app:boxBackgroundColor="#1C1C1C"
-            app:hintTextColor="#AAAAAA"
+            app:hintTextColor="@color/hint_color_selector"
             app:boxCornerRadiusTopStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
@@ -74,5 +78,31 @@
             android:textStyle="bold"
             app:cornerRadius="12dp"
             android:elevation="6dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New to this platform? "
+                android:textColor="#777777"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/register_page"
+                android:text="Register"
+                android:textColor="#3F51B5"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

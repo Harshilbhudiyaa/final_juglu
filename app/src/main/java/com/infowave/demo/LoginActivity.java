@@ -26,6 +26,7 @@ public class LoginActivity extends AppCompatActivity {
     private BottomSheetDialog otpBottomSheet;
     private View dimView;
     private WindowManager windowManager;
+    TextView register_page;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +42,12 @@ public class LoginActivity extends AppCompatActivity {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         etMobile = findViewById(R.id.etLoginMobile);
         btnSubmit = findViewById(R.id.btnLoginSubmit);
+        register_page = findViewById(R.id.register_page);
+
+        register_page.setOnClickListener(V->{
+            Intent i = new Intent(LoginActivity.this, Register.class);
+            startActivity(i);
+        });
 
         btnSubmit.setOnClickListener(v -> {
             String mobile = etMobile.getText().toString().trim();
