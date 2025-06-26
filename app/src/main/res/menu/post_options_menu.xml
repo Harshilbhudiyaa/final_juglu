@@ -1,24 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_block"
-        android:title="Block"
-        android:icon="@drawable/ic_block"
-        app:showAsAction="always" />
-
+        android:title="Block"/>
     <item
         android:id="@+id/action_unfollow"
-        android:title="Unfollow"
-        android:icon="@drawable/unfollow"
-        android:iconTint="@color/white"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_report"
-        android:iconTint="@color/white"
-        android:title="Report"
-        android:icon="@drawable/ic_report"
-        app:showAsAction="always" />
+        android:title="Unfollow"/>
 </menu>

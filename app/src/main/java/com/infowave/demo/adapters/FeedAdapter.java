@@ -12,6 +12,10 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.view.MenuItem;
 
 import androidx.media3.common.Player;
 import androidx.media3.common.MediaItem;
@@ -51,6 +55,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.postList = postList;
         SharedPreferences prefs = context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
         currentUserId = prefs.getString("user_id", "");
+
     }
 
     @Override
@@ -80,6 +85,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             );
             statusHolder.statusRecyclerView.setAdapter(statusAdapter);
+
+
         } else if (holder instanceof PostViewHolder) {
             Post post = postList.get(position - 1);
             PostViewHolder postHolder = (PostViewHolder) holder;
@@ -87,6 +94,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             postHolder.authorName.setText(post.getAuthor());
             postHolder.timestamp.setText(post.getTimestamp());
             postHolder.content.setText(post.getContent());
+
 
             // Profile image logic
             if (post.getProfileUrl() != null && !post.getProfileUrl().isEmpty()) {
@@ -99,6 +107,31 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else {
                 postHolder.profileImage.setImageResource(R.drawable.ic_profile_placeholder);
             }
+
+            postHolder.moreButton.setOnClickListener(v -> {
+                androidx.appcompat.widget.PopupMenu popupMenu = new androidx.appcompat.widget.PopupMenu(context, v);
+                popupMenu.getMenuInflater().inflate(R.menu.post_options_menu, popupMenu.getMenu());
+
+                // Set "Block" text color to red (you can use any hex or Color resource)
+                final int RED = 0xFFFF3333; // Or: ContextCompat.getColor(context, R.color.yourRed)
+                MenuItem blockItem = popupMenu.getMenu().findItem(R.id.action_block);
+                SpannableString s = new SpannableString("Block");
+                s.setSpan(new ForegroundColorSpan(RED), 0, s.length(), 0);
+                blockItem.setTitle(s);
+
+                popupMenu.setOnMenuItemClickListener(item -> {
+                    int id = item.getItemId();
+                    if (id == R.id.action_block) {
+                        handleBlock(post);
+                        return true;
+                    } else if (id == R.id.action_unfollow) {
+                        handleUnfollow(post);
+                        return true;
+                    }
+                    return false;
+                });
+                popupMenu.show();
+            });
 
             // --- MEDIA LOGIC ---
             String mediaUrl = post.getImageUrl();
@@ -267,6 +300,14 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    private void handleUnfollow(Post post) {
+        Toast.makeText(context, "unfollow clicked", Toast.LENGTH_SHORT).show();
+    }
+
+    private void handleBlock(Post post) {
+        Toast.makeText(context, "block clicked", Toast.LENGTH_SHORT).show();
+    }
+
     private void showCommentBottomSheet() {
         if (context instanceof AppCompatActivity) {
             CommentBottomSheet bottomSheet = CommentBottomSheet.newInstance(postId);
@@ -314,6 +355,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ImageButton likeButton;
         ImageButton commentButton;
         ImageButton shareButton;
+        ImageButton moreButton;
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
             postImage = itemView.findViewById(R.id.post_image);
@@ -329,6 +371,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             likeButton = itemView.findViewById(R.id.like_button);
             commentButton = itemView.findViewById(R.id.comment_button);
             shareButton = itemView.findViewById(R.id.share_button);
+            moreButton = itemView.findViewById(R.id.more_button);
             exoPlayer = null;
         }
     }
