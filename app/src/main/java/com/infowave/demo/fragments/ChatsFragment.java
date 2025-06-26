@@ -112,10 +112,11 @@ public class ChatsFragment extends Fragment {
                 Intent intent = new Intent(context, ChatActivity.class);
                 intent.putExtra("username", person.fullName != null ? person.fullName : person.username);
                 intent.putExtra("otherUserId", person.id);
-                intent.putExtra("profileRes", R.drawable.ic_profile_placeholder);
-                // Pass image URL too if needed!
+                // REMOVE profileRes (not needed anymore)
+                intent.putExtra("profileUrl", person.profileImage); // <-- KEY LINE!
                 context.startActivity(intent);
             });
+
         }
 
         @Override

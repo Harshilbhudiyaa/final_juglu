@@ -59,5 +59,9 @@ public class SupabaseClient {
     public static void addToRequestQueue(Context context, Request<?> request) {
         getInstance(context).getRequestQueue().add(request);
     }
+    public static String getAnonKey() {
+        return ANON_KEY;
+    }
+
 }
 
