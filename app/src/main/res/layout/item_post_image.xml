@@ -43,7 +43,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_heart_filled"
-                android:tint="#FFFFFF"
+
                 android:layout_marginEnd="4dp" />
 
             <TextView

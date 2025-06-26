@@ -24,6 +24,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
     private Context context;
     private List<Post> posts;
+    private String postId;
 
     public PostAdapter(Context context, List<Post> posts) {
         this.context = context;
@@ -71,7 +72,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         });
 
         holder.commentButton.setOnClickListener(v -> {
-            CommentBottomSheet.newInstance().show(((AppCompatActivity)context).getSupportFragmentManager(), "Comments");
+            CommentBottomSheet.newInstance(postId).show(((AppCompatActivity)context).getSupportFragmentManager(), "Comments");
         });
 
         holder.shareButton.setOnClickListener(v -> {

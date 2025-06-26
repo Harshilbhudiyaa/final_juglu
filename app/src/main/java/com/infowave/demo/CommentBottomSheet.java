@@ -29,7 +29,7 @@ public class CommentBottomSheet extends BottomSheetDialogFragment {
     private CommentAdapter commentAdapter;
     private List<Comment> commentList;
 
-    public static CommentBottomSheet newInstance() {
+    public static CommentBottomSheet newInstance(String postId) {
         return new CommentBottomSheet();
     }
 

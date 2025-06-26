@@ -33,9 +33,7 @@ import com.infowave.demo.supabase.PostsRepository;
 import java.util.List;
 
 // Import media3 ExoPlayer classes
-import androidx.media3.common.MediaItem;
-import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.ui.PlayerView;
+
 
 public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_STATUS = 0;
@@ -45,6 +43,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final List<StatusItem> statusList;
     private final List<Post> postList;
     private final String currentUserId;
+    private String postId;
 
     public FeedAdapter(Context context, List<StatusItem> statusList, List<Post> postList) {
         this.context = context;
@@ -270,7 +269,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void showCommentBottomSheet() {
         if (context instanceof AppCompatActivity) {
-            CommentBottomSheet bottomSheet = CommentBottomSheet.newInstance();
+            CommentBottomSheet bottomSheet = CommentBottomSheet.newInstance(postId);
             bottomSheet.show(((AppCompatActivity) context).getSupportFragmentManager(), "Comments");
         }
     }
