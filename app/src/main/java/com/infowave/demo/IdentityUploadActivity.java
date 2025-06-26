@@ -1,31 +1,38 @@
 package com.infowave.demo;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.infowave.demo.supabase.MediaUploadRepository;
+import com.infowave.demo.supabase.SupabaseClient;
+import com.infowave.demo.supabase.UsersRepository;
 
 import java.io.IOException;
 
 public class IdentityUploadActivity extends AppCompatActivity {
 
     private static final int PICK_PROFILE_IMAGE = 101;
-    private static final int PICK_ID_PROOF = 102;
-
-    private ImageView imgProfile, imgIdProof;
-    private Button btnPickProfile, btnPickIdProof, btnContinue;
-
+    private ImageView imgProfile;
+    private Button btnPickProfile, btnContinue;
     private boolean isProfileUploaded = false;
-    private boolean isIdUploaded = false;
+    private String userId = "";
+
+    // Use the anon key for public/test uploads (production: never use service key on client!)
+    private final String SUPABASE_BEARER_TOKEN = SupabaseClient.getAnonKey();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,46 +40,40 @@ public class IdentityUploadActivity extends AppCompatActivity {
         setContentView(R.layout.identity_document_upload);
 
         View decoreview = getWindow().getDecorView();
-        decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-            @NonNull
-            @Override
-            public WindowInsets onApplyWindowInsets(@NonNull View v, @NonNull WindowInsets insets) {
-                int left = insets.getSystemWindowInsetLeft();
-                int top = insets.getSystemWindowInsetTop();
-                int right = insets.getSystemWindowInsetRight();
-                int bottom = insets.getSystemWindowInsetBottom();
-                v.setPadding(left,top,right,bottom);
-                return insets.consumeSystemWindowInsets();
-
-            }
+        decoreview.setOnApplyWindowInsetsListener((v, insets) -> {
+            int left = insets.getSystemWindowInsetLeft();
+            int top = insets.getSystemWindowInsetTop();
+            int right = insets.getSystemWindowInsetRight();
+            int bottom = insets.getSystemWindowInsetBottom();
+            v.setPadding(left, top, right, bottom);
+            return insets.consumeSystemWindowInsets();
         });
 
-
         imgProfile = findViewById(R.id.imgProfile);
-//        imgIdProof = findViewById(R.id.imgIdProof);
         btnPickProfile = findViewById(R.id.btnPickProfile);
-//        btnPickIdProof = findViewById(R.id.btnPickIdProof);
         btnContinue = findViewById(R.id.btnContinue);
 
-        // Start with Continue button disabled
         btnContinue.setEnabled(false);
-          btnContinue.setAlpha(0.6f);
+        btnContinue.setAlpha(0.6f);
+
+        userId = getIntent().getStringExtra("userId");
+        Log.d("IDENTITY_FLOW", "userId from Intent: " + userId);
 
         btnPickProfile.setOnClickListener(v -> pickImage(PICK_PROFILE_IMAGE));
-//        btnPickIdProof.setOnClickListener(v -> pickImage(PICK_ID_PROOF));
 
         btnContinue.setOnClickListener(v -> {
-            // On continue, move to MainActivity
+            Log.d("IDENTITY_FLOW", "Continue clicked, userId: " + userId);
+            getSharedPreferences("YourApp", MODE_PRIVATE).edit().putString("userId", userId).apply();
             startActivity(new Intent(IdentityUploadActivity.this, Main.class));
             finish();
         });
     }
-
     private void pickImage(int requestCode) {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(Intent.createChooser(intent, "Select Image"), requestCode);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -84,19 +85,79 @@ public class IdentityUploadActivity extends AppCompatActivity {
 
                 if (requestCode == PICK_PROFILE_IMAGE) {
                     imgProfile.setImageBitmap(bitmap);
-                    isProfileUploaded = true;
+
+                    btnContinue.setEnabled(false);
+                    btnContinue.setAlpha(0.6f);
+                    btnContinue.setText("Uploading...");
+
+                    Log.d("IDENTITY_FLOW", "Starting image upload to storage for userId: " + userId + ", uri: " + selectedImageUri);
+
+                    MediaUploadRepository.uploadProfileImage(
+                            this,
+                            selectedImageUri,
+                            userId,
+                            SUPABASE_BEARER_TOKEN,
+                            new MediaUploadRepository.UploadCallback() {
+                                @SuppressLint("SetTextI18n")
+                                @Override
+                                public void onSuccess(String publicUrl) {
+                                    Log.d("IDENTITY_FLOW", "Image upload success! Public URL: " + publicUrl);
+
+                                    runOnUiThread(() -> btnContinue.setText("Saving..."));
+
+                                    UsersRepository.updateProfileImage(
+                                            IdentityUploadActivity.this,
+                                            userId,
+                                            publicUrl,
+                                            new UsersRepository.UserCallback() {
+                                                @Override
+                                                public void onSuccess(String msg) {
+                                                    Log.d("IDENTITY_FLOW", "Profile image URL saved to users table: " + msg);
+                                                    runOnUiThread(() -> {
+                                                        isProfileUploaded = true;
+                                                        btnContinue.setEnabled(true);
+                                                        btnContinue.setAlpha(1f);
+                                                        btnContinue.setText("Continue");
+                                                        Toast.makeText(IdentityUploadActivity.this, "Profile uploaded!", Toast.LENGTH_SHORT).show();
+                                                    });
+                                                }
+
+                                                @Override
+                                                public void onFailure(String error) {
+                                                    Log.e("IDENTITY_FLOW", "DB save failed: " + error);
+                                                    runOnUiThread(() -> {
+                                                        isProfileUploaded = false;
+                                                        btnContinue.setEnabled(false);
+                                                        btnContinue.setAlpha(0.6f);
+                                                        btnContinue.setText("Continue");
+                                                        Toast.makeText(IdentityUploadActivity.this, "DB save failed: " + error, Toast.LENGTH_LONG).show();
+                                                    });
+                                                }
+                                            }
+                                    );
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Log.e("IDENTITY_FLOW", "Image upload failed: " + error);
+                                    runOnUiThread(() -> {
+                                        isProfileUploaded = false;
+                                        btnContinue.setEnabled(false);
+                                        btnContinue.setAlpha(0.6f);
+                                        btnContinue.setText("Continue");
+                                        Toast.makeText(IdentityUploadActivity.this, "Upload failed: " + error, Toast.LENGTH_LONG).show();
+                                    });
+                                }
+                            }
+                    );
                 }
-                checkImagesUploaded();
-
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e("IDENTITY_FLOW", "Image decode error: " + e.getMessage(), e);
+                Toast.makeText(this, "Image Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
+        } else if (resultCode != RESULT_OK) {
+            Log.e("IDENTITY_FLOW", "Image selection canceled or failed: resultCode=" + resultCode);
+            Toast.makeText(this, "Image selection canceled.", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void checkImagesUploaded() {
-        boolean enabled = isProfileUploaded;
-        btnContinue.setEnabled(enabled);
-//        btnContinue.setAlpha(enabled ? 1f : 0.6f);
     }
 }

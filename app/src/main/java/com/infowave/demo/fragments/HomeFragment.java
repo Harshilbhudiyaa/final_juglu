@@ -243,8 +243,6 @@ public class HomeFragment extends Fragment {
 
         isFabMenuOpen = !isFabMenuOpen;
     }
-
-
     private float dpToPx(int dp) {
         return dp * getResources().getDisplayMetrics().density;
     }
