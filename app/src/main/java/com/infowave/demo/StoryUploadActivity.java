@@ -155,15 +155,18 @@ public class StoryUploadActivity extends AppCompatActivity {
     }
 
     private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("*/*");
+        String[] mimeTypes = {"image/*", "video/*"};
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
         galleryLauncher.launch(intent);
     }
 
     private void showSelectedMedia(Uri uri) {
-        String path = uri.toString();
+        String mimeType = getContentResolver().getType(uri);
 
-        if (path.endsWith(".mp4")) {
+        if (mimeType != null && mimeType.startsWith("video")) {
+            // Video
             if (exoPlayer != null) {
                 exoPlayer.release();
             }
@@ -183,14 +186,16 @@ public class StoryUploadActivity extends AppCompatActivity {
             exoPlayer.play();
 
             lastCapturedVideoFile = new File(uri.getPath());
-        } else {
+        } else if (mimeType != null && mimeType.startsWith("image")) {
+            // Image
             imagePreview.setImageURI(uri);
             imagePreview.setVisibility(View.VISIBLE);
             playerView.setVisibility(View.GONE);
             previewView.setVisibility(View.GONE);
             btnRetake.setVisibility(View.VISIBLE);
+        } else {
+            Toast.makeText(this, "Unsupported media type", Toast.LENGTH_SHORT).show();
         }
-
         isImageVisible = true;
     }
 
