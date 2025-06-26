@@ -12,7 +12,6 @@ import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -51,7 +50,6 @@ public class StoryUploadActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ImageView captureButton, imagePreview, btnGallery, btnBack;
     private TextView btnUpload, btnRetake;
-    private VideoView videoPreview;
 
     private ImageCapture imageCapture;
     private VideoCapture<Recorder> videoCapture;
@@ -65,13 +63,24 @@ public class StoryUploadActivity extends AppCompatActivity {
 
     private PlayerView playerView;
     private ExoPlayer exoPlayer;
+
+    // For the hold-to-record logic
+    private boolean isLongPress = false;
+    private final Runnable longPressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            isLongPress = true;
+            startVideoRecording();
+        }
+    };
+
     private final ActivityResultLauncher<Intent> galleryLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Uri selectedImage = result.getData().getData();
-                    if (selectedImage != null) {
-                        showSelectedMedia(selectedImage);
+                    Uri selectedMedia = result.getData().getData();
+                    if (selectedMedia != null) {
+                        showSelectedMedia(selectedMedia);
                     }
                 }
             });
@@ -80,6 +89,7 @@ public class StoryUploadActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_story_upload);
+
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @NonNull
@@ -89,10 +99,11 @@ public class StoryUploadActivity extends AppCompatActivity {
                 int top = insets.getSystemWindowInsetTop();
                 int right = insets.getSystemWindowInsetRight();
                 int bottom = insets.getSystemWindowInsetBottom();
-                v.setPadding(left,top,right,bottom);
+                v.setPadding(left, top, right, bottom);
                 return insets.consumeSystemWindowInsets();
             }
         });
+
         previewView = findViewById(R.id.previewView);
         captureButton = findViewById(R.id.captureButton);
         imagePreview = findViewById(R.id.imagePreview);
@@ -113,24 +124,24 @@ public class StoryUploadActivity extends AppCompatActivity {
                     REQUEST_CAMERA_PERMISSION);
         }
 
-        captureButton.setOnClickListener(v -> {
-            if (isImageVisible) {
-                resetToCamera();
-            } else {
-                takePhoto();
-            }
-        });
-
-        captureButton.setOnLongClickListener(v -> {
-            startVideoRecording();
-            return true;
-        });
-
+        // --- Instagram/Snapchat style tap/hold ---
         captureButton.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-                stopVideoRecording();
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    v.postDelayed(longPressRunnable, 1000); // 1 second hold
+                    isLongPress = false;
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    v.removeCallbacks(longPressRunnable);
+                    if (isLongPress) {
+                        stopVideoRecording();
+                    } else {
+                        takePhoto();
+                    }
+                    break;
             }
-            return false;
+            return true;
         });
 
         btnGallery.setOnClickListener(v -> openGallery());
@@ -165,11 +176,22 @@ public class StoryUploadActivity extends AppCompatActivity {
     private void showSelectedMedia(Uri uri) {
         String mimeType = getContentResolver().getType(uri);
 
-        if (mimeType != null && mimeType.startsWith("video")) {
-            // Video
-            if (exoPlayer != null) {
-                exoPlayer.release();
+        // Fallback: If mimeType is null, check file extension manually
+        if (mimeType == null) {
+            String path = uri.getPath();
+            if (path != null) {
+                String lower = path.toLowerCase();
+                if (lower.endsWith(".mp4") || lower.endsWith(".mkv") || lower.endsWith(".3gp") || lower.endsWith(".avi")) {
+                    mimeType = "video/*";
+                } else if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp")) {
+                    mimeType = "image/*";
+                }
             }
+        }
+
+        if (mimeType != null && mimeType.startsWith("video")) {
+            // Video preview
+            if (exoPlayer != null) exoPlayer.release();
 
             playerView.setVisibility(View.VISIBLE);
             imagePreview.setVisibility(View.GONE);
@@ -185,9 +207,9 @@ public class StoryUploadActivity extends AppCompatActivity {
             exoPlayer.prepare();
             exoPlayer.play();
 
-            lastCapturedVideoFile = new File(uri.getPath());
+            lastCapturedVideoFile = new File(getRealPathFromURI(uri)); // see helper below
         } else if (mimeType != null && mimeType.startsWith("image")) {
-            // Image
+            // Image preview
             imagePreview.setImageURI(uri);
             imagePreview.setVisibility(View.VISIBLE);
             playerView.setVisibility(View.GONE);
@@ -197,6 +219,16 @@ public class StoryUploadActivity extends AppCompatActivity {
             Toast.makeText(this, "Unsupported media type", Toast.LENGTH_SHORT).show();
         }
         isImageVisible = true;
+    }
+    private String getRealPathFromURI(Uri contentUri) {
+        String[] proj = {MediaStore.Video.Media.DATA};
+        try (android.database.Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+                return cursor.getString(column_index);
+            }
+        } catch (Exception ignored) {}
+        return contentUri.getPath();
     }
 
 
@@ -212,7 +244,6 @@ public class StoryUploadActivity extends AppCompatActivity {
             exoPlayer = null;
         }
     }
-
 
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> future = ProcessCameraProvider.getInstance(this);
