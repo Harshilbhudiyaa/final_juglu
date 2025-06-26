@@ -1,177 +1,293 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bottom_sheet_background"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@drawable/bottom_sheet_background">
 
-    <!-- Header Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:layout_marginBottom="24dp">
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/ic_otp"
-            android:background="@drawable/circle_background"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp"/>
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
 
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_otp"
+                android:background="@drawable/circle_background"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Verify Your Number or Email"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvPhoneNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="@color/gray"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:id="@+id/tvEmailAddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="@color/gray"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enter the 6-digit codes sent to your phone and email"
+                android:textSize="14sp"
+                android:textColor="@color/gray"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Mobile OTP Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Verify Your Number"
-            android:textSize="24sp"
+            android:text="Mobile OTP"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/black"
             android:layout_marginBottom="8dp"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp1"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp2"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp3"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp4"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp5"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/otp6"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <!-- Email OTP Section -->
         <TextView
-            android:id="@+id/tvPhoneNumber"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="@color/gray"
-            android:layout_marginBottom="24dp"/>
+            android:text="Email OTP"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="8dp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Enter the 6-digit code sent to your phone"
-            android:textSize="14sp"
-            android:textColor="@color/gray"
-            android:gravity="center"/>
-    </LinearLayout>
-
-    <!-- OTP Input Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="32dp">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp1"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/otp_input_background"
+            android:orientation="horizontal"
             android:gravity="center"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:layout_marginBottom="32dp">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp2"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:textColor="@color/black"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/otp_input_background"
-            android:gravity="center"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp1"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp3"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:textColor="@color/black"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/otp_input_background"
-            android:gravity="center"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp2"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp4"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="8dp"
-            android:textColor="@color/black"
-            android:background="@drawable/otp_input_background"
-            android:gravity="center"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp3"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp5"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:layout_marginEnd="8dp"
-            android:textColor="@color/black"
-            android:background="@drawable/otp_input_background"
-            android:gravity="center"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp4"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/otp6"
-            android:layout_width="48dp"
-            android:layout_height="56dp"
-            android:background="@drawable/otp_input_background"
-            android:gravity="center"
-            android:textColor="@color/black"
-            android:inputType="number"
-            android:maxLength="1"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp5"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
 
-    <!-- Timer and Resend Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginBottom="32dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailOtp6"
+                android:layout_width="48dp"
+                android:layout_height="56dp"
+                android:background="@drawable/otp_input_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvTimer"
-            android:layout_width="wrap_content"
+        <!-- Timer & Resend -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/gray"
-            android:layout_marginBottom="16dp"/>
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
 
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/gray"
+                android:layout_marginBottom="16dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResendCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resend Codes"
+                android:textColor="@color/primary"
+                app:backgroundTint="@android:color/transparent"
+                app:rippleColor="@color/primary_light"
+                style="@style/Widget.MaterialComponents.Button.TextButton"/>
+        </LinearLayout>
+
+        <!-- Verify Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnResendCode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Resend Code"
-            android:textColor="@color/primary"
-            app:backgroundTint="@android:color/transparent"
-            app:rippleColor="@color/primary_light"
-            style="@style/Widget.MaterialComponents.Button.TextButton"/>
+            android:id="@+id/btnVerify"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Verify Both"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:cornerRadius="28dp"
+            android:elevation="4dp"
+            app:rippleColor="@color/primary_dark"/>
     </LinearLayout>
-
-    <!-- Verify Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnVerify"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="Verify"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:cornerRadius="28dp"
-        android:elevation="4dp"
-        app:rippleColor="@color/primary_dark"/>
-
-</LinearLayout> 
+</ScrollView>

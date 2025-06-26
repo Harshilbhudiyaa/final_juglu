@@ -227,24 +227,7 @@
             android:backgroundTint="#5C27FE"
             app:cornerRadius="16dp"/>
 
-        <!-- Or Divider -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="—or—"
-            android:textColor="#777777"
-            android:layout_gravity="center"
-            android:padding="16dp"/>
 
-        <!-- Google Sign-In -->
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/btnGoogleSignIn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:size="wide"
-            app:colorScheme="dark"/>
-
-        <!-- Already have account -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
