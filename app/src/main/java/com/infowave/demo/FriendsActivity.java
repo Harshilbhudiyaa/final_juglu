@@ -1,10 +1,12 @@
 package com.infowave.demo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,15 +14,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.infowave.demo.adapters.FriendsAdapter;
 import com.infowave.demo.models.Friend;
+import com.infowave.demo.models.Friends;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FriendsActivity extends AppCompatActivity {
 
-    RecyclerView recyclerView;
-    FriendsAdapter adapter;
-    List<Friend> friendList;
+
+    private FriendsAdapter adapter;
+    private List<Friends> friendList = new ArrayList<>();
+
     ImageView back;
 
     @Override
@@ -41,21 +45,29 @@ public class FriendsActivity extends AppCompatActivity {
 
             }
         });
-        recyclerView = findViewById(R.id.recycler_friends);
-        back = findViewById(R.id.back_icon);
+
+        RecyclerView recyclerView = findViewById(R.id.recycler_friends);
+        ImageView back = findViewById(R.id.back_icon);
         back.setOnClickListener(v -> onBackPressed());
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        friendList = new ArrayList<>();
-        friendList.add(new Friend("Kunal Bhatt", "5 mutual friends", R.drawable.image1));
-        friendList.add(new Friend("Harshita Singh", "2 mutual friends", R.drawable.image2));
-        friendList.add(new Friend("Aman Patel", "1 mutual friend", R.drawable.image3));
+        List<Friends> friendList = new ArrayList<>();
+        friendList.add(new Friends("Kunal Bhatt", "5 mutual friends", R.drawable.image1));
+        friendList.add(new Friends("Harshita Singh", "2 mutual friends", R.drawable.image2));
+        friendList.add(new Friends("Aman Patel", "1 mutual friend", R.drawable.image3));
 
-        adapter = new FriendsAdapter(friendList, friend -> {
+        adapter = new FriendsAdapter(this, friendList, friend -> {
             Toast.makeText(this, "Unfollowed " + friend.getName(), Toast.LENGTH_SHORT).show();
-            // remove friend or handle logic
+
+            // Remove friend from list
+            friendList.remove(friend);
+
+            // Notify adapter of data change
+            adapter.notifyDataSetChanged();
         });
+
 
         recyclerView.setAdapter(adapter);
     }
+
 }

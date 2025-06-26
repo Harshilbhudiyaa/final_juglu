@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:background="@drawable/image5"
+    android:elevation="4dp"
+    android:clipToOutline="true"
+    android:layout_margin="5dp"
+    android:padding="0dp">
+
+    <!-- Main post image with rounded corners -->
+    <ImageView
+        android:id="@+id/post_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="Post image"
+        android:background="@android:color/transparent"
+        android:adjustViewBounds="true"
+        android:cropToPadding="true"
+        android:outlineProvider="background"
+        android:clipToOutline="true"
+        android:layout_margin="0dp" />
+
+    <!-- Gradient overlay for better text/icon visibility -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/gradient_overlay"
+        android:layout_marginBottom="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginTop="0dp" />
+
+    <!-- Like icon as an example overlay (optional, can be removed if not needed) -->
+
+</FrameLayout>

@@ -1,31 +1,35 @@
 package com.infowave.demo.adapters;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.infowave.demo.FriendProfileActivity;
 import com.infowave.demo.R;
-import com.infowave.demo.models.Friend;
+import com.infowave.demo.models.Friends;
 
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendViewHolder> {
 
     public interface OnUnfollowClick {
-        void onUnfollow(Friend friend);
+        void onUnfollow(Friends friend);
     }
 
-    private List<Friend> list;
+    private List<Friends> list;
     private OnUnfollowClick listener;
+    private Context context;
 
-    public FriendsAdapter(List<Friend> list, OnUnfollowClick listener) {
+    public FriendsAdapter(Context context, List<Friends> list, OnUnfollowClick listener) {
+        this.context = context;
         this.list = list;
         this.listener = listener;
     }
@@ -40,12 +44,22 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
 
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
-        Friend f = list.get(position);
+        Friends f = list.get(position);
         holder.name.setText(f.getName());
         holder.mutual.setText(f.getMutual());
         holder.image.setImageResource(f.getImageRes());
 
+        // Unfollow button click
         holder.unfollow.setOnClickListener(v -> listener.onUnfollow(f));
+
+        // Entire item click (redirect to profile)
+        holder.itemView.setOnClickListener(v -> openFriendProfile(f));
+    }
+
+    private void openFriendProfile(Friends friend) {
+        Intent profileIntent = new Intent(context, FriendProfileActivity.class);
+        profileIntent.putExtra("friend", friend);
+        context.startActivity(profileIntent);
     }
 
     @Override
