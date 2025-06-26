@@ -151,7 +151,7 @@
                 android:fontFamily="sans-serif-medium" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Date of Birth (etDOB) -->
+        <!-- Date of Birth -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -182,12 +182,12 @@
 
         <!-- Bio -->
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Tell us about yourself"
             android:textColor="#AAAAAA"
             android:textSize="14sp"
-            android:layout_marginBottom="6dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_marginBottom="6dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -215,7 +215,7 @@
                 android:fontFamily="sans-serif-medium" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Continue Button -->
+        <!-- Continue -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNext"
             android:layout_width="match_parent"
@@ -225,9 +225,26 @@
             android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#5C27FE"
-            app:cornerRadius="16dp"
-            android:layout_marginTop="10dp"/>
+            app:cornerRadius="16dp"/>
 
+        <!-- Or Divider -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="—or—"
+            android:textColor="#777777"
+            android:layout_gravity="center"
+            android:padding="16dp"/>
+
+        <!-- Google Sign-In -->
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/btnGoogleSignIn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:size="wide"
+            app:colorScheme="dark"/>
+
+        <!-- Already have account -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -243,15 +260,14 @@
                 android:textSize="14sp"/>
 
             <TextView
+                android:id="@+id/login"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/login"
                 android:text="Login"
                 android:textColor="#3F51B5"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
         </LinearLayout>
-
 
     </LinearLayout>
 </ScrollView>
