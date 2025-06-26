@@ -121,35 +121,8 @@
                 android:fontFamily="sans-serif-medium" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Password -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="18dp"
-            android:hint="Password"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:endIconMode="password_toggle"
-            app:startIconTint="#AAAAAA"
-            app:endIconTint="#AAAAAA"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeColor="@color/focused_border_color"
-            app:boxBackgroundColor="#1C1C1C"
-            app:hintTextColor="@color/hint_color_selector"
-            app:boxCornerRadiusTopStart="10dp"
-            app:boxCornerRadiusTopEnd="10dp"
-            app:boxCornerRadiusBottomStart="10dp"
-            app:boxCornerRadiusBottomEnd="10dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#777777"
-                android:textSize="15sp"
-                android:fontFamily="sans-serif-medium" />
-        </com.google.android.material.textfield.TextInputLayout>
+
 
         <!-- Date of Birth -->
         <com.google.android.material.textfield.TextInputLayout
