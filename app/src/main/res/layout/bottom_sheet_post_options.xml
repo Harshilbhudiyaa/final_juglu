@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="@drawable/bottomsheet_bg_rounded"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingBottom="16dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <!-- Edit Option -->
+    <TextView
+        android:id="@+id/option_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Edit"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:drawableStart="@drawable/ic_edit"
+        android:drawablePadding="16dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
+
+    <!-- Delete Option -->
+    <TextView
+        android:id="@+id/option_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:textColor="#e53935"
+        android:textSize="16sp"
+        android:drawableStart="@drawable/ic_delete"
+        android:drawablePadding="16dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#f0f0f0"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"/>
+
+    <!-- Hide Comment Option -->
+    <TextView
+        android:id="@+id/option_hide_comment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hide Comment"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:drawableTint="@color/white"
+        android:drawableStart="@drawable/ic_comment"
+        android:drawablePadding="16dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
+
+    <!-- Hide Like Option -->
+    <TextView
+        android:id="@+id/option_hide_like"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hide Like Count"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:drawableStart="@drawable/ic_heart_filled"
+        android:drawableTint="@color/white"
+        android:drawablePadding="16dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
+
+    <!-- Hide Share Option -->
+    <TextView
+        android:id="@+id/option_hide_share"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hide Share Option"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:drawableTint="@color/white"
+        android:drawableStart="@drawable/ic_share"
+        android:drawablePadding="16dp"
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackground"/>
+</LinearLayout>

@@ -20,15 +20,18 @@ import java.util.List;
 public class PersonNearbyAdapter extends RecyclerView.Adapter<PersonNearbyAdapter.ViewHolder> {
 
     public List<PersonNearby> nearbyList;
-    private final OnConnectClickListener connectClickListener;
 
     public interface OnConnectClickListener {
         void onConnectClick(int position);
     }
 
-    public PersonNearbyAdapter(List<PersonNearby> nearbyList, OnConnectClickListener listener) {
+    public interface OnPersonNearbyClickListener {
+        void onClick(PersonNearby person);
+    }
+    private final OnPersonNearbyClickListener listener;
+    public PersonNearbyAdapter(List<PersonNearby> nearbyList, OnPersonNearbyClickListener listener) {
         this.nearbyList = nearbyList;
-        this.connectClickListener = listener;
+        this.listener = listener;
     }
 
     @NonNull
@@ -46,12 +49,12 @@ public class PersonNearbyAdapter extends RecyclerView.Adapter<PersonNearbyAdapte
         holder.name.setText(person.getName());
         holder.distance.setText(person.getDistance());
         holder.profileImage.setImageResource(person.getProfileImageRes());
-
-        holder.connectButton.setOnClickListener(v -> {
-            if (connectClickListener != null) {
-                connectClickListener.onConnectClick(position);
-            }
-        });
+        holder.itemView.setOnClickListener(v -> listener.onClick(person));
+//        holder.connectButton.setOnClickListener(v -> {
+//            if (connectClickListener != null) {
+//                connectClickListener.onConnectClick(position);
+//            }
+//        });
     }
 
     @Override

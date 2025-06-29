@@ -1,5 +1,6 @@
 package com.infowave.demo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
@@ -9,11 +10,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.infowave.demo.adapters.PostsAdapter;
 import com.infowave.demo.models.Friends;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class FriendProfileActivity extends AppCompatActivity {
         Friends friend = getIntent().getParcelableExtra("friend");
 
         // Setup toolbar
-        Toolbar toolbar = findViewById(R.id.toolbar);
+//        Toolbar toolbar = findViewById(R.id.toolbar);
         ImageView backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> finish());
 
@@ -79,7 +81,12 @@ public class FriendProfileActivity extends AppCompatActivity {
                 R.drawable.image4, R.drawable.image5, R.drawable.image1
         );
 
-        PostsAdapter adapter = new PostsAdapter(this, postImages);
-        postsGrid.setAdapter(adapter);
+        postsGrid.setAdapter(new PostsAdapter(this, postImages, position -> {
+            Intent intent = new Intent(this, PostDetailActivity.class);
+            intent.putIntegerArrayListExtra("post_images", new ArrayList<>(postImages));
+            intent.putExtra("position", position);
+            startActivity(intent);
+        }));
+
     }
 }

@@ -18,15 +18,18 @@ import java.util.List;
 public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUserAdapter.ViewHolder> {
 
     public List<RecommendedUser> recommendedList;
-    private final OnFollowClickListener followClickListener;
 
+    public interface OnRecommendedUserClickListener {
+        void onClick(RecommendedUser user);
+    }
+    private final OnRecommendedUserClickListener listener;
     public interface OnFollowClickListener {
         void onFollowClick(int position);
     }
 
-    public RecommendedUserAdapter(List<RecommendedUser> recommendedList, OnFollowClickListener listener) {
+    public RecommendedUserAdapter(List<RecommendedUser> recommendedList, OnRecommendedUserClickListener listener) {
         this.recommendedList = recommendedList;
-        this.followClickListener = listener;
+        this.listener = listener;
     }
 
     @NonNull
@@ -44,12 +47,12 @@ public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUser
         holder.name.setText(user.getName());
         holder.interests.setText(user.getInterests());
         holder.profileImage.setImageResource(user.getProfileImageRes());
-
-        holder.actionButton.setOnClickListener(v -> {
-            if (followClickListener != null) {
-                followClickListener.onFollowClick(position);
-            }
-        });
+        holder.itemView.setOnClickListener(v -> listener.onClick(user));
+//        holder.actionButton.setOnClickListener(v -> {
+//            if (followClickListener != null) {
+//                followClickListener.onFollowClick(position);
+//            }
+//        });
     }
 
     @Override

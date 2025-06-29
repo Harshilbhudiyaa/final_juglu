@@ -1,5 +1,6 @@
 package com.infowave.demo.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.infowave.demo.FriendProfileActivity;
 import com.infowave.demo.R;
 import com.infowave.demo.adapters.PersonNearbyAdapter;
 import com.infowave.demo.adapters.RecommendedUserAdapter;
@@ -51,6 +53,9 @@ public class SearchFragment extends Fragment {
         loadDummyData();
 
         return view;
+
+
+
     }
 
     private void setupSearch() {
@@ -130,4 +135,6 @@ public class SearchFragment extends Fragment {
             recommendedAdapter.notifyDataSetChanged();
         }
     }
+
+
 }
