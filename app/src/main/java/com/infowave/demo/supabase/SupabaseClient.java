@@ -52,6 +52,7 @@ public class SupabaseClient {
         headers.put("Content-Type", "application/json");
         return headers;
     }
+
     public RequestQueue getRequestQueue() {
         return requestQueue;
     }

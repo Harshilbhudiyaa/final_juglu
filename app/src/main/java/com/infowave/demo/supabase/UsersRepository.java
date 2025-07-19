@@ -6,45 +6,90 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.JsonArrayRequest;
-
-
-import org.json.JSONArray;
+import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.Map;
+import java.util.HashMap;
 
 public class UsersRepository {
 
     public interface UserCallback {
-        void onSuccess(String result); // userId or message
+        void onSuccess(String result);
         void onFailure(String error);
     }
 
-    // 1️⃣ Register new user (without gender/profile_image)
-    public static void registerUser(Context ctx, com.infowave.demo.models.User user, UserCallback cb) {
-        String url = getBaseUrl() + "/rest/v1/users?on_conflict=username";
+    // Register user with Supabase Auth (with required apikey headers)
+    public static void registerUserWithAuth(Context ctx, com.infowave.demo.models.User user, String phone, String password, UserCallback cb) {
+        String url = SupabaseClient.getBaseUrl() + "/auth/v1/signup";
+
         JSONObject body = new JSONObject();
         try {
-            body.put("full_name", user.getFullName());
-            body.put("username",  user.getUsername());
-            body.put("phone",     user.getPhone());
-            body.put("password",  user.getPassword());
-            body.put("bio",       user.getBio());
-            body.put("status",    "active");
+            String email = phone + "@dummy.com"; // dummy unique email
+            body.put("email", email);
+            body.put("password", password);
+            body.put("email_confirm", true);  // skip email confirmation
         } catch (JSONException e) {
             cb.onFailure(e.getMessage());
             return;
         }
+
+        Log.d("SUPABASE_AUTH_REGISTER_URL", url);
+        Log.d("SUPABASE_AUTH_REGISTER_BODY", body.toString());
+
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,
+                resp -> {
+                    try {
+                        String authId = resp.getJSONObject("user").getString("id");
+                        Log.d("SUPABASE_AUTH_ID", authId);
+                        insertUserProfile(ctx, user, authId, cb);
+                    } catch (Exception e) {
+                        cb.onFailure("Auth success, but parse failed: " + e.getMessage());
+                    }
+                },
+                err -> {
+                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
+                    Log.e("SUPABASE_AUTH_ERROR", e);
+                    cb.onFailure("Auth Error: " + e);
+                }
+        ) {
+            @Override public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>();
+                h.put("apikey", SupabaseClient.getAnonKey());
+                h.put("Authorization", "Bearer " + SupabaseClient.getAnonKey());
+                h.put("Content-Type", "application/json");
+                return h;
+            }
+        };
+        req.setRetryPolicy(new DefaultRetryPolicy(7000, 1, 1f));
+        SupabaseClient.addToRequestQueue(ctx, req);
+    }
+
+    // Insert user profile data to 'users' table with auth_id from signup
+    private static void insertUserProfile(Context ctx, com.infowave.demo.models.User user, String authId, UserCallback cb) {
+        String url = getBaseUrl() + "/rest/v1/users?on_conflict=username";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("auth_id", authId);
+            body.put("full_name", user.getFullName());
+            body.put("username", user.getUsername());
+            body.put("phone", user.getPhone());
+            body.put("bio", user.getBio());
+            body.put("status", "active");
+        } catch (JSONException e) {
+            cb.onFailure(e.getMessage());
+            return;
+        }
+
         Log.d("USERS_REPO_REGISTER_URL", url);
         Log.d("USERS_REPO_REGISTER_BODY", body.toString());
 
         StringRequest req = new StringRequest(Request.Method.POST, url,
                 resp -> cb.onSuccess("upsert_ok"),
                 err -> {
-                    String e = err.networkResponse != null
-                            ? new String(err.networkResponse.data)
-                            : err.toString();
+                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
                     Log.e("USERS_REPO_REGISTER_ERR", e);
                     cb.onFailure("Error: " + e);
                 }
@@ -62,7 +107,6 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-    // 2️⃣ Fetch userId by phone (after registration)
     public static void fetchUserIdByPhone(Context ctx, String phone, UserCallback cb) {
         String url = getBaseUrl() + "/rest/v1/users?phone=eq." + phone + "&select=id";
         Log.d("USERS_REPO_FETCHID_URL", url);
@@ -82,9 +126,7 @@ public class UsersRepository {
                     }
                 },
                 err -> {
-                    String e = err.networkResponse != null
-                            ? new String(err.networkResponse.data)
-                            : err.toString();
+                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
                     Log.e("USERS_REPO_FETCHID_ERR", e);
                     cb.onFailure("Error: " + e);
                 }
@@ -99,7 +141,6 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-    // 3️⃣ Update Gender for user (by userId)
     public static void updateGender(Context ctx, String userId, String gender, UserCallback cb) {
         String url = getBaseUrl() + "/rest/v1/users?id=eq." + userId;
         JSONObject body = new JSONObject();
@@ -115,9 +156,7 @@ public class UsersRepository {
         StringRequest req = new StringRequest(Request.Method.PATCH, url,
                 resp -> cb.onSuccess("gender_updated"),
                 err -> {
-                    String e = err.networkResponse != null
-                            ? new String(err.networkResponse.data)
-                            : err.toString();
+                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
                     Log.e("USERS_REPO_GENDER_ERR", e);
                     cb.onFailure("Error: " + e);
                 }
@@ -134,7 +173,6 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-    // 4️⃣ Update Profile Photo for user (by userId)
     public static void updateProfileImage(Context ctx, String userId, String profileImageUrl, UserCallback cb) {
         String url = getBaseUrl() + "/rest/v1/users?id=eq." + userId;
         JSONObject body = new JSONObject();
@@ -150,9 +188,7 @@ public class UsersRepository {
         StringRequest req = new StringRequest(Request.Method.PATCH, url,
                 resp -> cb.onSuccess("profile_image_updated"),
                 err -> {
-                    String e = err.networkResponse != null
-                            ? new String(err.networkResponse.data)
-                            : err.toString();
+                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
                     Log.e("USERS_REPO_PROFILEIMG_ERR", e);
                     cb.onFailure("Error: " + e);
                 }

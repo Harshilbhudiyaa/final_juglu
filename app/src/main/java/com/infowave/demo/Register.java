@@ -18,12 +18,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.android.volley.toolbox.StringRequest;
+
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
 import com.infowave.demo.models.User;
@@ -82,7 +83,6 @@ public class Register extends AppCompatActivity {
 
         btnNext.setOnClickListener(v -> {
             if (validateForm()) {
-                // Disable button and show loader
                 originalBtnText = btnNext.getText().toString();
                 btnNext.setText("Sending OTP...");
                 btnNext.setEnabled(false);
@@ -91,7 +91,6 @@ public class Register extends AppCompatActivity {
                 Toast.makeText(this, "Please fix the errors", Toast.LENGTH_SHORT).show();
             }
         });
-
 
         login_txt.setOnClickListener(v -> startActivity(new Intent(this, LoginActivity.class)));
     }
@@ -102,51 +101,46 @@ public class Register extends AppCompatActivity {
         String otp = String.valueOf((int) (Math.random() * 900000 + 100000));
         Log.d("SEND_OTP", "Generated OTP: " + otp);
 
-        // 👇 COMMENT OUT THE ACTUAL SMS SEND BELOW
-    /*
-    String url = "https://ninzasms.in.net/auth/send_sms";
-    JSONObject body = new JSONObject();
-    try {
-        body.put("sender_id", "940");              // your approved sender ID
-        body.put("variables_values", otp);
-        body.put("numbers", mobile);
-    } catch (JSONException e) {
-        Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
-        return;
-    }
-
-    JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
-            response -> {
-                Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
-                saveOtpToSupabase(mobile, otp);
-            },
-            error -> {
-                String err = error.networkResponse != null
-                        ? new String(error.networkResponse.data)
-                        : error.toString();
-                Log.e("OTP_ERROR", err);
-                Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
-                // Restore button if failed
-                btnNext.setText(originalBtnText);
-                btnNext.setEnabled(true);
-            }
-    ) {
-        @Override
-        public Map<String, String> getHeaders() {
-            Map<String, String> h = new HashMap<>();
-            h.put("Content-Type", "application/json");
-            h.put("Authorization", "NINZASMS907929413f89905b48b267a8bf20646ee8dd803ba924f770854f9d49");
-            return h;
+        String url = "https://ninzasms.in.net/auth/send_sms";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("sender_id", "15155");
+            body.put("variables_values", otp);
+            body.put("numbers", mobile);
+        } catch (JSONException e) {
+            Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
+            return;
         }
-    };
-    request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
-    SupabaseClient.addToRequestQueue(this, request);
-    */
 
-        // 👇 JUST CALL THIS DIRECTLY FOR TESTING
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
+                    saveOtpToSupabase(mobile, otp);
+                },
+                error -> {
+                    String err = error.networkResponse != null
+                            ? new String(error.networkResponse.data)
+                            : error.toString();
+                    Log.e("OTP_ERROR", err);
+                    Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
+                    btnNext.setText(originalBtnText);
+                    btnNext.setEnabled(true);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>();
+                h.put("Content-Type", "application/json");
+                h.put("Authorization", "NINZASMSf6e2000ba91482e5cc0116b1b2bf1bc20818fd77297c02ae50e9a70b");
+                return h;
+            }
+        };
+        request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
+        SupabaseClient.addToRequestQueue(this, request);
+
+        // For testing (remove in production)
         saveOtpToSupabase(mobile, otp);
     }
-
 
     // ==== 2. Save OTP to Supabase ====
     private void saveOtpToSupabase(String phone, String otp) {
@@ -166,7 +160,6 @@ public class Register extends AppCompatActivity {
                 response -> {
                     Log.d("SUPABASE_OTP", "Upsert raw response: '" + response + "'");
                     showOtpBottomSheet();
-                    // Restore button when OTP screen is shown
                     btnNext.setText(originalBtnText);
                     btnNext.setEnabled(true);
                 },
@@ -258,7 +251,7 @@ public class Register extends AppCompatActivity {
                         if (resp.length() > 0 && resp.getJSONObject(0).getString("otp").equals(sb.toString())) {
                             Log.d("VERIFY_OTP", "OTP matched");
                             otpBottomSheet.dismiss();
-                            saveUserToSupabase();
+                            registerUserWithAuthAndInsertProfile();
                         } else {
                             Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show();
                         }
@@ -277,8 +270,8 @@ public class Register extends AppCompatActivity {
         SupabaseClient.addToRequestQueue(this, req);
     }
 
-    // ==== 5. Register user, then fetch userId and go to GenderSelectionActivity ====
-    private void saveUserToSupabase() {
+    // ==== 5. Register with Supabase Auth and Insert user profile ====
+    private void registerUserWithAuthAndInsertProfile() {
         User user = new User(
                 etUsername.getText().toString(),
                 etUsername.getText().toString(),
@@ -287,34 +280,31 @@ public class Register extends AppCompatActivity {
                 etBio.getText().toString()
         );
 
-        UsersRepository.registerUser(this, user, new UsersRepository.UserCallback() {
+        UsersRepository.registerUserWithAuth(this, user, etMobile.getText().toString(), etPassword.getText().toString(), new UsersRepository.UserCallback() {
             @Override
             public void onSuccess(String resp) {
-                Log.d("REGISTER", "User saved. Now fetching userId...");
-                // 1️⃣ Immediately fetch userId using phone
-                UsersRepository.fetchUserIdByPhone(Register.this, etMobile.getText().toString(),
-                        new UsersRepository.UserCallback() {
-                            @Override
-                            public void onSuccess(String userId) {
-                                Log.d("REGISTER", "Fetched userId: " + userId);
-                                // 2️⃣ Pass userId to GenderSelectionActivity
-                                Intent i = new Intent(Register.this, GenderSelectionActivity.class);
-                                i.putExtra("userId", userId);
-                                startActivity(i);
-                                finish();
-                            }
+                Log.d("REGISTER", "User registered and profile saved: " + resp);
+                // Move to next activity with fetched userId (optional fetchUserIdByPhone)
+                UsersRepository.fetchUserIdByPhone(Register.this, etMobile.getText().toString(), new UsersRepository.UserCallback() {
+                    @Override
+                    public void onSuccess(String userId) {
+                        Log.d("REGISTER", "Fetched userId: " + userId);
+                        Intent i = new Intent(Register.this, GenderSelectionActivity.class);
+                        i.putExtra("userId", userId);
+                        startActivity(i);
+                        finish();
+                    }
 
-                            @Override
-                            public void onFailure(String error) {
-                                Log.e("REGISTER", "UserId fetch failed: " + error);
-                                Toast.makeText(Register.this, "Registration failed: UserId fetch error", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                    @Override
+                    public void onFailure(String error) {
+                        Toast.makeText(Register.this, "UserId fetch failed: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
             public void onFailure(String error) {
-                Log.e("REGISTER", "Save failed: " + error);
+                Log.e("REGISTER", "Registration failed: " + error);
                 Toast.makeText(Register.this, "Registration failed: " + error, Toast.LENGTH_SHORT).show();
             }
         });
