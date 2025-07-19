@@ -21,16 +21,23 @@ public class UsersRepository {
         void onSuccess(String result);
         void onFailure(String error);
     }
+    public interface AuthLoginCallback {
+        void onSuccess(String jwtToken, String userId);
+        void onFailure(String error);
+    }
 
-    // Register user with Supabase Auth (with required apikey headers)
-    public static void registerUserWithAuth(Context ctx, com.infowave.demo.models.User user, String phone, String password, UserCallback cb) {
+    // --------------------- REGISTRATION ------------------------
+    public static void registerUserWithAuth(Context ctx, com.infowave.demo.models.User user, String phone, String realEmail, UserCallback cb) {
+        // Backend-generated password and backend email
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String backendPassword = phone + "_" + timestamp;
+        String backendEmail = phone + "_" + timestamp + "@gmail.com";
+
         String url = SupabaseClient.getBaseUrl() + "/auth/v1/signup";
-        String email = phone + "_" + System.currentTimeMillis() + "@gmail.com";
-
         JSONObject body = new JSONObject();
         try {
-            body.put("email", email);
-            body.put("password", password);
+            body.put("email", backendEmail);
+            body.put("password", backendPassword);
             body.put("email_confirm", true);  // skip email confirmation
         } catch (JSONException e) {
             cb.onFailure(e.getMessage());
@@ -53,7 +60,7 @@ public class UsersRepository {
                             saveJwtToPrefs(ctx, jwt);
 
                             // Continue as normal
-                            insertUserProfile(ctx, user, authId, cb);
+                            insertUserProfile(ctx, user, authId, realEmail, backendEmail, backendPassword, cb);
                         } else {
                             Log.w("SUPABASE_JWT_TOKEN", "No JWT token found in response. Trying login workaround.");
 
@@ -61,8 +68,8 @@ public class UsersRepository {
                             String loginUrl = SupabaseClient.getBaseUrl() + "/auth/v1/token?grant_type=password";
                             JSONObject loginBody = new JSONObject();
                             try {
-                                loginBody.put("email", email);
-                                loginBody.put("password", password);
+                                loginBody.put("email", backendEmail);
+                                loginBody.put("password", backendPassword);
                             } catch (JSONException e) {
                                 cb.onFailure(e.getMessage());
                                 return;
@@ -74,7 +81,7 @@ public class UsersRepository {
                                             Log.d("SUPABASE_JWT_TOKEN", jwtLogin);
                                             saveJwtToPrefs(ctx, jwtLogin);
                                             // Continue as normal after JWT obtained via login
-                                            insertUserProfile(ctx, user, authId, cb);
+                                            insertUserProfile(ctx, user, authId, realEmail, backendEmail, backendPassword, cb);
                                         } catch (Exception e) {
                                             cb.onFailure("Login workaround failed: " + e.getMessage());
                                         }
@@ -118,8 +125,10 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-    // Insert user profile data to 'users' table with auth_id from signup
-    private static void insertUserProfile(Context ctx, com.infowave.demo.models.User user, String authId, UserCallback cb) {
+    // Insert user profile data to 'users' table with auth_id from signup, plus real_email, backend_email, backend_password
+    private static void insertUserProfile(Context ctx, com.infowave.demo.models.User user, String authId,
+                                          String realEmail, String backendEmail, String backendPassword,
+                                          UserCallback cb) {
         String url = getBaseUrl() + "/rest/v1/users?on_conflict=username";
         JSONObject body = new JSONObject();
         try {
@@ -128,6 +137,9 @@ public class UsersRepository {
             body.put("username", user.getUsername());
             body.put("phone", user.getPhone());
             body.put("bio", user.getBio());
+            body.put("real_email", realEmail);          // NEW
+            body.put("backend_email", backendEmail);    // NEW
+            body.put("backend_password", backendPassword); // NEW
             body.put("status", "active");
         } catch (JSONException e) {
             cb.onFailure(e.getMessage());
@@ -158,6 +170,146 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
+
+    // --------------------- OTP-BASED LOGIN (JWT ONLY) ------------------------
+    // Verifies OTP, fetches backend email/password, logs in, saves JWT, returns userId
+    // --------------------- OTP-BASED LOGIN (JWT ONLY, FULL LOGS) ------------------------
+    public static void loginWithOtp(Context ctx, String phone, String otp, UserCallback cb) {
+        // 1. Verify OTP
+        String otpUrl = SupabaseClient.getBaseUrl() + "/rest/v1/phone_otps?phone=eq." + phone + "&select=otp";
+        Log.d("LOGIN_FLOW", "[OTP] Checking OTP at: " + otpUrl);
+        JsonArrayRequest otpReq = new JsonArrayRequest(
+                Request.Method.GET, otpUrl, null,
+                otpArr -> {
+                    Log.d("LOGIN_FLOW", "[OTP] Response: " + otpArr.toString());
+                    try {
+                        if (otpArr.length() == 0) {
+                            Log.e("LOGIN_FLOW", "[OTP] No OTP found for phone " + phone);
+                            cb.onFailure("No OTP found. Please request again.");
+                            return;
+                        }
+                        String savedOtp = otpArr.getJSONObject(0).getString("otp");
+                        Log.d("LOGIN_FLOW", "[OTP] Received in DB: " + savedOtp + " | User entered: " + otp);
+                        if (!savedOtp.equals(otp)) {
+                            Log.e("LOGIN_FLOW", "[OTP] Invalid OTP entered.");
+                            cb.onFailure("Invalid OTP.");
+                            return;
+                        }
+                        // 2. Fetch backend_email and password from users
+                        String userUrl = SupabaseClient.getBaseUrl() + "/rest/v1/users?phone=eq." + phone + "&select=id,backend_email,backend_password";
+                        Log.d("LOGIN_FLOW", "[USER] Fetching user at: " + userUrl);
+                        JsonArrayRequest userReq = new JsonArrayRequest(
+                                Request.Method.GET, userUrl, null,
+                                userArr -> {
+                                    Log.d("LOGIN_FLOW", "[USER] Response: " + userArr.toString());
+                                    try {
+                                        if (userArr.length() == 0) {
+                                            Log.e("LOGIN_FLOW", "[USER] No user found for phone " + phone);
+                                            cb.onFailure("User not found. Please register.");
+                                            return;
+                                        }
+                                        JSONObject obj = userArr.getJSONObject(0);
+                                        String userId = obj.getString("id");
+                                        String backendEmail = obj.getString("backend_email");
+                                        String backendPassword = obj.getString("backend_password");
+                                        Log.d("LOGIN_FLOW", "[USER] Got backendEmail: " + backendEmail + ", backendPassword: " + backendPassword);
+                                        // 3. Supabase Auth Login
+                                        loginWithEmailAndPassword(ctx, backendEmail, backendPassword, new UserCallback() {
+                                            @Override
+                                            public void onSuccess(String jwt) {
+                                                Log.d("LOGIN_FLOW", "[AUTH] Login successful, JWT: " + jwt);
+                                                cb.onSuccess(userId);
+                                            }
+                                            @Override
+                                            public void onFailure(String error) {
+                                                Log.e("LOGIN_FLOW", "[AUTH] Login error: " + error);
+                                                cb.onFailure(error);
+                                            }
+                                        });
+                                    } catch (Exception e) {
+                                        Log.e("LOGIN_FLOW", "[USER] JSON parsing error: " + e.getMessage());
+                                        cb.onFailure("User fetch error: " + e.getMessage());
+                                    }
+                                },
+                                error -> {
+                                    String e = error.networkResponse != null ? new String(error.networkResponse.data) : error.toString();
+                                    Log.e("LOGIN_FLOW", "[USER] Lookup error: " + e);
+                                    cb.onFailure("User lookup failed: " + e);
+                                }
+                        ) {
+                            @Override
+                            public Map<String, String> getHeaders() {
+                                return SupabaseClient.getHeaders(ctx);
+                            }
+                        };
+                        SupabaseClient.addToRequestQueue(ctx, userReq);
+
+                    } catch (Exception e) {
+                        Log.e("LOGIN_FLOW", "[OTP] Parse error: " + e.getMessage());
+                        cb.onFailure("OTP parse error: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    String e = error.networkResponse != null ? new String(error.networkResponse.data) : error.toString();
+                    Log.e("LOGIN_FLOW", "[OTP] Check error: " + e);
+                    cb.onFailure("OTP check error: " + e);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(ctx);
+            }
+        };
+        SupabaseClient.addToRequestQueue(ctx, otpReq);
+    }
+
+    // Actual Supabase Auth email/password login. Saves JWT if success, prints response/errors
+    private static void loginWithEmailAndPassword(Context ctx, String backendEmail, String backendPassword, UserCallback cb) {
+        String loginUrl = SupabaseClient.getBaseUrl() + "/auth/v1/token?grant_type=password";
+        JSONObject loginBody = new JSONObject();
+        try {
+            loginBody.put("email", backendEmail);
+            loginBody.put("password", backendPassword);
+        } catch (JSONException e) {
+            Log.e("LOGIN_FLOW", "[AUTH] JSON error: " + e.getMessage());
+            cb.onFailure(e.getMessage());
+            return;
+        }
+        Log.d("LOGIN_FLOW", "[AUTH] Logging in via: " + loginUrl + " | Body: " + loginBody);
+
+        JsonObjectRequest loginReq = new JsonObjectRequest(Request.Method.POST, loginUrl, loginBody,
+                loginResp -> {
+                    Log.d("LOGIN_FLOW", "[AUTH] Response: " + loginResp.toString());
+                    try {
+                        String jwt = loginResp.getString("access_token");
+                        Log.d("LOGIN_FLOW", "[AUTH] JWT: " + jwt);
+                        saveJwtToPrefs(ctx, jwt);
+                        cb.onSuccess(jwt);
+                    } catch (Exception e) {
+                        Log.e("LOGIN_FLOW", "[AUTH] Parse error: " + e.getMessage());
+                        cb.onFailure("Login parse failed: " + e.getMessage());
+                    }
+                },
+                loginErr -> {
+                    String e = loginErr.networkResponse != null ? new String(loginErr.networkResponse.data) : loginErr.toString();
+                    Log.e("LOGIN_FLOW", "[AUTH] Login failed: " + e);
+                    cb.onFailure("Login failed: " + e);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>();
+                h.put("apikey", SupabaseClient.getAnonKey());
+                h.put("Authorization", "Bearer " + SupabaseClient.getAnonKey());
+                h.put("Content-Type", "application/json");
+                return h;
+            }
+        };
+        SupabaseClient.addToRequestQueue(ctx, loginReq);
+    }
+
+
+    // --------------------- USER UTILITIES ------------------------
     public static void fetchUserIdByPhone(Context ctx, String phone, UserCallback cb) {
         String url = getBaseUrl() + "/rest/v1/users?phone=eq." + phone + "&select=id";
         Log.d("USERS_REPO_FETCHID_URL", url);
@@ -253,15 +405,13 @@ public class UsersRepository {
             public byte[] getBody() {
                 return body.toString().getBytes();
             }
-
             @Override
             public String getBodyContentType() {
                 return "application/json";
             }
-
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders(ctx); // <-- Use ctx for JWT!
+                Map<String, String> h = SupabaseClient.getHeaders(ctx);
                 Log.d("SUPABASE_HEADERS_PROFILEIMG", h.toString());
                 return h;
             }
@@ -278,6 +428,6 @@ public class UsersRepository {
     private static void saveJwtToPrefs(Context ctx, String jwt) {
         SharedPreferences prefs = ctx.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
         prefs.edit().putString("jwt_token", jwt).apply();
-        Log.d("JWT_SHARED_PREFS", "JWT token saved in SharedPreferences.");
+        Log.d("LOGIN_FLOW", "[AUTH] JWT token saved in SharedPreferences.");
     }
 }

@@ -36,7 +36,6 @@ public class MediaUploadRepository {
     public static SupabaseApiService getApiService() {
         return getRetrofitClient().create(SupabaseApiService.class);
     }
-
     /**
      * Upload profile image to Supabase Storage with detailed logging.
      * Uses anon key for Bearer authentication (DO NOT use service_role in app).

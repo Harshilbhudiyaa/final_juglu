@@ -71,7 +71,7 @@ public class Register extends AppCompatActivity {
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etMobile = findViewById(R.id.etMobile);
-        etPassword = findViewById(R.id.etPassword);
+//        etPassword = findViewById(R.id.etPassword);
         etDOB = findViewById(R.id.etDOB);
         etBio = findViewById(R.id.etBio);
         btnNext = findViewById(R.id.btnNext);
@@ -101,42 +101,42 @@ public class Register extends AppCompatActivity {
         String otp = String.valueOf((int) (Math.random() * 900000 + 100000));
         Log.d("SEND_OTP", "Generated OTP: " + otp);
 
-//        String url = "https://ninzasms.in.net/auth/send_sms";
-//        JSONObject body = new JSONObject();
-//        try {
-//            body.put("sender_id", "15155");
-//            body.put("variables_values", otp);
-//            body.put("numbers", mobile);
-//        } catch (JSONException e) {
-//            Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
-//            return;
-//        }
-//
-//        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
-//                response -> {
-//                    Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
-//                    saveOtpToSupabase(mobile, otp);
-//                },
-//                error -> {
-//                    String err = error.networkResponse != null
-//                            ? new String(error.networkResponse.data)
-//                            : error.toString();
-//                    Log.e("OTP_ERROR", err);
-//                    Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
-//                    btnNext.setText(originalBtnText);
-//                    btnNext.setEnabled(true);
-//                }
-//        ) {
-//            @Override
-//            public Map<String, String> getHeaders() {
-//                Map<String, String> h = new HashMap<>();
-//                h.put("Content-Type", "application/json");
-//                h.put("Authorization", "NINZASMSf6e2000ba91482e5cc0116b1b2bf1bc20818fd77297c02ae50e9a70b");
-//                return h;
-//            }
-//        };
-//        request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
-//        SupabaseClient.addToRequestQueue(this, request);
+        String url = "https://ninzasms.in.net/auth/send_sms";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("sender_id", "15155");
+            body.put("variables_values", otp);
+            body.put("numbers", mobile);
+        } catch (JSONException e) {
+            Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
+                    saveOtpToSupabase(mobile, otp);
+                },
+                error -> {
+                    String err = error.networkResponse != null
+                            ? new String(error.networkResponse.data)
+                            : error.toString();
+                    Log.e("OTP_ERROR", err);
+                    Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
+                    btnNext.setText(originalBtnText);
+                    btnNext.setEnabled(true);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>();
+                h.put("Content-Type", "application/json");
+                h.put("Authorization", "NINZASMSf6e2000ba91482e5cc0116b1b2bf1bc20818fd77297c02ae50e9a70b");
+                return h;
+            }
+        };
+        request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
+        SupabaseClient.addToRequestQueue(this, request);
 
         // For testing (remove in production)
         saveOtpToSupabase(mobile, otp);
@@ -272,43 +272,56 @@ public class Register extends AppCompatActivity {
 
     // ==== 5. Register with Supabase Auth and Insert user profile ====
     private void registerUserWithAuthAndInsertProfile() {
+        String phone = etMobile.getText().toString();
+        String realEmail = etEmail.getText().toString();
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String backendPassword = phone + "_" + timestamp;
+        // (backend email will be generated in UsersRepository)
+
         User user = new User(
                 etUsername.getText().toString(),
                 etUsername.getText().toString(),
-                etMobile.getText().toString(),
-                etPassword.getText().toString(),
+                phone,
+                backendPassword,  // <-- this is only for struct, not for Auth anymore
                 etBio.getText().toString()
         );
 
-        UsersRepository.registerUserWithAuth(this, user, etMobile.getText().toString(), etPassword.getText().toString(), new UsersRepository.UserCallback() {
-            @Override
-            public void onSuccess(String resp) {
-                Log.d("REGISTER", "User registered and profile saved: " + resp);
-                // Move to next activity with fetched userId (optional fetchUserIdByPhone)
-                UsersRepository.fetchUserIdByPhone(Register.this, etMobile.getText().toString(), new UsersRepository.UserCallback() {
+        UsersRepository.registerUserWithAuth(
+                this,
+                user,
+                phone,
+                realEmail,
+                new UsersRepository.UserCallback() {
                     @Override
-                    public void onSuccess(String userId) {
-                        Log.d("REGISTER", "Fetched userId: " + userId);
-                        Intent i = new Intent(Register.this, GenderSelectionActivity.class);
-                        i.putExtra("userId", userId);
-                        startActivity(i);
-                        finish();
+                    public void onSuccess(String resp) {
+                        Log.d("REGISTER", "User registered and profile saved: " + resp);
+                        // Move to next activity with fetched userId (optional fetchUserIdByPhone)
+                        UsersRepository.fetchUserIdByPhone(Register.this, phone, new UsersRepository.UserCallback() {
+                            @Override
+                            public void onSuccess(String userId) {
+                                Log.d("REGISTER", "Fetched userId: " + userId);
+                                Intent i = new Intent(Register.this, GenderSelectionActivity.class);
+                                i.putExtra("userId", userId);
+                                startActivity(i);
+                                finish();
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(Register.this, "UserId fetch failed: " + error, Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
 
                     @Override
                     public void onFailure(String error) {
-                        Toast.makeText(Register.this, "UserId fetch failed: " + error, Toast.LENGTH_SHORT).show();
+                        Log.e("REGISTER", "Registration failed: " + error);
+                        Toast.makeText(Register.this, "Registration failed: " + error, Toast.LENGTH_SHORT).show();
                     }
-                });
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.e("REGISTER", "Registration failed: " + error);
-                Toast.makeText(Register.this, "Registration failed: " + error, Toast.LENGTH_SHORT).show();
-            }
-        });
+                }
+        );
     }
+
 
     private void setupOtpInputs(TextInputEditText[] inputs) {
         for (int i = 0; i < inputs.length; i++) {
@@ -353,9 +366,7 @@ public class Register extends AppCompatActivity {
         if (etMobile.getText().toString().length() != 10) {
             etMobile.setError("10-digit number required"); valid = false;
         }
-        if (etPassword.getText().toString().length() < 6) {
-            etPassword.setError("Min 6 chars"); valid = false;
-        }
+
         if (etDOB.getText().toString().trim().isEmpty()) {
             etDOB.setError("DOB required"); valid = false;
         }
