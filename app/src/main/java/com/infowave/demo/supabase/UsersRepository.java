@@ -1,6 +1,7 @@
 package com.infowave.demo.supabase;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -24,10 +25,10 @@ public class UsersRepository {
     // Register user with Supabase Auth (with required apikey headers)
     public static void registerUserWithAuth(Context ctx, com.infowave.demo.models.User user, String phone, String password, UserCallback cb) {
         String url = SupabaseClient.getBaseUrl() + "/auth/v1/signup";
+        String email = phone + "_" + System.currentTimeMillis() + "@gmail.com";
 
         JSONObject body = new JSONObject();
         try {
-            String email = phone + "@dummy.com"; // dummy unique email
             body.put("email", email);
             body.put("password", password);
             body.put("email_confirm", true);  // skip email confirmation
@@ -44,7 +45,57 @@ public class UsersRepository {
                     try {
                         String authId = resp.getJSONObject("user").getString("id");
                         Log.d("SUPABASE_AUTH_ID", authId);
-                        insertUserProfile(ctx, user, authId, cb);
+
+                        String jwt = null;
+                        if (resp.has("session") && !resp.isNull("session")) {
+                            jwt = resp.getJSONObject("session").getString("access_token");
+                            Log.d("SUPABASE_JWT_TOKEN", jwt);
+                            saveJwtToPrefs(ctx, jwt);
+
+                            // Continue as normal
+                            insertUserProfile(ctx, user, authId, cb);
+                        } else {
+                            Log.w("SUPABASE_JWT_TOKEN", "No JWT token found in response. Trying login workaround.");
+
+                            // --- WORKAROUND: Call login endpoint immediately ---
+                            String loginUrl = SupabaseClient.getBaseUrl() + "/auth/v1/token?grant_type=password";
+                            JSONObject loginBody = new JSONObject();
+                            try {
+                                loginBody.put("email", email);
+                                loginBody.put("password", password);
+                            } catch (JSONException e) {
+                                cb.onFailure(e.getMessage());
+                                return;
+                            }
+                            JsonObjectRequest loginReq = new JsonObjectRequest(Request.Method.POST, loginUrl, loginBody,
+                                    loginResp -> {
+                                        try {
+                                            String jwtLogin = loginResp.getString("access_token");
+                                            Log.d("SUPABASE_JWT_TOKEN", jwtLogin);
+                                            saveJwtToPrefs(ctx, jwtLogin);
+                                            // Continue as normal after JWT obtained via login
+                                            insertUserProfile(ctx, user, authId, cb);
+                                        } catch (Exception e) {
+                                            cb.onFailure("Login workaround failed: " + e.getMessage());
+                                        }
+                                    },
+                                    loginErr -> {
+                                        String e = loginErr.networkResponse != null ? new String(loginErr.networkResponse.data) : loginErr.toString();
+                                        Log.e("SUPABASE_LOGIN_ERROR", e);
+                                        cb.onFailure("Login workaround error: " + e);
+                                    }
+                            ) {
+                                @Override public Map<String, String> getHeaders() {
+                                    Map<String, String> h = new HashMap<>();
+                                    h.put("apikey", SupabaseClient.getAnonKey());
+                                    h.put("Authorization", "Bearer " + SupabaseClient.getAnonKey());
+                                    h.put("Content-Type", "application/json");
+                                    return h;
+                                }
+                            };
+                            loginReq.setRetryPolicy(new DefaultRetryPolicy(7000, 1, 1f));
+                            SupabaseClient.addToRequestQueue(ctx, loginReq);
+                        }
                     } catch (Exception e) {
                         cb.onFailure("Auth success, but parse failed: " + e.getMessage());
                     }
@@ -97,7 +148,7 @@ public class UsersRepository {
             @Override public byte[] getBody() { return body.toString().getBytes(); }
             @Override public String getBodyContentType() { return "application/json"; }
             @Override public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders();
+                Map<String, String> h = SupabaseClient.getHeaders(ctx);
                 h.put("Prefer", "resolution=merge-duplicates");
                 Log.d("SUPABASE_HEADERS_REGISTER", h.toString());
                 return h;
@@ -132,7 +183,7 @@ public class UsersRepository {
                 }
         ) {
             @Override public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders();
+                Map<String, String> h = SupabaseClient.getHeaders(ctx);
                 Log.d("SUPABASE_HEADERS_FETCHID", h.toString());
                 return h;
             }
@@ -164,7 +215,7 @@ public class UsersRepository {
             @Override public byte[] getBody() { return body.toString().getBytes(); }
             @Override public String getBodyContentType() { return "application/json"; }
             @Override public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders();
+                Map<String, String> h = SupabaseClient.getHeaders(ctx);
                 Log.d("SUPABASE_HEADERS_GENDER", h.toString());
                 return h;
             }
@@ -174,7 +225,7 @@ public class UsersRepository {
     }
 
     public static void updateProfileImage(Context ctx, String userId, String profileImageUrl, UserCallback cb) {
-        String url = getBaseUrl() + "/rest/v1/users?id=eq." + userId;
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/users?id=eq." + userId;
         JSONObject body = new JSONObject();
         try {
             body.put("profile_image", profileImageUrl);
@@ -186,26 +237,47 @@ public class UsersRepository {
         Log.d("USERS_REPO_PROFILEIMG_BODY", body.toString());
 
         StringRequest req = new StringRequest(Request.Method.PATCH, url,
-                resp -> cb.onSuccess("profile_image_updated"),
+                resp -> {
+                    Log.d("USERS_REPO_PROFILEIMG_RESP", resp);
+                    cb.onSuccess("profile_image_updated");
+                },
                 err -> {
-                    String e = err.networkResponse != null ? new String(err.networkResponse.data) : err.toString();
+                    String e = err.networkResponse != null && err.networkResponse.data != null
+                            ? new String(err.networkResponse.data)
+                            : err.toString();
                     Log.e("USERS_REPO_PROFILEIMG_ERR", e);
                     cb.onFailure("Error: " + e);
                 }
         ) {
-            @Override public byte[] getBody() { return body.toString().getBytes(); }
-            @Override public String getBodyContentType() { return "application/json"; }
-            @Override public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders();
+            @Override
+            public byte[] getBody() {
+                return body.toString().getBytes();
+            }
+
+            @Override
+            public String getBodyContentType() {
+                return "application/json";
+            }
+
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> h = SupabaseClient.getHeaders(ctx); // <-- Use ctx for JWT!
                 Log.d("SUPABASE_HEADERS_PROFILEIMG", h.toString());
                 return h;
             }
         };
-        req.setRetryPolicy(new DefaultRetryPolicy(7000, 1, 1f));
+        req.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(7000, 1, 1f));
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
     private static String getBaseUrl() {
         return SupabaseClient.getBaseUrl();
+    }
+
+    // ===== Helper to save JWT securely in SharedPreferences =====
+    private static void saveJwtToPrefs(Context ctx, String jwt) {
+        SharedPreferences prefs = ctx.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
+        prefs.edit().putString("jwt_token", jwt).apply();
+        Log.d("JWT_SHARED_PREFS", "JWT token saved in SharedPreferences.");
     }
 }

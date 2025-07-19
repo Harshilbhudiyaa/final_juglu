@@ -101,42 +101,42 @@ public class Register extends AppCompatActivity {
         String otp = String.valueOf((int) (Math.random() * 900000 + 100000));
         Log.d("SEND_OTP", "Generated OTP: " + otp);
 
-        String url = "https://ninzasms.in.net/auth/send_sms";
-        JSONObject body = new JSONObject();
-        try {
-            body.put("sender_id", "15155");
-            body.put("variables_values", otp);
-            body.put("numbers", mobile);
-        } catch (JSONException e) {
-            Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
-                response -> {
-                    Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
-                    saveOtpToSupabase(mobile, otp);
-                },
-                error -> {
-                    String err = error.networkResponse != null
-                            ? new String(error.networkResponse.data)
-                            : error.toString();
-                    Log.e("OTP_ERROR", err);
-                    Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
-                    btnNext.setText(originalBtnText);
-                    btnNext.setEnabled(true);
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> h = new HashMap<>();
-                h.put("Content-Type", "application/json");
-                h.put("Authorization", "NINZASMSf6e2000ba91482e5cc0116b1b2bf1bc20818fd77297c02ae50e9a70b");
-                return h;
-            }
-        };
-        request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
-        SupabaseClient.addToRequestQueue(this, request);
+//        String url = "https://ninzasms.in.net/auth/send_sms";
+//        JSONObject body = new JSONObject();
+//        try {
+//            body.put("sender_id", "15155");
+//            body.put("variables_values", otp);
+//            body.put("numbers", mobile);
+//        } catch (JSONException e) {
+//            Log.e("SEND_OTP", "JSON Error: " + e.getMessage());
+//            return;
+//        }
+//
+//        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+//                response -> {
+//                    Log.d("OTP_SUCCESS", "OTP API Response: " + response.toString());
+//                    saveOtpToSupabase(mobile, otp);
+//                },
+//                error -> {
+//                    String err = error.networkResponse != null
+//                            ? new String(error.networkResponse.data)
+//                            : error.toString();
+//                    Log.e("OTP_ERROR", err);
+//                    Toast.makeText(this, "OTP failed: " + err, Toast.LENGTH_LONG).show();
+//                    btnNext.setText(originalBtnText);
+//                    btnNext.setEnabled(true);
+//                }
+//        ) {
+//            @Override
+//            public Map<String, String> getHeaders() {
+//                Map<String, String> h = new HashMap<>();
+//                h.put("Content-Type", "application/json");
+//                h.put("Authorization", "NINZASMSf6e2000ba91482e5cc0116b1b2bf1bc20818fd77297c02ae50e9a70b");
+//                return h;
+//            }
+//        };
+//        request.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1f));
+//        SupabaseClient.addToRequestQueue(this, request);
 
         // For testing (remove in production)
         saveOtpToSupabase(mobile, otp);
@@ -185,7 +185,7 @@ public class Register extends AppCompatActivity {
 
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> h = SupabaseClient.getHeaders();
+                Map<String, String> h = SupabaseClient.getHeaders(Register.this);
                 h.put("Prefer", "resolution=merge-duplicates");
                 return h;
             }
@@ -264,7 +264,7 @@ public class Register extends AppCompatActivity {
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(Register.this);
             }
         };
         SupabaseClient.addToRequestQueue(this, req);

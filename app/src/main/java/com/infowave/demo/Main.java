@@ -3,23 +3,16 @@ package com.infowave.demo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
 
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
-import com.infowave.demo.fragments.ChatsFragment;
-import com.infowave.demo.fragments.HomeFragment;
-import com.infowave.demo.fragments.ProfileFragment;
-import com.infowave.demo.fragments.SearchFragment;
-import com.infowave.demo.supabase.SupabaseClient;
+import com.infowave.demo.fragments.*;
 
 public class Main extends AppCompatActivity {
 
@@ -38,17 +31,6 @@ public class Main extends AppCompatActivity {
         android.content.SharedPreferences prefs = getSharedPreferences("juglu_prefs", MODE_PRIVATE); // Or requireContext() in a Fragment
         prefs.edit().putString("user_id", "11111111-1111-1111-1111-111111111111").apply();
 
-            
-        SupabaseClient db = SupabaseClient.getInstance(this);
-
-        db.getTable("users", // or your table name
-                response -> {
-                    android.util.Log.d("SUPABASE", "Data: " + response);
-                },
-                error -> {
-                    android.util.Log.e("SUPABASE", "Error: " + error.toString());
-                }
-        );
 
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {

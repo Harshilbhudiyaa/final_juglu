@@ -34,7 +34,7 @@ public class StoriesRepository {
         }, error -> callback.onError("Network error: " + error.getMessage())) {
             @Override
             public java.util.Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(stringRequest);
@@ -53,7 +53,7 @@ public class StoriesRepository {
         }, error -> callback.onError("Network error: " + error.getMessage())) {
             @Override
             public java.util.Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(stringRequest);
@@ -103,7 +103,7 @@ public class StoriesRepository {
         }, error -> callback.onError("Network error: " + error.getMessage())) {
             @Override
             public java.util.Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(request);

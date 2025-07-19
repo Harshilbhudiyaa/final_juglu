@@ -1,6 +1,7 @@
 package com.infowave.demo.supabase;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -25,17 +26,14 @@ public class SupabaseClient {
         }
         return instance;
     }
-    // Generic GET from any table
+
+    // Generic GET from any table (uses anon key - for public tables only)
     public void getTable(String tableName, Response.Listener<String> listener, Response.ErrorListener errorListener) {
         String url = SUPABASE_URL + "/rest/v1/" + tableName + "?select=*";
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, listener, errorListener) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("apikey", ANON_KEY);
-                headers.put("Authorization", "Bearer " + ANON_KEY);
-                headers.put("Content-Type", "application/json");
-                return headers;
+                return getAnonHeaders();
             }
         };
         requestQueue.add(stringRequest);
@@ -45,7 +43,22 @@ public class SupabaseClient {
         return SUPABASE_URL;
     }
 
-    public static Map<String, String> getHeaders() {
+    // --- Use this for authenticated requests (PATCH/POST/PUT) ---
+    public static Map<String, String> getHeaders(Context ctx) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("apikey", ANON_KEY);
+        String jwt = getJwtFromPrefs(ctx);
+        if (jwt != null && !jwt.isEmpty()) {
+            headers.put("Authorization", "Bearer " + jwt); // Use user's JWT
+        } else {
+            headers.put("Authorization", "Bearer " + ANON_KEY); // Fallback (public only)
+        }
+        headers.put("Content-Type", "application/json");
+        return headers;
+    }
+
+    // --- Use this ONLY for public GET requests ---
+    public static Map<String, String> getAnonHeaders() {
         Map<String, String> headers = new HashMap<>();
         headers.put("apikey", ANON_KEY);
         headers.put("Authorization", "Bearer " + ANON_KEY);
@@ -60,9 +73,14 @@ public class SupabaseClient {
     public static void addToRequestQueue(Context context, Request<?> request) {
         getInstance(context).getRequestQueue().add(request);
     }
+
     public static String getAnonKey() {
         return ANON_KEY;
     }
 
+    // --- Helper: Get JWT from SharedPreferences ---
+    public static String getJwtFromPrefs(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
+        return prefs.getString("jwt_token", null);
+    }
 }
-

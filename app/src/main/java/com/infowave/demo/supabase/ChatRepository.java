@@ -7,10 +7,13 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.*;
+
 import com.infowave.demo.models.ChatMessage;
 
 public class ChatRepository {
@@ -65,19 +68,17 @@ public class ChatRepository {
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = SupabaseClient.getHeaders();
+                Map<String, String> headers = SupabaseClient.getHeaders(context); // ✅ Fix: pass context
                 headers.put("Prefer", "return=representation");
                 Log.d("SEND_MESSAGE", "Request headers: " + headers.toString());
                 return headers;
             }
 
-            // 👇 THIS IS THE IMPORTANT PART!
             @Override
             protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
                 try {
                     String jsonString = new String(response.data, com.android.volley.toolbox.HttpHeaderParser.parseCharset(response.headers, "utf-8"));
                     Log.d("SEND_MESSAGE", "parseNetworkResponse jsonString: " + jsonString);
-                    // If response is a JSON array, parse the first object
                     if (jsonString.trim().startsWith("[")) {
                         JSONArray arr = new JSONArray(jsonString);
                         if (arr.length() > 0) {
@@ -86,11 +87,9 @@ public class ChatRepository {
                             return Response.success(obj, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                         } else {
                             Log.e("SEND_MESSAGE", "parseNetworkResponse: empty array returned from server.");
-                            // Return empty object if nothing found (should not happen)
                             return Response.success(new JSONObject(), com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                         }
                     } else {
-                        // Normal object as expected
                         JSONObject jsonObject = new JSONObject(jsonString);
                         return Response.success(jsonObject, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                     }
@@ -104,9 +103,6 @@ public class ChatRepository {
         Log.d("SEND_MESSAGE", "Adding request to Volley queue: " + url);
         SupabaseClient.getInstance(context).getRequestQueue().add(request);
     }
-
-
-
 
     // ========= 2️⃣ Fetch all messages between two users =========
     public static void fetchMessagesBetweenUsers(
@@ -137,7 +133,7 @@ public class ChatRepository {
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(request);
@@ -200,7 +196,7 @@ public class ChatRepository {
                     ) {
                         @Override
                         public Map<String, String> getHeaders() {
-                            return SupabaseClient.getHeaders();
+                            return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
                         }
                     };
                     SupabaseClient.getInstance(context).getRequestQueue().add(usersReq);
@@ -209,7 +205,7 @@ public class ChatRepository {
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(friendshipsReq);
@@ -244,20 +240,18 @@ public class ChatRepository {
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(req);
     }
 
     // ========= 5️⃣ Fetch all chat people with their latest message (Inbox Preview) =========
-    // This method gives a "Chats/Inbox" style list (people + last message + their profile)
     public static void fetchChatPeople(
             Context context,
             String currentUserId,
             ChatCallback<List<ChatPersonPreview>> callback
     ) {
-        // First, fetch friends with profiles
         fetchFriendsWithProfiles(context, currentUserId, new ChatCallback<List<FriendProfile>>() {
             @Override
             public void onSuccess(List<FriendProfile> friendProfiles) {
@@ -279,7 +273,6 @@ public class ChatRepository {
 
                             completed[0]++;
                             if (completed[0] == friendProfiles.size()) {
-                                // Sort by latest message time (if null, put last)
                                 previews.sort((a, b) -> {
                                     if (a.lastMessage == null && b.lastMessage == null) return 0;
                                     if (a.lastMessage == null) return 1;
@@ -307,7 +300,6 @@ public class ChatRepository {
         });
     }
 
-
     // ========= Model: FriendProfile =========
     public static class FriendProfile {
         public String id, fullName, username, phone, bio, profileImage;
@@ -322,7 +314,7 @@ public class ChatRepository {
             f.username = obj.optString("username");
             f.phone = obj.optString("phone");
             f.bio = obj.optString("bio");
-            f.profileImage = obj.optString("profile_image"); // can be null
+            f.profileImage = obj.optString("profile_image");
             f.isPrivate = obj.optBoolean("is_private");
             f.lastActive = obj.optString("last_active");
             f.status = obj.optString("status");

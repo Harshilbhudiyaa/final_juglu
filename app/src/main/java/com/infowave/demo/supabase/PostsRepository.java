@@ -6,7 +6,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.util.HashMap;
 import java.util.Map;
 
 public class PostsRepository {
@@ -31,11 +30,12 @@ public class PostsRepository {
         void onResult(JSONArray comments);
         void onError(String message);
     }
+    public interface PostEngagementCallback {
+        void onLoaded(int likeCount, int commentCount, boolean likedByMe);
+    }
 
-    /**
-     * Fetch posts for all user IDs (current user + friends)
-     */
-    public static void getPostsForUsers(Context context, java.util.List<String> userIds, AllPostsCallback callback) {
+    // Fetch posts for given user IDs
+    public static void getPostsForUsers(Context ctx, java.util.List<String> userIds, AllPostsCallback callback) {
         if (userIds == null || userIds.isEmpty()) {
             callback.onPostsLoaded(new JSONArray());
             return;
@@ -59,17 +59,38 @@ public class PostsRepository {
             }
         }, error -> callback.onError("Network error: " + error.getMessage())) {
             @Override
-            public java.util.Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+            public Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(ctx);
             }
         };
-        SupabaseClient.getInstance(context).getRequestQueue().add(stringRequest);
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(stringRequest);
     }
 
     // ------------------------- LIKES (LIKE/UNLIKE/COUNT) -------------------------
 
-    // Add a like
-    public static void likePost(Context context, String postId, String userId, LikeCallback callback) {
+    // Add a like (Runnable version)
+    public static void likePost(Context ctx, String postId, String userId, Runnable onSuccess, Runnable onError) {
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/post_engagements";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("post_id", postId);
+            body.put("user_id", userId);
+            body.put("type", "like");
+        } catch (Exception ignored) {}
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,
+                r -> onSuccess.run(),
+                e -> onError.run()
+        ) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(ctx);
+            }
+        };
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
+    }
+
+    // Add a like (LikeCallback version)
+    public static void likePost(Context ctx, String postId, String userId, LikeCallback callback) {
         try {
             JSONObject body = new JSONObject();
             body.put("user_id", userId);
@@ -83,19 +104,37 @@ public class PostsRepository {
                     error -> callback.onError("Like failed")) {
                 @Override
                 public Map<String, String> getHeaders() {
-                    Map<String, String> headers = SupabaseClient.getHeaders();
+                    Map<String, String> headers = SupabaseClient.getHeaders(ctx);
                     headers.put("Prefer", "return=minimal");
                     return headers;
                 }
             };
-            SupabaseClient.getInstance(context).getRequestQueue().add(req);
+            SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
         } catch (Exception e) {
             callback.onError("Internal error");
         }
     }
 
-    // Remove a like
-    public static void unlikePost(Context context, String postId, String userId, LikeCallback callback) {
+    // Remove a like (Runnable version)
+    public static void unlikePost(Context ctx, String postId, String userId, Runnable onSuccess, Runnable onError) {
+        String url = SupabaseClient.getBaseUrl()
+                + "/rest/v1/post_engagements?post_id=eq." + postId
+                + "&user_id=eq." + userId
+                + "&type=eq.like";
+        StringRequest req = new StringRequest(Request.Method.DELETE, url,
+                r -> onSuccess.run(),
+                e -> onError.run()
+        ) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(ctx);
+            }
+        };
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
+    }
+
+    // Remove a like (LikeCallback version)
+    public static void unlikePost(Context ctx, String postId, String userId, LikeCallback callback) {
         String url = SupabaseClient.getBaseUrl()
                 + "/rest/v1/post_engagements?post_id=eq." + postId
                 + "&user_id=eq." + userId
@@ -105,16 +144,16 @@ public class PostsRepository {
                 error -> callback.onError("Unlike failed")) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = SupabaseClient.getHeaders();
+                Map<String, String> headers = SupabaseClient.getHeaders(ctx);
                 headers.put("Prefer", "return=minimal");
                 return headers;
             }
         };
-        SupabaseClient.getInstance(context).getRequestQueue().add(req);
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
     }
 
     // Get number of likes for a post and whether the current user liked it
-    public static void getLikesCountAndState(Context context, String postId, String userId, LikesCountCallback callback) {
+    public static void getLikesCountAndState(Context ctx, String postId, String userId, LikesCountCallback callback) {
         String url = SupabaseClient.getBaseUrl()
                 + "/rest/v1/post_engagements?post_id=eq." + postId + "&type=eq.like&select=user_id";
         StringRequest req = new StringRequest(Request.Method.GET, url, response -> {
@@ -136,16 +175,16 @@ public class PostsRepository {
         }, error -> callback.onError("Fetch failed")) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(ctx);
             }
         };
-        SupabaseClient.getInstance(context).getRequestQueue().add(req);
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
     }
 
     // ------------------------- COMMENTS (ADD/GET) -------------------------
 
     // Add a comment
-    public static void addComment(Context context, String postId, String userId, String comment, CommentCallback callback) {
+    public static void addComment(Context ctx, String postId, String userId, String comment, CommentCallback callback) {
         try {
             JSONObject body = new JSONObject();
             body.put("user_id", userId);
@@ -160,19 +199,19 @@ public class PostsRepository {
                     error -> callback.onError("Comment failed")) {
                 @Override
                 public Map<String, String> getHeaders() {
-                    Map<String, String> headers = SupabaseClient.getHeaders();
+                    Map<String, String> headers = SupabaseClient.getHeaders(ctx);
                     headers.put("Prefer", "return=minimal");
                     return headers;
                 }
             };
-            SupabaseClient.getInstance(context).getRequestQueue().add(req);
+            SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
         } catch (Exception e) {
             callback.onError("Internal error");
         }
     }
 
     // Get all comments for a post (returns JSONArray)
-    public static void getComments(Context context, String postId, CommentsCallback callback) {
+    public static void getComments(Context ctx, String postId, CommentsCallback callback) {
         String url = SupabaseClient.getBaseUrl()
                 + "/rest/v1/post_engagements?post_id=eq." + postId + "&type=eq.comment&select=*";
         StringRequest req = new StringRequest(Request.Method.GET, url, response -> {
@@ -185,17 +224,10 @@ public class PostsRepository {
         }, error -> callback.onError("Fetch failed")) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(ctx);
             }
         };
-        SupabaseClient.getInstance(context).getRequestQueue().add(req);
-    }
-
-    // In PostsRepository.java
-
-    // Callback for likes/comments state
-    public interface PostEngagementCallback {
-        void onLoaded(int likeCount, int commentCount, boolean likedByMe);
+        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
     }
 
     // Fetch like count, comment count, and if user liked
@@ -222,42 +254,10 @@ public class PostsRepository {
                 cb.onLoaded(0, 0, false);
             }
         }, err -> cb.onLoaded(0, 0, false)) {
-            @Override public java.util.Map<String, String> getHeaders() { return SupabaseClient.getHeaders(); }
+            @Override public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(ctx);
+            }
         };
         SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
     }
-
-    // Like a post
-    public static void likePost(Context ctx, String postId, String userId, Runnable cb, Runnable onErr) {
-        String url = SupabaseClient.getBaseUrl() + "/rest/v1/post_engagements";
-        JSONObject body = new JSONObject();
-        try {
-            body.put("post_id", postId);
-            body.put("user_id", userId);
-            body.put("type", "like");
-        } catch (Exception ignored) {}
-        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body, r -> cb.run(), e -> onErr.run()) {
-            @Override public java.util.Map<String, String> getHeaders() { return SupabaseClient.getHeaders(); }
-        };
-        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
-    }
-
-    // Unlike a post
-    public static void unlikePost(Context ctx, String postId, String userId, Runnable cb, Runnable onErr) {
-
-
-
-        String url = SupabaseClient.getBaseUrl() +
-                "/rest/v1/post_engagements?post_id=eq." + postId
-                + "&user_id=eq." + userId + "&type=eq.like";
-
-
-
-        StringRequest req = new StringRequest(Request.Method.DELETE, url, r -> cb.run(), e -> onErr.run()) {
-            @Override public java.util.Map<String, String> getHeaders() { return SupabaseClient.getHeaders(); }
-        };
-        SupabaseClient.getInstance(ctx).getRequestQueue().add(req);
-    }
-
-
 }

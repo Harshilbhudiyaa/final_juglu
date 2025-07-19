@@ -182,7 +182,7 @@ public class HomeFragment extends Fragment {
         }, error -> Toast.makeText(requireContext(), "Network error: " + error.getMessage(), Toast.LENGTH_SHORT).show()) {
             @Override
             public java.util.Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders();
+                return SupabaseClient.getHeaders(getContext());
             }
         };
 
