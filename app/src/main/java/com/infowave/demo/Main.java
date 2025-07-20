@@ -1,21 +1,22 @@
 package com.infowave.demo;
 
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.infowave.demo.fragments.*;
+import com.infowave.demo.LocationService;
 
 public class Main extends AppCompatActivity {
-
 
     private NavigationView navView;
     private BottomNavigationView bottomNav;
@@ -25,12 +26,13 @@ public class Main extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Only do this ONCE, for testing. Change the user ID to whatever you want for different tests.
 
-
-//        android.content.SharedPreferences prefs = getSharedPreferences("juglu_prefs", MODE_PRIVATE); // Or requireContext() in a Fragment
-//        prefs.edit().putString("user_id", "11111111-1111-1111-1111-111111111111").apply();
-
+        // Start LocationService to update location every 30 sec
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, LocationService.class));
+        } else {
+            startService(new Intent(this, LocationService.class));
+        }
 
         View decoreview = getWindow().getDecorView();
         decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
@@ -41,52 +43,19 @@ public class Main extends AppCompatActivity {
                 int top = insets.getSystemWindowInsetTop();
                 int right = insets.getSystemWindowInsetRight();
                 int bottom = insets.getSystemWindowInsetBottom();
-                v.setPadding(left,top,right,bottom);
+                v.setPadding(left, top, right, bottom);
                 return insets.consumeSystemWindowInsets();
             }
         });
 
-//        drawerLayout = findViewById(R.id.drawer_layout);
         navView = findViewById(R.id.nav_view);
         bottomNav = findViewById(R.id.bottom_navigation);
         toolbar = findViewById(R.id.toolbar);
 
-        // Set default fragment
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
         }
 
-        // Hamburger icon opens drawer
-//        toolbar.setNavigationOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
-
-        // Drawer toggle for hamburger sync
-//        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-//                this, drawerLayout, toolbar,
-//                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-//        drawerLayout.addDrawerListener(toggle);
-//        toggle.syncState();
-
-        // Handle sidebar (drawer) item clicks
-//        navView.setNavigationItemSelectedListener(item -> {
-//            int itemId = item.getItemId();
-//            if (itemId == R.id.drawer_edit_profile) {
-//                Toast.makeText(this, "Edit Profile Clicked", Toast.LENGTH_SHORT).show();
-//            } else if (itemId == R.id.drawer_privacy) {
-//                Toast.makeText(this, "Privacy Clicked", Toast.LENGTH_SHORT).show();
-//            } else if (itemId == R.id.drawer_blocked) {
-//                Toast.makeText(this, "Blocked Users Clicked", Toast.LENGTH_SHORT).show();
-//            } else if (itemId == R.id.drawer_settings) {
-//                Toast.makeText(this, "Settings Clicked", Toast.LENGTH_SHORT).show();
-//            } else if (itemId == R.id.drawer_logout) {
-//                Toast.makeText(this, "Logout Clicked", Toast.LENGTH_SHORT).show();
-//            } else if (itemId == R.id.drawer_delete_account) {
-//                Toast.makeText(this, "Delete Account Clicked", Toast.LENGTH_SHORT).show();
-//            }
-//            drawerLayout.closeDrawer(GravityCompat.START);
-//            return true;
-//        });
-
-        // Bottom nav item clicks
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
@@ -112,13 +81,4 @@ public class Main extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
-
-//    @Override
-//    public void onBackPressed() {
-//        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-//            drawerLayout.closeDrawer(GravityCompat.START);
-//        } else {
-//            super.onBackPressed();
-//        }
-//    }
 }
