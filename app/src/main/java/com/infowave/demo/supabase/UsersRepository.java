@@ -28,7 +28,6 @@ public class UsersRepository {
 
     // --------------------- REGISTRATION ------------------------
     public static void registerUserWithAuth(Context ctx, com.infowave.demo.models.User user, String phone, String realEmail, UserCallback cb) {
-        // Backend-generated password and backend email
         String timestamp = String.valueOf(System.currentTimeMillis());
         String backendPassword = phone + "_" + timestamp;
         String backendEmail = phone + "_" + timestamp + "@gmail.com";
@@ -125,7 +124,6 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-    // Insert user profile data to 'users' table with auth_id from signup, plus real_email, backend_email, backend_password
     private static void insertUserProfile(Context ctx, com.infowave.demo.models.User user, String authId,
                                           String realEmail, String backendEmail, String backendPassword,
                                           UserCallback cb) {
@@ -170,12 +168,8 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, req);
     }
 
-
     // --------------------- OTP-BASED LOGIN (JWT ONLY) ------------------------
-    // Verifies OTP, fetches backend email/password, logs in, saves JWT, returns userId
-    // --------------------- OTP-BASED LOGIN (JWT ONLY, FULL LOGS) ------------------------
     public static void loginWithOtp(Context ctx, String phone, String otp, UserCallback cb) {
-        // 1. Verify OTP
         String otpUrl = SupabaseClient.getBaseUrl() + "/rest/v1/phone_otps?phone=eq." + phone + "&select=otp";
         Log.d("LOGIN_FLOW", "[OTP] Checking OTP at: " + otpUrl);
         JsonArrayRequest otpReq = new JsonArrayRequest(
@@ -218,6 +212,9 @@ public class UsersRepository {
                                             @Override
                                             public void onSuccess(String jwt) {
                                                 Log.d("LOGIN_FLOW", "[AUTH] Login successful, JWT: " + jwt);
+                                                // === SAVE user_id to juglu_prefs ===
+                                                SharedPreferences jugluPrefs = ctx.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
+                                                jugluPrefs.edit().putString("user_id", userId).apply();
                                                 cb.onSuccess(userId);
                                             }
                                             @Override
@@ -307,7 +304,6 @@ public class UsersRepository {
         };
         SupabaseClient.addToRequestQueue(ctx, loginReq);
     }
-
 
     // --------------------- USER UTILITIES ------------------------
     public static void fetchUserIdByPhone(Context ctx, String phone, UserCallback cb) {
