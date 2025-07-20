@@ -83,4 +83,10 @@ public class SupabaseClient {
         SharedPreferences prefs = ctx.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
         return prefs.getString("jwt_token", null);
     }
+    // Retrieve userId from juglu_prefs
+    public static String getUserIdFromPrefs(Context context) {
+        return context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE)
+                .getString("user_id", null);
+    }
+
 }

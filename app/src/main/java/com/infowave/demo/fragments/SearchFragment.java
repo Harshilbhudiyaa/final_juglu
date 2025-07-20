@@ -1,5 +1,6 @@
 package com.infowave.demo.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -111,6 +112,7 @@ public class SearchFragment extends Fragment {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void loadDummyData() {
         // Nearby dummy data
         List<PersonNearby> nearbyList = new ArrayList<>();
