@@ -1,5 +1,6 @@
 package com.infowave.demo.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,19 +13,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.infowave.demo.*;
 import com.infowave.demo.adapters.FeatureAdapter;
 import com.infowave.demo.models.FeatureItem;
 import com.infowave.demo.supabase.ProfileRepository;
-import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +39,9 @@ public class ProfileFragment extends Fragment {
     MaterialButton editProfileButton;
     private ShapeableImageView profileImage;
     private TextView username, userBio;
+
+    // Modern ActivityResult launcher
+    private ActivityResultLauncher<Intent> editProfileLauncher;
 
     @Nullable
     @Override
@@ -51,6 +57,17 @@ public class ProfileFragment extends Fragment {
         editProfileButton = view.findViewById(R.id.edit_profile_button);
         TextView friendsCount = view.findViewById(R.id.friends_count);
         TextView postsCount = view.findViewById(R.id.posts_count);
+
+        // --- Register result launcher for edit profile ---
+        editProfileLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Log.d("PROFILE_FRAGMENT", "EditProfileActivity finished, refreshing profile.");
+                        reloadProfile();
+                    }
+                }
+        );
 
         if (blockedUsersButton != null) {
             blockedUsersButton.setOnClickListener(v -> {
@@ -78,7 +95,8 @@ public class ProfileFragment extends Fragment {
                 if (userId != null) {
                     Intent intent = new Intent(getActivity(), EditProfileActivity.class);
                     intent.putExtra("USER_ID", userId);
-                    startActivity(intent);
+                    // LAUNCH using the result launcher
+                    editProfileLauncher.launch(intent);
                 } else {
                     Toast.makeText(requireContext(), "User ID not found, please login again.", Toast.LENGTH_SHORT).show();
                 }
@@ -123,7 +141,11 @@ public class ProfileFragment extends Fragment {
         featuresRecyclerView.setAdapter(featureAdapter);
         loadFeatures();
 
-        // === Fetch user id from SharedPreferences ===
+        // Initial load
+        reloadProfile();
+    }
+
+    private void reloadProfile() {
         SharedPreferences prefs = requireContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE);
         String userId = prefs.getString("user_id", null);
         Log.d("PROFILE_FRAGMENT", "Loaded userId from prefs: " + userId);
@@ -133,19 +155,21 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        // --- DYNAMIC PROFILE DATA + LOGGING ---
         ProfileRepository.getLoggedInUserProfile(requireContext(), userId, new ProfileRepository.ProfileCallback() {
             @Override
             public void onSuccess(ProfileRepository.Profile user) {
-                Log.d("PROFILE_FRAGMENT", "Profile loaded: name=" + user.name + ", bio=" + user.bio + ", imageUrl=" + user.imageUrl);
-                username.setText(user.name);
+                Log.d("PROFILE_FRAGMENT", "Profile loaded: username=" + user.username + ", fullName=" + user.fullName + ", bio=" + user.bio + ", imageUrl=" + user.imageUrl);
+
+                username.setText(user.username != null && !user.username.isEmpty() ? user.username : user.fullName != null ? user.fullName : "User");
                 userBio.setText(user.bio);
-                if (!user.imageUrl.isEmpty() && getContext() != null) {
+
+                if (user.imageUrl != null && !user.imageUrl.isEmpty() && getContext() != null) {
                     Glide.with(getContext()).load(user.imageUrl).placeholder(R.drawable.image1).into(profileImage);
                 } else {
                     profileImage.setImageResource(R.drawable.image1);
                 }
             }
+
             @Override
             public void onError(String error) {
                 Log.e("PROFILE_FRAGMENT", "Profile error: " + error);

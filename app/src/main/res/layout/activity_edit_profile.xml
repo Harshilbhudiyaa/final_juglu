@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Header with Icon -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Profile Photo with Shadow -->
+        <!-- Profile Photo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,7 +47,6 @@
                 android:layout_width="110dp"
                 android:layout_height="110dp"
                 android:src="@drawable/image1"
-
                 android:elevation="6dp" />
         </LinearLayout>
 
@@ -60,7 +59,17 @@
             android:textSize="14sp"
             android:layout_marginBottom="8dp"/>
 
-
+        <EditText
+            android:id="@+id/edit_full_name"
+            android:hint="Full Name"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edit_text_bg"
+            android:padding="14dp"
+            android:inputType="textPersonName"
+            android:layout_marginBottom="12dp"/>
 
         <EditText
             android:id="@+id/edit_username"
@@ -74,52 +83,73 @@
             android:inputType="textPersonName"
             android:layout_marginBottom="12dp"/>
 
+        <!-- Mobile Number (readonly) -->
         <EditText
-            android:id="@+id/edit_dob"
-            android:hint="Date of Birth"
-            android:textColor="#FFFFFF"
+            android:id="@+id/edit_mobile"
+            android:hint="Mobile Number"
+            android:textColor="#AAAAAA"
             android:textColorHint="#888888"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/edit_text_bg"
             android:padding="14dp"
-            android:inputType="date"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- Section: Location & Social -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Location and Social"
-            android:textColor="#BBBBBB"
-            android:textSize="14sp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/edit_location"
-            android:hint="Location"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edit_text_bg"
-            android:padding="14dp"
+            android:inputType="phone"
+            android:focusable="false"
+            android:clickable="false"
+            android:enabled="false"
             android:layout_marginBottom="12dp"/>
 
+        <!-- Email (editable) -->
         <EditText
-            android:id="@+id/edit_instagram"
-            android:hint="Instagram Handle (optional)"
+            android:id="@+id/edit_email"
+            android:hint="Email"
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/edit_text_bg"
             android:padding="14dp"
-            android:inputType="text"
-            android:layout_marginBottom="16dp"/>
+            android:inputType="textEmailAddress"
+            android:layout_marginBottom="12dp"/>
 
-        <!-- Section: About -->
+        <!-- Gender (readonly as TextView) -->
+        <TextView
+            android:id="@+id/gender_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edit_text_bg"
+            android:padding="14dp"
+            android:text="Gender"
+            android:textColor="#AAAAAA"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Private Profile Switch (Material) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp"
+            android:paddingTop="4dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Private Account"
+                android:textColor="#BBBBBB"
+                android:textSize="14sp"/>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_private"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:thumbTint="#FF4081"
+                app:trackTint="#333333"/>
+        </LinearLayout>
+
+        <!-- About You -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -146,17 +176,14 @@
         <!-- Save Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save_profile"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save Changes"
             android:textAllCaps="false"
-
             app:iconTint="#FFFFFF"
             app:iconPadding="12dp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#FF4081"
-
             android:paddingVertical="12dp"/>
     </LinearLayout>
 </ScrollView>

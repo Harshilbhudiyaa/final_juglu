@@ -1,26 +1,31 @@
 package com.infowave.demo;
 
-import android.app.DatePickerDialog;
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
-
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.infowave.demo.supabase.ProfileRepository;
+import com.infowave.demo.supabase.MediaUploadRepository;
 
 import java.io.IOException;
-import java.util.Calendar;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -29,53 +34,96 @@ public class EditProfileActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
 
     CircleImageView editProfileImage;
-    EditText editFullName, editUsername, editDob, editLocation, editInstagram, editBio;
+    EditText editFullName, editUsername, editEmail, editMobile, editBio;
+    TextView genderText;
+    SwitchMaterial privateSwitch;
     MaterialButton btnSaveProfile;
     ImageView backIcon;
 
-    Uri imageUri;
+    Uri imageUri = null;
+    String currentImageUrl = "";
+    String userId = "";
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
-        View decoreview = getWindow().getDecorView();
-        decoreview.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-            @NonNull
-            @Override
-            public WindowInsets onApplyWindowInsets(@NonNull View v, @NonNull WindowInsets insets) {
-                int left = insets.getSystemWindowInsetLeft();
-                int top = insets.getSystemWindowInsetTop();
-                int right = insets.getSystemWindowInsetRight();
-                int bottom = insets.getSystemWindowInsetBottom();
-                v.setPadding(left,top,right,bottom);
-                return insets.consumeSystemWindowInsets();
 
-            }
+        View decoreview = getWindow().getDecorView();
+        decoreview.setOnApplyWindowInsetsListener((v, insets) -> {
+            int left = insets.getSystemWindowInsetLeft();
+            int top = insets.getSystemWindowInsetTop();
+            int right = insets.getSystemWindowInsetRight();
+            int bottom = insets.getSystemWindowInsetBottom();
+            v.setPadding(left, top, right, bottom);
+            return insets.consumeSystemWindowInsets();
         });
 
-        // Initialize views
         editProfileImage = findViewById(R.id.edit_profile_image);
-
+        editFullName = findViewById(R.id.edit_full_name);
         editUsername = findViewById(R.id.edit_username);
-        editDob = findViewById(R.id.edit_dob);
-        editLocation = findViewById(R.id.edit_location);
-        editInstagram = findViewById(R.id.edit_instagram);
+        editMobile = findViewById(R.id.edit_mobile);
+        editEmail = findViewById(R.id.edit_email);
+        genderText = findViewById(R.id.gender_text);
+        privateSwitch = findViewById(R.id.switch_private);
         editBio = findViewById(R.id.edit_bio);
         btnSaveProfile = findViewById(R.id.btn_save_profile);
         backIcon = findViewById(R.id.back_icon);
 
-        // Back icon action
+        editMobile.setEnabled(false);
+
+        userId = getIntent().getStringExtra("USER_ID");
+        if (userId == null) {
+            userId = getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE).getString("user_id", null);
+        }
+        if (userId == null) {
+            Toast.makeText(this, "User ID not found. Please login again.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        fetchAndPrefillProfile();
+
         backIcon.setOnClickListener(v -> finish());
-
-        // Image selection
         editProfileImage.setOnClickListener(v -> openGallery());
-
-        // Date picker for DOB
-        editDob.setOnClickListener(v -> showDatePickerDialog());
-
-        // Save button
         btnSaveProfile.setOnClickListener(v -> saveProfile());
+    }
+
+    private void fetchAndPrefillProfile() {
+        ProfileRepository.getLoggedInUserProfile(this, userId, new ProfileRepository.ProfileCallback() {
+            @Override
+            public void onSuccess(ProfileRepository.Profile user) {
+                editFullName.setText(user.fullName != null ? user.fullName : "");
+                editUsername.setText(user.username != null ? user.username : "");
+                editBio.setText(user.bio != null ? user.bio : "");
+                editMobile.setText(user.phone != null ? user.phone : "");
+                editEmail.setText(user.email != null ? user.email : "");
+
+                // Gender is readonly as TextView
+                genderText.setText(
+                        user.gender != null && !user.gender.isEmpty() ?
+                                capitalize(user.gender) : "Not specified"
+                );
+
+                privateSwitch.setChecked(user.isPrivate != null && user.isPrivate);
+
+                currentImageUrl = user.imageUrl != null ? user.imageUrl : "";
+                if (!currentImageUrl.isEmpty()) {
+                    Glide.with(EditProfileActivity.this)
+                            .load(currentImageUrl)
+                            .placeholder(R.drawable.image1)
+                            .into(editProfileImage);
+                } else {
+                    editProfileImage.setImageResource(R.drawable.image1);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(EditProfileActivity.this, "Failed to load profile: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void openGallery() {
@@ -87,7 +135,6 @@ public class EditProfileActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
             try {
@@ -100,33 +147,59 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void showDatePickerDialog() {
-        final Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
-            String dob = String.format("%02d/%02d/%d", dayOfMonth, month1 + 1, year1);
-            editDob.setText(dob);
-        }, year, month, day).show();
-    }
-
     private void saveProfile() {
+        final String fullName = editFullName.getText().toString().trim();
+        final String username = editUsername.getText().toString().trim();
+        final String bio = editBio.getText().toString().trim();
+        final String email = editEmail.getText().toString().trim();
+        final String gender = genderText.getText().toString().trim().toLowerCase(); // Readonly
+        final Boolean isPrivate = privateSwitch.isChecked();
 
-        String username = editUsername.getText().toString().trim();
-        String dob = editDob.getText().toString().trim();
-        String location = editLocation.getText().toString().trim();
-        String insta = editInstagram.getText().toString().trim();
-        String bio = editBio.getText().toString().trim();
-
-        // Validate fields (optional)
-        if (username.isEmpty() || username.isEmpty()) {
-            Toast.makeText(this, "Username are required", Toast.LENGTH_SHORT).show();
+        if (username.isEmpty()) {
+            Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Toast.makeText(this, "Profile saved successfully!", Toast.LENGTH_SHORT).show();
-        finish();
+        btnSaveProfile.setEnabled(false);
+
+        if (imageUri != null) {
+            MediaUploadRepository.uploadProfileImage(this, imageUri, userId, new MediaUploadRepository.ImageUploadCallback() {
+                @Override
+                public void onSuccess(String imageUrl) {
+                    updateProfileInSupabase(fullName, username, email, bio, imageUrl, gender, isPrivate);
+                }
+                @Override
+                public void onFailure(String error) {
+                    btnSaveProfile.setEnabled(true);
+                    Toast.makeText(EditProfileActivity.this, "Image upload failed: " + error, Toast.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            updateProfileInSupabase(fullName, username, email, bio, currentImageUrl, gender, isPrivate);
+        }
+    }
+
+    private void updateProfileInSupabase(String fullName, String username, String email, String bio, String imageUrl,
+                                         String gender, Boolean isPrivate) {
+        ProfileRepository.updateUserProfile(this, userId, fullName, username, email, bio, imageUrl, gender, isPrivate,
+                new ProfileRepository.UpdateProfileCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(EditProfileActivity.this, "Profile saved successfully!", Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK); // To refresh ProfileFragment
+                        finish();
+                    }
+                    @Override
+                    public void onFailure(String error) {
+                        btnSaveProfile.setEnabled(true);
+                        Toast.makeText(EditProfileActivity.this, "Failed to update profile: " + error, Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+    // Helper: capitalize first letter (for gender display)
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return "";
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }

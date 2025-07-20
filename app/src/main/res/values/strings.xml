@@ -9,5 +9,11 @@
     <string name="save">Save</string>
     <string name="post_image">Post Image</string>
     <string name="more_option">More options</string>
+    <string-array name="gender_options">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+    </string-array>
+
 
 </resources>

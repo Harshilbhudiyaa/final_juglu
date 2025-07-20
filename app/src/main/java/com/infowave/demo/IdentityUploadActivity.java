@@ -68,6 +68,7 @@ public class IdentityUploadActivity extends AppCompatActivity {
             finish();
         });
     }
+
     private void pickImage(int requestCode) {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(Intent.createChooser(intent, "Select Image"), requestCode);
@@ -96,8 +97,7 @@ public class IdentityUploadActivity extends AppCompatActivity {
                             this,
                             selectedImageUri,
                             userId,
-                            SUPABASE_BEARER_TOKEN,
-                            new MediaUploadRepository.UploadCallback() {
+                            new MediaUploadRepository.ImageUploadCallback() {
                                 @SuppressLint("SetTextI18n")
                                 @Override
                                 public void onSuccess(String publicUrl) {

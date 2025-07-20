@@ -21,6 +21,12 @@ public class MediaUploadRepository {
 
     private static Retrofit retrofit = null;
 
+    // The ONLY callback interface used everywhere
+    public interface ImageUploadCallback {
+        void onSuccess(String publicUrl);
+        void onFailure(String error);
+    }
+
     public static Retrofit getRetrofitClient() {
         if (retrofit == null) {
             String baseUrl = SupabaseClient.getBaseUrl();
@@ -36,11 +42,11 @@ public class MediaUploadRepository {
     public static SupabaseApiService getApiService() {
         return getRetrofitClient().create(SupabaseApiService.class);
     }
+
     /**
-     * Upload profile image to Supabase Storage with detailed logging.
-     * Uses anon key for Bearer authentication (DO NOT use service_role in app).
+     * Uploads a profile image to Supabase Storage and returns the public URL.
      */
-    public static void uploadProfileImage(Context context, Uri imageUri, String userId,String supabaseBearerToken,UploadCallback callback) {
+    public static void uploadProfileImage(Context context, Uri imageUri, String userId, ImageUploadCallback callback) {
         try {
             Log.d("MEDIA_UPLOAD", "Starting upload: userId=" + userId + ", uri=" + imageUri);
 
@@ -54,18 +60,24 @@ public class MediaUploadRepository {
 
             byte[] bytes = getBytes(inputStream);
 
-            String fileName = "user_" + userId + "_" + System.currentTimeMillis() + ".jpg";
+            // Infer file extension from URI/mime
+            String extension = "jpg"; // default
+            String mimeType = context.getContentResolver().getType(imageUri);
+            if (mimeType != null) {
+                if (mimeType.contains("png")) extension = "png";
+                else if (mimeType.contains("jpeg") || mimeType.contains("jpg")) extension = "jpg";
+            }
+
+            String fileName = "user_" + userId + "_" + System.currentTimeMillis() + "." + extension;
             Log.d("MEDIA_UPLOAD", "Uploading as filename: " + fileName + " (size=" + bytes.length + " bytes)");
 
-            RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), bytes);
+            RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType != null ? mimeType : "image/jpeg"), bytes);
             MultipartBody.Part body = MultipartBody.Part.createFormData("file", fileName, requestFile);
 
             SupabaseApiService apiService = getApiService();
-
-            // Always use anon key from SupabaseClient
             String anonKey = SupabaseClient.getAnonKey();
-            Log.d("MEDIA_UPLOAD", "Using anon key (partial): " + (anonKey.length() > 10 ? anonKey.substring(0,10) + "..." : anonKey));
 
+            // Upload to "profile-images" bucket
             Call<ResponseBody> call = apiService.uploadProfileImage(
                     fileName,
                     body,
@@ -121,11 +133,5 @@ public class MediaUploadRepository {
         }
         buffer.flush();
         return buffer.toByteArray();
-    }
-
-    // Upload callback interface
-    public interface UploadCallback {
-        void onSuccess(String publicUrl);
-        void onFailure(String error);
     }
 }
