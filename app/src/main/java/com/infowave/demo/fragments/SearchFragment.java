@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,17 +23,21 @@ import com.infowave.demo.FriendProfileActivity;
 import com.infowave.demo.R;
 import com.infowave.demo.adapters.PersonNearbyAdapter;
 import com.infowave.demo.adapters.RecommendedUserAdapter;
+import com.infowave.demo.adapters.UserSearchAdapter;
 import com.infowave.demo.models.PersonNearby;
 import com.infowave.demo.models.RecommendedUser;
+import com.infowave.demo.models.UserSearchResult;
+import com.infowave.demo.supabase.SearchRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchFragment extends Fragment {
 
-    private RecyclerView rvPeopleNearby, rvRecommended;
+    private RecyclerView rvPeopleNearby, rvRecommended, rvSearchResults;
     private PersonNearbyAdapter nearbyAdapter;
     private RecommendedUserAdapter recommendedAdapter;
+    private UserSearchAdapter userSearchAdapter;
     private EditText searchInput;
     private ImageButton clearButton;
 
@@ -48,13 +53,15 @@ public class SearchFragment extends Fragment {
         rvPeopleNearby = view.findViewById(R.id.rvPeopleNearby);
         rvRecommended = view.findViewById(R.id.rvRecommended);
 
+        // Add this line for the search results RecyclerView (add to your XML if missing)
+        rvSearchResults = view.findViewById(R.id.rvSearchResults); // <-- see XML note below
+
         setupSearch();
         setupAdapters();
         setupRecyclerViews();
         loadDummyData();
 
         return view;
-
     }
 
     private void setupSearch() {
@@ -68,6 +75,7 @@ public class SearchFragment extends Fragment {
                     if (clearButton != null) {
                         clearButton.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
                     }
+                    performLiveUserSearch(s.toString().trim());
                 }
 
                 @Override
@@ -78,6 +86,39 @@ public class SearchFragment extends Fragment {
         if (clearButton != null && searchInput != null) {
             clearButton.setOnClickListener(v -> searchInput.setText(""));
         }
+    }
+
+    private void performLiveUserSearch(String query) {
+        Log.d("SEARCH_FRAGMENT", "Performing live search for: " + query);
+
+        if (query.isEmpty()) {
+            // Hide search results, show normal content
+            if (rvSearchResults != null) rvSearchResults.setVisibility(View.GONE);
+            if (rvPeopleNearby != null) rvPeopleNearby.setVisibility(View.VISIBLE);
+            if (rvRecommended != null) rvRecommended.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        if (getContext() == null) return;
+
+        SearchRepository.searchUsers(getContext(), query, new SearchRepository.SearchCallback() {
+            @Override
+            public void onResults(List<UserSearchResult> results) {
+                Log.d("SEARCH_FRAGMENT", "Search results: " + results.size());
+                if (rvSearchResults != null && userSearchAdapter != null) {
+                    userSearchAdapter.setResults(results);
+                    rvSearchResults.setVisibility(View.VISIBLE);
+                }
+                if (rvPeopleNearby != null) rvPeopleNearby.setVisibility(View.GONE);
+                if (rvRecommended != null) rvRecommended.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("SEARCH_FRAGMENT", "Search error: " + error);
+                Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setupAdapters() {
@@ -92,6 +133,15 @@ public class SearchFragment extends Fragment {
         recommendedAdapter = new RecommendedUserAdapter(new ArrayList<>(), position -> {
             if (getContext() != null) {
                 Toast.makeText(getContext(), "Follow clicked: " + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // User search adapter (open profile on click)
+        userSearchAdapter = new UserSearchAdapter(new ArrayList<>(), user -> {
+            if (getContext() != null && user != null) {
+                Intent i = new Intent(getContext(), FriendProfileActivity.class);
+//                i.putExtra("userId", user.getId());
+                startActivity(i);
             }
         });
     }
@@ -109,6 +159,13 @@ public class SearchFragment extends Fragment {
         if (rvRecommended != null) {
             rvRecommended.setLayoutManager(new LinearLayoutManager(getContext()));
             rvRecommended.setAdapter(recommendedAdapter);
+        }
+
+        // Set up search results RecyclerView (add this block)
+        if (rvSearchResults != null) {
+            rvSearchResults.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvSearchResults.setAdapter(userSearchAdapter);
+            rvSearchResults.setVisibility(View.GONE);
         }
     }
 
@@ -135,6 +192,4 @@ public class SearchFragment extends Fragment {
             recommendedAdapter.notifyDataSetChanged();
         }
     }
-
-
 }

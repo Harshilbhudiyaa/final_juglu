@@ -41,6 +41,15 @@ public class FriendProfileActivity extends AppCompatActivity {
         });
         // Get friend data
         Friends friend = getIntent().getParcelableExtra("friend");
+        if (friend == null) {
+            // Fallback static data
+            friend = new Friends(
+                    "Vansh Mandanka", // name
+                    "Professional Coder & Foodie", // bio
+                    R.drawable.default_profile// imageRes
+            );
+        }
+
 
         // Setup toolbar
 //        Toolbar toolbar = findViewById(R.id.toolbar);

@@ -73,6 +73,14 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSearchResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:padding="10dp"
+            tools:listitem="@layout/item_user_search_result" />
+
         <!-- People Nearby Section -->
         <LinearLayout
             android:layout_width="match_parent"
