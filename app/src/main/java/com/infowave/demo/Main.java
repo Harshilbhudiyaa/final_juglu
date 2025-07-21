@@ -201,7 +201,7 @@ public class Main extends AppCompatActivity {
         try {
             if (id == R.id.action_notifications) {
                 android.util.Log.d("MainActivity", "Opening NewPostActivity");
-                Intent intent = new Intent(this, NotificationActivity2.class);
+                Intent intent = new Intent(this, NotificationActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.location) {

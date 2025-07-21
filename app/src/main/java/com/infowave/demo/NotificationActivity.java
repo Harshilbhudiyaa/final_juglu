@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.infowave.demo.adapters.NotificationAdapter;
 import com.infowave.demo.adapters.NotificationAdapter2;
 import com.infowave.demo.models.NotificationItem;
 import com.infowave.demo.models.NotificationListItem;
@@ -15,14 +14,14 @@ import com.infowave.demo.models.SectionHeader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NotificationActivity2 extends AppCompatActivity {
+public class NotificationActivity extends AppCompatActivity {
 
     private RecyclerView rvNotifications;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notification2);
+        setContentView(R.layout.activity_notification);
 
         rvNotifications = findViewById(R.id.recyclerViewNotifications);
         rvNotifications.setLayoutManager(new LinearLayoutManager(this));

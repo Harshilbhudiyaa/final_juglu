@@ -139,7 +139,7 @@ public class Register extends AppCompatActivity {
         SupabaseClient.addToRequestQueue(this, request);
 
         // For testing (remove in production)
-        saveOtpToSupabase(mobile, otp);
+        // saveOtpToSupabase(mobile, otp);
     }
 
     // ==== 2. Save OTP to Supabase ====

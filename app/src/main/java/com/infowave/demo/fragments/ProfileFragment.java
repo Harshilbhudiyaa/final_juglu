@@ -130,7 +130,7 @@ public class ProfileFragment extends Fragment {
             if (title.equals("App Preferences")) {
                 startActivity(new Intent(requireContext(), AppPreferencesActivity.class));
             } else if (title.equals("Notifications")) {
-                startActivity(new Intent(requireContext(), NotificationsActivity.class));
+                startActivity(new Intent(requireContext(), NotificationsSetting.class));
             } else if (title.equals("Privacy Center")) {
                 startActivity(new Intent(requireContext(), PrivacyCenterActivity.class));
             } else if (title.equals("Help Center")) {

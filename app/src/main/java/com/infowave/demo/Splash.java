@@ -11,6 +11,8 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.infowave.demo.supabase.UsersRepository;
+
 public class Splash extends AppCompatActivity {
 
     @Override
@@ -33,20 +35,41 @@ public class Splash extends AppCompatActivity {
             }
         });
 
-        Handler h = new Handler();
-        h.postDelayed(() -> {
-            // Check JWT token in SharedPreferences
+        new Handler().postDelayed(() -> {
             SharedPreferences prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE);
             String jwt = prefs.getString("jwt_token", null);
+            String refreshToken = prefs.getString("refresh_token", null);
 
-            Intent in;
-            if (jwt != null && !jwt.isEmpty()) {
-                in = new Intent(Splash.this, Main.class); // Redirect to home
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                // Attempt to refresh JWT
+                UsersRepository.refreshAccessToken(Splash.this, new UsersRepository.UserCallback() {
+                    @Override
+                    public void onSuccess(String newJwt) {
+                        // Proceed to Main if refresh works
+                        Intent in = new Intent(Splash.this, Main.class);
+                        startActivity(in);
+                        finish();
+                    }
+                    @Override
+                    public void onFailure(String error) {
+                        // On failure, clear tokens and redirect to Register
+                        UsersRepository.clearTokens(Splash.this);
+                        Intent in = new Intent(Splash.this, Register.class);
+                        startActivity(in);
+                        finish();
+                    }
+                });
+            } else if (jwt != null && !jwt.isEmpty()) {
+                // JWT exists (legacy, fallback)
+                Intent in = new Intent(Splash.this, Main.class);
+                startActivity(in);
+                finish();
             } else {
-                in = new Intent(Splash.this, Register.class); // Redirect to register
+                // No tokens, go to Register
+                Intent in = new Intent(Splash.this, Register.class);
+                startActivity(in);
+                finish();
             }
-            startActivity(in);
-            finish();
-        }, 3000);
+        }, 1200); // Faster splash, reduce to 1200ms for better UX
     }
 }

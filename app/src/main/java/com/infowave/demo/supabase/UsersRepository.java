@@ -52,11 +52,13 @@ public class UsersRepository {
                         String authId = resp.getJSONObject("user").getString("id");
                         Log.d("SUPABASE_AUTH_ID", authId);
 
-                        String jwt = null;
                         if (resp.has("session") && !resp.isNull("session")) {
-                            jwt = resp.getJSONObject("session").getString("access_token");
+                            JSONObject session = resp.getJSONObject("session");
+                            String jwt = session.getString("access_token");
+                            String refreshToken = session.getString("refresh_token");
                             Log.d("SUPABASE_JWT_TOKEN", jwt);
-                            saveJwtToPrefs(ctx, jwt);
+                            Log.d("SUPABASE_REFRESH_TOKEN", refreshToken);
+                            saveTokensToPrefs(ctx, jwt, refreshToken);
 
                             // Continue as normal
                             insertUserProfile(ctx, user, authId, realEmail, backendEmail, backendPassword, cb);
@@ -77,8 +79,10 @@ public class UsersRepository {
                                     loginResp -> {
                                         try {
                                             String jwtLogin = loginResp.getString("access_token");
+                                            String refreshLogin = loginResp.getString("refresh_token");
                                             Log.d("SUPABASE_JWT_TOKEN", jwtLogin);
-                                            saveJwtToPrefs(ctx, jwtLogin);
+                                            Log.d("SUPABASE_REFRESH_TOKEN", refreshLogin);
+                                            saveTokensToPrefs(ctx, jwtLogin, refreshLogin);
                                             // Continue as normal after JWT obtained via login
                                             insertUserProfile(ctx, user, authId, realEmail, backendEmail, backendPassword, cb);
                                         } catch (Exception e) {
@@ -260,7 +264,7 @@ public class UsersRepository {
         SupabaseClient.addToRequestQueue(ctx, otpReq);
     }
 
-    // Actual Supabase Auth email/password login. Saves JWT if success, prints response/errors
+    // Actual Supabase Auth email/password login. Saves JWT and refresh token if success
     private static void loginWithEmailAndPassword(Context ctx, String backendEmail, String backendPassword, UserCallback cb) {
         String loginUrl = SupabaseClient.getBaseUrl() + "/auth/v1/token?grant_type=password";
         JSONObject loginBody = new JSONObject();
@@ -279,8 +283,10 @@ public class UsersRepository {
                     Log.d("LOGIN_FLOW", "[AUTH] Response: " + loginResp.toString());
                     try {
                         String jwt = loginResp.getString("access_token");
+                        String refreshToken = loginResp.getString("refresh_token");
                         Log.d("LOGIN_FLOW", "[AUTH] JWT: " + jwt);
-                        saveJwtToPrefs(ctx, jwt);
+                        Log.d("LOGIN_FLOW", "[AUTH] RefreshToken: " + refreshToken);
+                        saveTokensToPrefs(ctx, jwt, refreshToken);
                         cb.onSuccess(jwt);
                     } catch (Exception e) {
                         Log.e("LOGIN_FLOW", "[AUTH] Parse error: " + e.getMessage());
@@ -303,6 +309,50 @@ public class UsersRepository {
             }
         };
         SupabaseClient.addToRequestQueue(ctx, loginReq);
+    }
+
+    // --------------------- REFRESH ACCESS TOKEN ------------------------
+    public static void refreshAccessToken(Context ctx, UserCallback cb) {
+        String refreshToken = getRefreshToken(ctx);
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            cb.onFailure("No refresh token found. User needs to login again.");
+            return;
+        }
+        String url = SupabaseClient.getBaseUrl() + "/auth/v1/token?grant_type=refresh_token";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("refresh_token", refreshToken);
+        } catch (JSONException e) {
+            cb.onFailure("JSON error: " + e.getMessage());
+            return;
+        }
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    try {
+                        String newAccessToken = response.getString("access_token");
+                        String newRefreshToken = response.getString("refresh_token");
+                        saveTokensToPrefs(ctx, newAccessToken, newRefreshToken);
+                        cb.onSuccess(newAccessToken);
+                    } catch (Exception e) {
+                        cb.onFailure("Failed to parse refresh response: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    String e = error.networkResponse != null ? new String(error.networkResponse.data) : error.toString();
+                    cb.onFailure("Token refresh failed: " + e);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("apikey", SupabaseClient.getAnonKey());
+                headers.put("Authorization", "Bearer " + SupabaseClient.getAnonKey());
+                headers.put("Content-Type", "application/json");
+                return headers;
+            }
+        };
+        req.setRetryPolicy(new DefaultRetryPolicy(7000, 1, 1f));
+        SupabaseClient.addToRequestQueue(ctx, req);
     }
 
     // --------------------- USER UTILITIES ------------------------
@@ -420,10 +470,30 @@ public class UsersRepository {
         return SupabaseClient.getBaseUrl();
     }
 
-    // ===== Helper to save JWT securely in SharedPreferences =====
-    private static void saveJwtToPrefs(Context ctx, String jwt) {
-        SharedPreferences prefs = ctx.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE);
-        prefs.edit().putString("jwt_token", jwt).apply();
-        Log.d("LOGIN_FLOW", "[AUTH] JWT token saved in SharedPreferences.");
+    // ===== Helpers to save & retrieve tokens securely in SharedPreferences =====
+    private static final String PREFS_NAME = "auth_prefs";
+    private static final String KEY_JWT = "jwt_token";
+    private static final String KEY_REFRESH = "refresh_token";
+
+    public static void saveTokensToPrefs(Context ctx, String jwt, String refreshToken) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+                .putString(KEY_JWT, jwt)
+                .putString(KEY_REFRESH, refreshToken)
+                .apply();
+        Log.d("LOGIN_FLOW", "[AUTH] JWT & Refresh tokens saved in SharedPreferences.");
+    }
+    public static String getAccessToken(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(KEY_JWT, null);
+    }
+    public static String getRefreshToken(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(KEY_REFRESH, null);
+    }
+    public static void clearTokens(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().remove(KEY_JWT).remove(KEY_REFRESH).apply();
+        Log.d("LOGIN_FLOW", "[AUTH] Tokens cleared from SharedPreferences.");
     }
 }
