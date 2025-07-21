@@ -1,19 +1,19 @@
 package com.infowave.demo.models;
-
-// RecommendedUser.java
 public class RecommendedUser {
+    private String id;
     private String name;
     private String interests;
-    private int profileImageRes;
+    private String profileImageUrl;
 
-    public RecommendedUser(String name, String interests, int profileImageRes) {
+    public RecommendedUser(String id, String name, String interests, String profileImageUrl) {
+        this.id = id;
         this.name = name;
         this.interests = interests;
-        this.profileImageRes = profileImageRes;
+        this.profileImageUrl = profileImageUrl;
     }
 
-    // Getters
+    public String getId() { return id; }
     public String getName() { return name; }
     public String getInterests() { return interests; }
-    public int getProfileImageRes() { return profileImageRes; }
+    public String getProfileImageUrl() { return profileImageUrl; }
 }

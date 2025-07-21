@@ -1,21 +1,28 @@
 package com.infowave.demo.models;
 
-// PersonNearby.java
+/**
+ * Model representing a person nearby, with name, distance (e.g. "1.2 km away"), and profile image URL.
+ */
 public class PersonNearby {
-    private String name;
-    private String distance;
-    private int profileImageRes;
+    private final String name;
+    private final String distance;
+    private final String profileImageUrl;  // Profile image URL, not a drawable resource
 
-    public PersonNearby(String name, String distance, int profileImageRes) {
+    public PersonNearby(String name, String distance, String profileImageUrl) {
         this.name = name;
         this.distance = distance;
-        this.profileImageRes = profileImageRes;
+        this.profileImageUrl = profileImageUrl;
     }
 
-    // Getters
-    public String getName() { return name; }
-    public String getDistance() { return distance; }
-    public int getProfileImageRes() { return profileImageRes; }
+    public String getName() {
+        return name;
+    }
+
+    public String getDistance() {
+        return distance;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
 }
-
-

@@ -1,6 +1,7 @@
 package com.infowave.demo.fragments;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -18,7 +19,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.infowave.demo.FriendProfileActivity;
 import com.infowave.demo.R;
 import com.infowave.demo.adapters.PersonNearbyAdapter;
@@ -28,6 +32,9 @@ import com.infowave.demo.models.PersonNearby;
 import com.infowave.demo.models.RecommendedUser;
 import com.infowave.demo.models.UserSearchResult;
 import com.infowave.demo.supabase.SearchRepository;
+import com.infowave.demo.supabase.SupabaseClient;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +43,7 @@ public class SearchFragment extends Fragment {
 
     private RecyclerView rvPeopleNearby, rvRecommended, rvSearchResults;
     private PersonNearbyAdapter nearbyAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecommendedUserAdapter recommendedAdapter;
     private UserSearchAdapter userSearchAdapter;
     private EditText searchInput;
@@ -52,17 +60,28 @@ public class SearchFragment extends Fragment {
         clearButton = view.findViewById(R.id.clear_button);
         rvPeopleNearby = view.findViewById(R.id.rvPeopleNearby);
         rvRecommended = view.findViewById(R.id.rvRecommended);
-
-        // Add this line for the search results RecyclerView (add to your XML if missing)
-        rvSearchResults = view.findViewById(R.id.rvSearchResults); // <-- see XML note below
+        rvSearchResults = view.findViewById(R.id.rvSearchResults);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefresh);
 
         setupSearch();
         setupAdapters();
         setupRecyclerViews();
-        loadDummyData();
+        loadNearbyPeople();      // Dynamic nearby users
+        loadRecommendedUsers();  // Dynamic recommended users
 
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            refreshAllData();
+        });
         return view;
     }
+
+    private void refreshAllData() {
+        performLiveUserSearch(searchInput.getText().toString().trim());
+        loadNearbyPeople();
+        loadRecommendedUsers();
+        swipeRefreshLayout.setRefreshing(false); // Stop the spinner after refresh is triggered
+    }
+
 
     private void setupSearch() {
         if (searchInput != null) {
@@ -122,17 +141,17 @@ public class SearchFragment extends Fragment {
     }
 
     private void setupAdapters() {
-        // Nearby adapter
-        nearbyAdapter = new PersonNearbyAdapter(new ArrayList<>(), position -> {
+        // Nearby adapter (dynamic)
+        nearbyAdapter = new PersonNearbyAdapter(new ArrayList<>(), person -> {
             if (getContext() != null) {
-                Toast.makeText(getContext(), "Connect clicked: " + position, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Clicked: " + person.getName(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Recommended adapter
-        recommendedAdapter = new RecommendedUserAdapter(new ArrayList<>(), position -> {
+        // Recommended adapter (dynamic)
+        recommendedAdapter = new RecommendedUserAdapter(new ArrayList<>(), user -> {
             if (getContext() != null) {
-                Toast.makeText(getContext(), "Follow clicked: " + position, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Follow clicked: " + user.getName(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -140,7 +159,7 @@ public class SearchFragment extends Fragment {
         userSearchAdapter = new UserSearchAdapter(new ArrayList<>(), user -> {
             if (getContext() != null && user != null) {
                 Intent i = new Intent(getContext(), FriendProfileActivity.class);
-//                i.putExtra("userId", user.getId());
+                // i.putExtra("userId", user.getId());
                 startActivity(i);
             }
         });
@@ -161,7 +180,6 @@ public class SearchFragment extends Fragment {
             rvRecommended.setAdapter(recommendedAdapter);
         }
 
-        // Set up search results RecyclerView (add this block)
         if (rvSearchResults != null) {
             rvSearchResults.setLayoutManager(new LinearLayoutManager(getContext()));
             rvSearchResults.setAdapter(userSearchAdapter);
@@ -169,27 +187,118 @@ public class SearchFragment extends Fragment {
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private void loadDummyData() {
-        // Nearby dummy data
-        List<PersonNearby> nearbyList = new ArrayList<>();
-        nearbyList.add(new PersonNearby("Alex", "1.2 km away", R.drawable.image1));
-        nearbyList.add(new PersonNearby("Taylor", "0.8 km away", R.drawable.image2));
-        nearbyList.add(new PersonNearby("Jordan", "2.1 km away", R.drawable.image3));
-        nearbyList.add(new PersonNearby("Morgan", "1.5 km away", R.drawable.image4));
-        if (nearbyAdapter != null) {
-            nearbyAdapter.nearbyList = nearbyList;
-            nearbyAdapter.notifyDataSetChanged();
+    // Fetch nearby people dynamically from Supabase
+    private void loadNearbyPeople() {
+        if (getContext() == null) return;
+        Log.d("SEARCH_FRAGMENT", "Loading current user location...");
+
+        // Fetch current user's lat/lng first
+        String userId = getCurrentUserId(getContext());
+        if (userId == null || userId.isEmpty()) {
+            Log.e("SEARCH_FRAGMENT", "User ID not found in SharedPreferences.");
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // Recommended dummy data
-        List<RecommendedUser> recommendedList = new ArrayList<>();
-        recommendedList.add(new RecommendedUser("Alex Johnson", "Travel, Photography", R.drawable.image5));
-        recommendedList.add(new RecommendedUser("Sam Wilson", "Music, Hiking", R.drawable.image1));
-        recommendedList.add(new RecommendedUser("Casey Lee", "Cooking, Art", R.drawable.image3));
-        if (recommendedAdapter != null) {
-            recommendedAdapter.recommendedList = recommendedList;
-            recommendedAdapter.notifyDataSetChanged();
-        }
+        String url = SupabaseClient.getBaseUrl()
+                + "/rest/v1/users?id=eq." + userId
+                + "&select=latitude,longitude";
+
+        JsonArrayRequest request = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d("SEARCH_FRAGMENT", "User location response: " + response.toString());
+                    if (response.length() == 0) {
+                        Log.e("SEARCH_FRAGMENT", "User location not found in DB.");
+                        Toast.makeText(getContext(), "Location not set. Please update your profile.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    try {
+                        JSONObject obj = response.getJSONObject(0);
+                        double latitude = obj.optDouble("latitude", 0.0);
+                        double longitude = obj.optDouble("longitude", 0.0);
+
+                        if (latitude == 0.0 && longitude == 0.0) {
+                            Toast.makeText(getContext(), "Please enable location or update profile.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        Log.d("SEARCH_FRAGMENT", "Calling getPeopleNearby with lat=" + latitude + " lng=" + longitude);
+
+                        // Call repository function to load nearby users
+                        SearchRepository.getPeopleNearby(
+                                getContext(),
+                                latitude,
+                                longitude,
+                                500.0, // radius in km
+                                new SearchRepository.PeopleNearbyCallback() {
+                                    @SuppressLint("NotifyDataSetChanged")
+                                    @Override
+                                    public void onResults(List<PersonNearby> people) {
+                                        Log.d("SEARCH_FRAGMENT", "Loaded " + people.size() + " nearby people.");
+                                        if (nearbyAdapter != null) {
+                                            nearbyAdapter.nearbyList = people;
+                                            nearbyAdapter.notifyDataSetChanged();
+                                        }
+                                    }
+                                    @Override
+                                    public void onError(String error) {
+                                        Log.e("SEARCH_FRAGMENT", "Failed to load nearby people: " + error);
+                                        Toast.makeText(getContext(), "Error loading nearby people: " + error, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                        );
+                    } catch (Exception e) {
+                        Log.e("SEARCH_FRAGMENT", "Error parsing user location: " + e.getMessage());
+                        Toast.makeText(getContext(), "Error loading location.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e("SEARCH_FRAGMENT", "Error fetching user location: " + error.toString());
+                    Toast.makeText(getContext(), "Error fetching user location", Toast.LENGTH_SHORT).show();
+                }
+        ) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                return SupabaseClient.getHeaders(getContext());
+            }
+        };
+
+        SupabaseClient.addToRequestQueue(getContext(), request);
+        if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
     }
+
+    // Helper: fetch userId from SharedPreferences (adjust as per your codebase)
+    private String getCurrentUserId(Context context) {
+        return context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE)
+                .getString("user_id", null);
+    }
+
+    // Fetch "Recommended for you" users dynamically from Supabase
+    @SuppressLint("NotifyDataSetChanged")
+    private void loadRecommendedUsers() {
+        if (getContext() == null) return;
+        Log.d("SEARCH_FRAGMENT", "Loading recommended users...");
+
+        SearchRepository.getRecommendedUsers(getContext(), new SearchRepository.RecommendedUsersCallback() {
+            @Override
+            public void onResults(List<RecommendedUser> users) {
+                Log.d("SEARCH_FRAGMENT", "Loaded " + users.size() + " recommended users.");
+                if (recommendedAdapter != null) {
+                    recommendedAdapter.recommendedList = users;
+                    recommendedAdapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e("SEARCH_FRAGMENT", "Failed to load recommended users: " + error);
+                Toast.makeText(getContext(), "Error loading recommended users: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+        if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
+    }
+
 }

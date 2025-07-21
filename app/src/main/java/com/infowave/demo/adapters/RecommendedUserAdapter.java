@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import com.bumptech.glide.Glide; // Add this for dynamic image
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,22 +14,20 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.infowave.demo.R;
 import com.infowave.demo.models.RecommendedUser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUserAdapter.ViewHolder> {
 
     public List<RecommendedUser> recommendedList;
+    private final OnRecommendedUserClickListener listener;
 
     public interface OnRecommendedUserClickListener {
         void onClick(RecommendedUser user);
     }
-    private final OnRecommendedUserClickListener listener;
-    public interface OnFollowClickListener {
-        void onFollowClick(int position);
-    }
 
     public RecommendedUserAdapter(List<RecommendedUser> recommendedList, OnRecommendedUserClickListener listener) {
-        this.recommendedList = recommendedList;
+        this.recommendedList = recommendedList != null ? recommendedList : new ArrayList<>();
         this.listener = listener;
     }
 
@@ -46,18 +45,26 @@ public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUser
 
         holder.name.setText(user.getName());
         holder.interests.setText(user.getInterests());
-        holder.profileImage.setImageResource(user.getProfileImageRes());
+
+        String imageUrl = user.getProfileImageUrl();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Glide.with(holder.profileImage.getContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.default_profile)
+                    .error(R.drawable.default_profile)
+                    .into(holder.profileImage);
+        } else {
+            holder.profileImage.setImageResource(R.drawable.default_profile);
+        }
+
         holder.itemView.setOnClickListener(v -> listener.onClick(user));
-//        holder.actionButton.setOnClickListener(v -> {
-//            if (followClickListener != null) {
-//                followClickListener.onFollowClick(position);
-//            }
-//        });
+        // Optional: follow button logic here
     }
+
 
     @Override
     public int getItemCount() {
-        return recommendedList.size();
+        return recommendedList != null ? recommendedList.size() : 0;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -72,5 +79,11 @@ public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUser
             interests = itemView.findViewById(R.id.interests);
             actionButton = itemView.findViewById(R.id.actionButton);
         }
+    }
+
+    // Helper for updating data
+    public void setRecommendedList(List<RecommendedUser> list) {
+        this.recommendedList = list != null ? list : new ArrayList<>();
+        notifyDataSetChanged();
     }
 }
