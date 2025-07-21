@@ -64,7 +64,7 @@ public class LocationRepository {
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
                 headers.put("Prefer", "return=representation");
-               // headers.put("Content-Profile", "public"); // For Supabase REST
+                // headers.put("Content-Profile", "public"); // For Supabase REST
                 return headers;
             }
 

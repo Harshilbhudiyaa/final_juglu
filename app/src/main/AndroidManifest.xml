@@ -8,19 +8,20 @@
         android:required="true" />
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"/>
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -32,63 +33,69 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApp"
         tools:targetApi="31">
-        <activity android:name=".LoginActivity"
-            android:exported="false"/>
-        <activity android:name=".PostDetailActivity"
-            android:exported="false"/>
-        <activity android:name=".FriendProfileActivity"
-            android:exported="false"/>
-
-        <activity android:name=".StoryUploadActivity"
-            android:exported="false"/>
-        <activity android:name=".NewPostActivity"
-            android:exported="false"/>
-
-        <activity android:name=".OwnPostActivity"
-            android:exported="false"/>
-
-<!--        <activity android:name=".PostDetailActivity"-->
-<!--            android:exported="false"/>-->
-
-        <activity android:name=".FriendsActivity"
-            android:exported="false"/>
-
-        <activity android:name=".EditProfileActivity"
-            android:exported="false"/>
-
-        <activity android:name=".BlockedUsersActivity"
-            android:exported="false"/>
-
-        <activity android:name=".HelpCenterActivity"
-            android:exported="false"/>
-        <activity android:name=".NotificationsActivity"
-            android:exported="false"/>
-        <activity android:name=".PrivacyCenterActivity"
-            android:exported="false"/>
-
-        <activity android:name=".AppPreferencesActivity"
-            android:exported="false"/>
-
-        <activity android:name=".StoryViewerActivity"
-            android:exported="false"/>
-
-        <activity android:name=".IdentityUploadActivity"
-            android:exported="false"/>
-
-<!--        <activity-->
-<!--            android:name=".LookingForActivity"-->
-<!--            android:exported="false"-->
-<!--            tools:ignore="MissingClass" />-->
+        <activity
+            android:name=".NotificationActivity2"
+            android:exported="false" />
+        <activity
+            android:name=".Map"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PostDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FriendProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".StoryUploadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NewPostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OwnPostActivity"
+            android:exported="false" /> <!-- <activity android:name=".PostDetailActivity" -->
+        <!-- android:exported="false"/> -->
+        <activity
+            android:name=".FriendsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BlockedUsersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HelpCenterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NotificationsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PrivacyCenterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AppPreferencesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".StoryViewerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".IdentityUploadActivity"
+            android:exported="false" /> <!-- <activity -->
+        <!-- android:name=".LookingForActivity" -->
+        <!-- android:exported="false" -->
+        <!-- tools:ignore="MissingClass" /> -->
         <activity
             android:name=".GenderSelectionActivity"
             android:exported="false" />
         <activity
             android:name=".Register"
-            android:exported="false" />
-<!--        <activity-->
-<!--            android:name=".OtpVerificationActivity"-->
-<!--            android:exported="false" />-->
-
+            android:exported="false" /> <!-- <activity -->
+        <!-- android:name=".OtpVerificationActivity" -->
+        <!-- android:exported="false" /> -->
         <activity
             android:name=".Main"
             android:exported="false"
@@ -98,10 +105,13 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.ChatActivity" android:exported="false" />
+        <activity
+            android:name=".activities.ChatActivity"
+            android:exported="false" />
 
         <service
             android:name=".LocationService"
@@ -109,7 +119,6 @@
             android:exported="false"
             android:foregroundServiceType="location"
             tools:ignore="ForegroundServicePermission" />
-
     </application>
 
 </manifest>

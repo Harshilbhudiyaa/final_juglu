@@ -1,7 +1,6 @@
 package com.infowave.demo;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -15,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
-// Google Play Services location imports
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -46,6 +44,9 @@ public class Main extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         android.util.Log.d("MainActivity", "onCreate: Main activity started");
 
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);  // <-- यह लाइन मेनू और क्लिक के लिए जरूरी है
+
         checkAndRequestLocationPermission();
 
         View decoreview = getWindow().getDecorView();
@@ -64,7 +65,6 @@ public class Main extends AppCompatActivity {
 
         navView = findViewById(R.id.nav_view);
         bottomNav = findViewById(R.id.bottom_navigation);
-        toolbar = findViewById(R.id.toolbar);
 
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
@@ -185,5 +185,36 @@ public class Main extends AppCompatActivity {
         } else {
             startService(intent);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
+        int id = item.getItemId();
+        android.util.Log.d("MainActivity", "Menu item clicked with id: " + id);
+
+        try {
+            if (id == R.id.action_notifications) {
+                android.util.Log.d("MainActivity", "Opening NewPostActivity");
+                Intent intent = new Intent(this, NotificationActivity2.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.location) {
+                android.util.Log.d("MainActivity", "Opening Map Activity");
+                Intent intent = new Intent(this, Map.class);
+                startActivity(intent);
+                return true;
+            }
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error opening activity", e);
+            Toast.makeText(this, "Error opening activity: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }
