@@ -69,9 +69,7 @@ public class SearchFragment extends Fragment {
         loadNearbyPeople();      // Dynamic nearby users
         loadRecommendedUsers();  // Dynamic recommended users
 
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            refreshAllData();
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::refreshAllData);
         return view;
     }
 
@@ -81,7 +79,6 @@ public class SearchFragment extends Fragment {
         loadRecommendedUsers();
         swipeRefreshLayout.setRefreshing(false); // Stop the spinner after refresh is triggered
     }
-
 
     private void setupSearch() {
         if (searchInput != null) {
