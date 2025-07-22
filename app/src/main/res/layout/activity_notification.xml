@@ -9,12 +9,16 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/white"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:elevation="4dp"
+        android:background="@drawable/bg_toolbar_gradient"
+        app:contentInsetStartWithNavigation="0dp"
+        app:navigationIcon="@drawable/ic_back_white"
         app:title="Notifications"
         app:titleTextColor="@android:color/white"
-        app:navigationIcon="@drawable/ic_back"
+       ></com.google.android.material.appbar.MaterialToolbar>
 
-        />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewNotifications"
