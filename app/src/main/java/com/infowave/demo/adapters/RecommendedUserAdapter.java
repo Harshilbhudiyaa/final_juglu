@@ -1,5 +1,6 @@
 package com.infowave.demo.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -91,6 +92,7 @@ public class RecommendedUserAdapter extends RecyclerView.Adapter<RecommendedUser
     }
 
     // Public helper for updating data
+    @SuppressLint("NotifyDataSetChanged")
     public void setRecommendedList(List<RecommendedUser> list) {
         this.recommendedList = list != null ? list : new ArrayList<>();
         notifyDataSetChanged();

@@ -133,7 +133,8 @@
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"
                     android:textColor="#FFFFFF"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="12dp"
+                    tools:ignore="HardcodedText" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvRecommended"

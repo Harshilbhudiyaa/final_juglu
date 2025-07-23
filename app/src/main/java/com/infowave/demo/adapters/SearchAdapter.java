@@ -16,8 +16,10 @@ import com.infowave.demo.models.ChatMessage;
 import java.util.List;
 
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ChatViewHolder> {
-    private Context context;
-    private List<ChatMessage> messages;
+    private final Context context;
+    private final List<ChatMessage> messages;
+
+
 
     public SearchAdapter(Context context, List<ChatMessage> messages) {
         this.context = context;
@@ -49,7 +51,6 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ChatViewHo
             holder.sentMessage.setText(message.getMessage());
             holder.sentTimestamp.setText(message.getCreatedAt());
 
-
         }
     }
 
@@ -76,4 +77,5 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ChatViewHo
             sentTimestamp = itemView.findViewById(R.id.sent_timestamp);
         }
     }
+
 }

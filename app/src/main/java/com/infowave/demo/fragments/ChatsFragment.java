@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.*;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +31,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class ChatsFragment extends Fragment {
     private RecyclerView chatListRecycler;
     private ChatListAdapter chatListAdapter;
-    private List<ChatRepository.ChatPersonPreview> chatList = new ArrayList<>();
+    private final List<ChatRepository.ChatPersonPreview> chatList = new ArrayList<>();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Nullable
     @Override
@@ -45,25 +48,33 @@ public class ChatsFragment extends Fragment {
     }
 
     private String getCurrentUserId() {
-        // Get from shared prefs or your session logic
-        return getContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE).getString("user_id", "");
+        return requireContext().getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE).getString("user_id", "");
     }
 
     private void loadChatList() {
         ChatRepository.fetchChatPeople(getContext(), getCurrentUserId(), new ChatRepository.ChatCallback<List<ChatRepository.ChatPersonPreview>>() {
-            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onSuccess(List<ChatRepository.ChatPersonPreview> result) {
-                chatList.clear();
-                chatList.addAll(result);
-                chatListAdapter.notifyDataSetChanged();
+                // Always update on main thread to avoid race conditions
+                mainHandler.post(() -> {
+                    chatList.clear();
+                    if (result != null) chatList.addAll(result);
+                    chatListAdapter.notifyDataSetChanged();
+                });
             }
 
             @Override
             public void onFailure(String error) {
-                Toast.makeText(getContext(), "Failed to load chats: " + error, Toast.LENGTH_SHORT).show();
+                mainHandler.post(() -> Toast.makeText(getContext(), "Failed to load chats: " + error, Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    // --- Optional: Call this in onResume() for polling, or after sending/receiving messages for live refresh ---
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadChatList();
     }
 
     // Adapter for RecyclerView
@@ -105,18 +116,17 @@ public class ChatsFragment extends Fragment {
                 holder.profileImage.setImageResource(R.drawable.ic_profile_placeholder);
             }
 
-            // Optional: logic for unread dot (example, always false)
+            // --- Unread dot logic, extend as per your backend status ---
+            // holder.unreadDot.setVisibility(hasUnread(person.id) ? View.VISIBLE : View.GONE);
             holder.unreadDot.setVisibility(View.GONE);
 
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, ChatActivity.class);
                 intent.putExtra("username", person.fullName != null ? person.fullName : person.username);
                 intent.putExtra("otherUserId", person.id);
-                // REMOVE profileRes (not needed anymore)
-                intent.putExtra("profileUrl", person.profileImage); // <-- KEY LINE!
+                intent.putExtra("profileUrl", person.profileImage);
                 context.startActivity(intent);
             });
-
         }
 
         @Override

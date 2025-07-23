@@ -77,7 +77,9 @@ dependencies {
 
         implementation ("com.google.android.gms:play-services-location:21.0.1")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
-
+    implementation("org.jitsi.react:jitsi-meet-sdk:8.1.2") {
+        isTransitive = true
+    }
 
 
 

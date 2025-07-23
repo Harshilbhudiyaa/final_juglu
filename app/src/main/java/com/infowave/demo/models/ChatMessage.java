@@ -7,7 +7,7 @@ public class ChatMessage {
     private String id;            // Supabase row id (nullable)
     private String senderId;
     private String receiverId;
-    private String content;       // Message content
+    protected String content;     // Message content
     private String createdAt;     // UTC timestamp from DB
     private boolean isReceived;   // UI helper
     private int profileImage;     // (UI only, optional/local)
@@ -44,11 +44,31 @@ public class ChatMessage {
     public String getId() { return id; }
     public String getSenderId() { return senderId; }
     public String getReceiverId() { return receiverId; }
-    public String getContent() { return content; }        // Now named 'getContent' for consistency
-    public String getCreatedAt() { return createdAt; }    // Use this in repo sorting!
+    public String getContent() { return content; }
+    public String getCreatedAt() { return createdAt; }
     public boolean isReceived() { return isReceived; }
     public int getProfileImage() { return profileImage; }
-
-    // Backward compatibility (if anywhere uses getMessage)
     public String getMessage() { return content; }
+
+    // --- Helper: Is this a call-invite message? ---
+    public boolean isCallInvite() {
+        try {
+            String contentStr = getContent();
+            if (contentStr == null) return false;
+            JSONObject obj = new JSONObject(contentStr);
+            return obj.has("room") && obj.has("call_type");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // --- Helper: Get call type ("audio" or "video"), or null if not a call ---
+    public String getCallType() {
+        try {
+            JSONObject obj = new JSONObject(getContent());
+            return obj.optString("call_type", null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

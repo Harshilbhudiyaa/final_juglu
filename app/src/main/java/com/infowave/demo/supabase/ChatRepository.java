@@ -1,6 +1,8 @@
 package com.infowave.demo.supabase;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -16,7 +18,12 @@ import java.util.*;
 
 import com.infowave.demo.models.ChatMessage;
 
+import timber.log.Timber;
+
 public class ChatRepository {
+
+    private static final String TAG = "JugluChatRepo";
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     // ======= Callback interface =======
     public interface ChatCallback<T> {
@@ -32,45 +39,44 @@ public class ChatRepository {
             String content,
             ChatCallback<ChatMessage> callback
     ) {
+        Log.d(TAG, "sendMessage: senderId=" + senderId + ", receiverId=" + receiverId + ", content=" + content);
+
         String url = SupabaseClient.getBaseUrl() + "/rest/v1/messages";
         JSONObject body = new JSONObject();
         try {
             body.put("sender_id", senderId);
             body.put("receiver_id", receiverId);
             body.put("content", content);
-            Log.d("SEND_MESSAGE", "Request body: " + body.toString());
         } catch (JSONException e) {
-            Log.e("SEND_MESSAGE", "JSONException in request body: " + e.getMessage());
-            callback.onFailure(e.getMessage());
+            Log.e(TAG, "sendMessage: JSONException in request body: " + e.getMessage());
+            postFailure(callback, "JSON Error: " + e.getMessage());
             return;
         }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
                 response -> {
-                    Log.d("SEND_MESSAGE", "Volley onResponse (JSONObject): " + response.toString());
+                    Log.d(TAG, "sendMessage: Network response: " + response.toString());
                     try {
                         ChatMessage msg = ChatMessage.fromJson(response, senderId);
-                        Log.d("SEND_MESSAGE", "Parsed message in onResponse: " + msg.toString());
-                        callback.onSuccess(msg);
+                        postSuccess(callback, msg);
                     } catch (JSONException e) {
-                        Log.e("SEND_MESSAGE", "JSONException in onResponse: " + e.getMessage());
-                        callback.onFailure("JSON Error: " + e.getMessage());
+                        Log.e(TAG, "sendMessage: JSONException in onResponse: " + e.getMessage());
+                        postFailure(callback, "JSON Parse Error: " + e.getMessage());
                     }
                 },
                 error -> {
-                    Log.e("SEND_MESSAGE", "Volley onErrorResponse: " + error.toString());
+                    Log.e(TAG, "sendMessage: Volley error: " + error.toString());
                     if (error.networkResponse != null && error.networkResponse.data != null) {
                         String errorBody = new String(error.networkResponse.data);
-                        Log.e("SEND_MESSAGE", "Body: " + errorBody);
+                        Log.e(TAG, "sendMessage: Body: " + errorBody);
                     }
-                    callback.onFailure(error.toString());
+                    postFailure(callback, "Network Error: " + error.toString());
                 }
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = SupabaseClient.getHeaders(context); // ✅ Fix: pass context
+                Map<String, String> headers = SupabaseClient.getHeaders(context);
                 headers.put("Prefer", "return=representation");
-                Log.d("SEND_MESSAGE", "Request headers: " + headers.toString());
                 return headers;
             }
 
@@ -78,15 +84,12 @@ public class ChatRepository {
             protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
                 try {
                     String jsonString = new String(response.data, com.android.volley.toolbox.HttpHeaderParser.parseCharset(response.headers, "utf-8"));
-                    Log.d("SEND_MESSAGE", "parseNetworkResponse jsonString: " + jsonString);
                     if (jsonString.trim().startsWith("[")) {
                         JSONArray arr = new JSONArray(jsonString);
                         if (arr.length() > 0) {
                             JSONObject obj = arr.getJSONObject(0);
-                            Log.d("SEND_MESSAGE", "parseNetworkResponse: returning first object of array: " + obj.toString());
                             return Response.success(obj, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                         } else {
-                            Log.e("SEND_MESSAGE", "parseNetworkResponse: empty array returned from server.");
                             return Response.success(new JSONObject(), com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                         }
                     } else {
@@ -94,15 +97,97 @@ public class ChatRepository {
                         return Response.success(jsonObject, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
                     }
                 } catch (Exception e) {
-                    Log.e("SEND_MESSAGE", "parseNetworkResponse exception: " + e.getMessage());
+                    Log.e(TAG, "sendMessage: parseNetworkResponse exception: " + e.getMessage());
                     return Response.error(new com.android.volley.ParseError(e));
                 }
             }
         };
 
-        Log.d("SEND_MESSAGE", "Adding request to Volley queue: " + url);
+        // ⚠️ RECOMMEND: In your UI, disable the send button until this callback returns (prevents multi-tap bugs)
         SupabaseClient.getInstance(context).getRequestQueue().add(request);
     }
+    // ========= Send a call invite message =========
+    public static void sendCallInvite(
+            Context context,
+            String senderId,
+            String receiverId,
+            String roomName,
+            String callType, // "audio" or "video"
+            ChatCallback<ChatMessage> callback
+    ) {
+        Log.d(TAG, "sendCallInvite: senderId=" + senderId + ", receiverId=" + receiverId
+                + ", roomName=" + roomName + ", callType=" + callType);
+
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/messages";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("sender_id", senderId);
+            body.put("receiver_id", receiverId);
+            body.put("type", "call_invite");
+            // Store room and callType as JSON string in 'content'
+            JSONObject callContent = new JSONObject();
+            callContent.put("room", roomName);
+            callContent.put("call_type", callType);
+            body.put("content", callContent.toString());
+        } catch (JSONException e) {
+            Timber.tag(TAG).e("sendCallInvite: JSONException in request body: " + e.getMessage());
+            postFailure(callback, "JSON Error: " + e.getMessage());
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    Log.d(TAG, "sendCallInvite: Network response: " + response.toString());
+                    try {
+                        ChatMessage msg = ChatMessage.fromJson(response, senderId);
+                        postSuccess(callback, msg);
+                    } catch (JSONException e) {
+                        Timber.tag(TAG).e("sendCallInvite: JSONException in onResponse: " + e.getMessage());
+                        postFailure(callback, "JSON Parse Error: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "sendCallInvite: Volley error: " + error.toString());
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        String errorBody = new String(error.networkResponse.data);
+                        Log.e(TAG, "sendCallInvite: Body: " + errorBody);
+                    }
+                    postFailure(callback, "Network Error: " + error.toString());
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = SupabaseClient.getHeaders(context);
+                headers.put("Prefer", "return=representation");
+                return headers;
+            }
+
+            @Override
+            protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
+                try {
+                    String jsonString = new String(response.data, com.android.volley.toolbox.HttpHeaderParser.parseCharset(response.headers, "utf-8"));
+                    if (jsonString.trim().startsWith("[")) {
+                        JSONArray arr = new JSONArray(jsonString);
+                        if (arr.length() > 0) {
+                            JSONObject obj = arr.getJSONObject(0);
+                            return Response.success(obj, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        } else {
+                            return Response.success(new JSONObject(), com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        }
+                    } else {
+                        JSONObject jsonObject = new JSONObject(jsonString);
+                        return Response.success(jsonObject, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "sendCallInvite: parseNetworkResponse exception: " + e.getMessage());
+                    return Response.error(new com.android.volley.ParseError(e));
+                }
+            }
+        };
+
+        SupabaseClient.getInstance(context).getRequestQueue().add(request);
+    }
+
 
     // ========= 2️⃣ Fetch all messages between two users =========
     public static void fetchMessagesBetweenUsers(
@@ -111,6 +196,8 @@ public class ChatRepository {
             String otherUserId,
             ChatCallback<List<ChatMessage>> callback
     ) {
+        Log.d(TAG, "fetchMessagesBetweenUsers: currentUserId=" + currentUserId + ", otherUserId=" + otherUserId);
+
         String url = SupabaseClient.getBaseUrl() +
                 "/rest/v1/messages?or=(and(sender_id.eq." + currentUserId +
                 ",receiver_id.eq." + otherUserId + "),and(sender_id.eq." + otherUserId +
@@ -124,16 +211,21 @@ public class ChatRepository {
                             JSONObject obj = response.getJSONObject(i);
                             messages.add(ChatMessage.fromJson(obj, currentUserId));
                         }
-                        callback.onSuccess(messages);
+                        postSuccess(callback, messages);
+                        Log.d(TAG, "fetchMessagesBetweenUsers: loaded " + messages.size() + " messages");
                     } catch (JSONException e) {
-                        callback.onFailure(e.getMessage());
+                        Log.e(TAG, "fetchMessagesBetweenUsers: JSON Error: " + e.getMessage());
+                        postFailure(callback, "JSON Error: " + e.getMessage());
                     }
                 },
-                error -> callback.onFailure(error.toString())
+                error -> {
+                    Log.e(TAG, "fetchMessagesBetweenUsers: Network Error: " + error.toString());
+                    postFailure(callback, "Network Error: " + error.toString());
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(request);
@@ -145,6 +237,8 @@ public class ChatRepository {
             String currentUserId,
             ChatCallback<List<FriendProfile>> callback
     ) {
+        Log.d(TAG, "fetchFriendsWithProfiles: currentUserId=" + currentUserId);
+
         String url = SupabaseClient.getBaseUrl()
                 + "/rest/v1/friendships?or=(user_one.eq." + currentUserId
                 + ",user_two.eq." + currentUserId + ")&status=eq.accepted";
@@ -161,12 +255,13 @@ public class ChatRepository {
                             if (!friendId.equals(currentUserId)) friendIds.add(friendId);
                         }
                     } catch (JSONException e) {
-                        callback.onFailure(e.getMessage());
+                        Log.e(TAG, "fetchFriendsWithProfiles: JSON Error: " + e.getMessage());
+                        postFailure(callback, "JSON Error: " + e.getMessage());
                         return;
                     }
 
                     if (friendIds.isEmpty()) {
-                        callback.onSuccess(new ArrayList<>());
+                        postSuccess(callback, new ArrayList<>());
                         return;
                     }
 
@@ -187,25 +282,32 @@ public class ChatRepository {
                                         JSONObject userObj = usersArr.getJSONObject(i);
                                         profiles.add(FriendProfile.fromJson(userObj));
                                     }
-                                    callback.onSuccess(profiles);
+                                    postSuccess(callback, profiles);
                                 } catch (JSONException e) {
-                                    callback.onFailure(e.getMessage());
+                                    Log.e(TAG, "fetchFriendsWithProfiles: JSON Error: " + e.getMessage());
+                                    postFailure(callback, "JSON Error: " + e.getMessage());
                                 }
                             },
-                            error -> callback.onFailure(error.toString())
+                            error -> {
+                                Log.e(TAG, "fetchFriendsWithProfiles: Network Error: " + error.toString());
+                                postFailure(callback, "Network Error: " + error.toString());
+                            }
                     ) {
                         @Override
                         public Map<String, String> getHeaders() {
-                            return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
+                            return SupabaseClient.getHeaders(context);
                         }
                     };
                     SupabaseClient.getInstance(context).getRequestQueue().add(usersReq);
                 },
-                error -> callback.onFailure(error.toString())
+                error -> {
+                    Log.e(TAG, "fetchFriendsWithProfiles: Network Error: " + error.toString());
+                    postFailure(callback, "Network Error: " + error.toString());
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(friendshipsReq);
@@ -218,6 +320,8 @@ public class ChatRepository {
             String friendUserId,
             ChatCallback<ChatMessage> callback
     ) {
+        Log.d(TAG, "fetchLastMessageWithFriend: currentUserId=" + currentUserId + ", friendUserId=" + friendUserId);
+
         String url = SupabaseClient.getBaseUrl() +
                 "/rest/v1/messages?or=(and(sender_id.eq." + currentUserId +
                 ",receiver_id.eq." + friendUserId + "),and(sender_id.eq." + friendUserId +
@@ -226,21 +330,25 @@ public class ChatRepository {
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     if (response.length() == 0) {
-                        callback.onSuccess(null);
+                        postSuccess(callback, null);
                         return;
                     }
                     try {
                         JSONObject obj = response.getJSONObject(0);
-                        callback.onSuccess(ChatMessage.fromJson(obj, currentUserId));
+                        postSuccess(callback, ChatMessage.fromJson(obj, currentUserId));
                     } catch (JSONException e) {
-                        callback.onFailure(e.getMessage());
+                        Log.e(TAG, "fetchLastMessageWithFriend: JSON Error: " + e.getMessage());
+                        postFailure(callback, "JSON Error: " + e.getMessage());
                     }
                 },
-                error -> callback.onFailure(error.toString())
+                error -> {
+                    Log.e(TAG, "fetchLastMessageWithFriend: Network Error: " + error.toString());
+                    postFailure(callback, "Network Error: " + error.toString());
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {
-                return SupabaseClient.getHeaders(context); // ✅ Fix: pass context
+                return SupabaseClient.getHeaders(context);
             }
         };
         SupabaseClient.getInstance(context).getRequestQueue().add(req);
@@ -256,7 +364,7 @@ public class ChatRepository {
             @Override
             public void onSuccess(List<FriendProfile> friendProfiles) {
                 if (friendProfiles.isEmpty()) {
-                    callback.onSuccess(new ArrayList<>());
+                    postSuccess(callback, new ArrayList<>());
                     return;
                 }
 
@@ -279,14 +387,14 @@ public class ChatRepository {
                                     if (b.lastMessage == null) return -1;
                                     return b.lastMessage.getCreatedAt().compareTo(a.lastMessage.getCreatedAt());
                                 });
-                                callback.onSuccess(previews);
+                                postSuccess(callback, previews);
                             }
                         }
                         @Override
                         public void onFailure(String error) {
                             completed[0]++;
                             if (completed[0] == friendProfiles.size()) {
-                                callback.onSuccess(previews);
+                                postSuccess(callback, previews);
                             }
                         }
                     });
@@ -295,9 +403,18 @@ public class ChatRepository {
 
             @Override
             public void onFailure(String error) {
-                callback.onFailure(error);
+                postFailure(callback, error);
             }
         });
+    }
+
+    // ========= Handler for UI thread-safe callback =========
+    private static <T> void postSuccess(ChatCallback<T> callback, T result) {
+        mainHandler.post(() -> callback.onSuccess(result));
+    }
+
+    private static void postFailure(ChatCallback<?> callback, String error) {
+        mainHandler.post(() -> callback.onFailure(error));
     }
 
     // ========= Model: FriendProfile =========

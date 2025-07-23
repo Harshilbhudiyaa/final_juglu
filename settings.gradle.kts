@@ -17,8 +17,15 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven(url = "https://jitpack.io")
+        maven {
+            url = uri("https://github.com/jitsi/jitsi-maven-repository/raw/master/releases")
+        }
+        maven {
+            url = uri("https://maven.google.com")
+        }
     }
 }
+
 
 rootProject.name = "demo"
 include(":app")

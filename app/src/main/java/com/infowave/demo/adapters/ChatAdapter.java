@@ -1,8 +1,13 @@
 package com.infowave.demo.adapters;
 
+import android.annotation.SuppressLint;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -13,6 +18,7 @@ import com.bumptech.glide.Glide;
 import com.infowave.demo.R;
 import com.infowave.demo.models.ChatMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -21,22 +27,36 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
+    private static final int VIEW_TYPE_CALL_SENT = 3;
+    private static final int VIEW_TYPE_CALL_RECEIVED = 4;
+
+    private static final String TAG = "JugluChatAdapter";
 
     private final List<ChatMessage> messages;
     private final String currentUserId;
-    private final String receiverProfileUrl; // For 1-to-1 chats only
+    private final String receiverProfileUrl;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final CallBubbleClickListener callBubbleClickListener;
 
-    // Constructor when you know the receiver's profile URL (for all received messages)
-    public ChatAdapter(List<ChatMessage> messages, String currentUserId, String receiverProfileUrl) {
-        this.messages = messages;
+    public interface CallBubbleClickListener {
+        void onCallBubbleClick(String room, boolean isVideo);
+    }
+
+    public ChatAdapter(List<ChatMessage> messages, String currentUserId, String receiverProfileUrl, CallBubbleClickListener callBubbleClickListener) {
+        this.messages = (messages != null) ? messages : new ArrayList<>();
         this.currentUserId = currentUserId;
         this.receiverProfileUrl = receiverProfileUrl;
+        this.callBubbleClickListener = callBubbleClickListener;
     }
 
     @Override
     public int getItemViewType(int position) {
         ChatMessage msg = messages.get(position);
-        return msg.getSenderId().equals(currentUserId) ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
+        if (msg.isCallInvite()) {
+            return msg.getSenderId().equals(currentUserId) ? VIEW_TYPE_CALL_SENT : VIEW_TYPE_CALL_RECEIVED;
+        } else {
+            return msg.getSenderId().equals(currentUserId) ? VIEW_TYPE_SENT : VIEW_TYPE_RECEIVED;
+        }
     }
 
     @NonNull
@@ -46,10 +66,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_sent, parent, false);
             return new SentMessageViewHolder(view);
-        } else {
+        } else if (viewType == VIEW_TYPE_RECEIVED) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_received, parent, false);
             return new ReceivedMessageViewHolder(view);
+        } else if (viewType == VIEW_TYPE_CALL_SENT) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_call_invite_sent, parent, false);
+            return new CallInviteSentViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_call_invite_received, parent, false);
+            return new CallInviteReceivedViewHolder(view);
         }
     }
 
@@ -61,6 +89,42 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             ((SentMessageViewHolder) holder).bind(message);
         } else if (holder instanceof ReceivedMessageViewHolder) {
             ((ReceivedMessageViewHolder) holder).bind(message, receiverProfileUrl);
+        } else if (holder instanceof CallInviteSentViewHolder) {
+            ((CallInviteSentViewHolder) holder).bind(message);
+            holder.itemView.setOnClickListener(v -> {
+                String room = getRoomFromContent(message);
+                boolean isVideo = isVideoCallType(message);
+                if (callBubbleClickListener != null) {
+                    callBubbleClickListener.onCallBubbleClick(room, isVideo);
+                }
+            });
+        } else if (holder instanceof CallInviteReceivedViewHolder) {
+            ((CallInviteReceivedViewHolder) holder).bind(message, receiverProfileUrl);
+            holder.itemView.setOnClickListener(v -> {
+                String room = getRoomFromContent(message);
+                boolean isVideo = isVideoCallType(message);
+                if (callBubbleClickListener != null) {
+                    callBubbleClickListener.onCallBubbleClick(room, isVideo);
+                }
+            });
+        }
+    }
+
+    private String getRoomFromContent(ChatMessage message) {
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(message.getContent());
+            return obj.optString("room", "juglu_" + message.getSenderId() + "_" + message.getReceiverId());
+        } catch (Exception e) {
+            return "juglu_" + message.getSenderId() + "_" + message.getReceiverId();
+        }
+    }
+
+    private boolean isVideoCallType(ChatMessage message) {
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(message.getContent());
+            return "video".equalsIgnoreCase(obj.optString("call_type", "video"));
+        } catch (Exception e) {
+            return true;
         }
     }
 
@@ -69,7 +133,41 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
-    // ViewHolder for Sent Messages (right side)
+    public void addMessage(ChatMessage message) {
+        mainHandler.post(() -> {
+            messages.add(message);
+            notifyItemInserted(messages.size() - 1);
+            Log.d(TAG, "addMessage: message added at " + (messages.size() - 1));
+        });
+    }
+
+    public void addMessages(List<ChatMessage> newMessages) {
+        if (newMessages == null || newMessages.isEmpty()) return;
+        mainHandler.post(() -> {
+            int start = messages.size();
+            messages.addAll(newMessages);
+            notifyItemRangeInserted(start, newMessages.size());
+            Log.d(TAG, "addMessages: " + newMessages.size() + " messages added.");
+        });
+    }
+
+    public void replaceMessages(List<ChatMessage> newMessages) {
+        mainHandler.post(() -> {
+            messages.clear();
+            if (newMessages != null) messages.addAll(newMessages);
+            notifyDataSetChanged();
+            Log.d(TAG, "replaceMessages: All messages replaced.");
+        });
+    }
+
+    public void clearMessages() {
+        mainHandler.post(() -> {
+            messages.clear();
+            notifyDataSetChanged();
+            Log.d(TAG, "clearMessages: All messages cleared.");
+        });
+    }
+
     static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, timeText;
         LinearLayout messageLayout;
@@ -87,7 +185,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    // ViewHolder for Received Messages (left side)
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, timeText;
         CircleImageView profileImage;
@@ -104,8 +201,66 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void bind(ChatMessage message, String receiverProfileUrl) {
             messageText.setText(message.getMessage());
             timeText.setText(message.getCreatedAt());
+            if (profileImage != null) {
+                if (receiverProfileUrl != null && !receiverProfileUrl.isEmpty()) {
+                    Glide.with(profileImage.getContext())
+                            .load(receiverProfileUrl)
+                            .placeholder(R.drawable.ic_profile_placeholder)
+                            .into(profileImage);
+                } else {
+                    profileImage.setImageResource(R.drawable.ic_profile_placeholder);
+                }
+            }
+        }
+    }
 
-            // Use the profile URL passed for the receiver
+    static class CallInviteSentViewHolder extends RecyclerView.ViewHolder {
+        TextView callTypeText, callTimeText;
+        ImageView callTypeIcon;
+
+        CallInviteSentViewHolder(View itemView) {
+            super(itemView);
+            callTypeText = itemView.findViewById(R.id.call_invite_type);
+            callTimeText = itemView.findViewById(R.id.call_invite_time);
+            callTypeIcon = itemView.findViewById(R.id.call_invite_icon);
+        }
+
+        void bind(ChatMessage message) {
+            String callType = message.getCallType();
+            if ("video".equalsIgnoreCase(callType)) {
+                callTypeText.setText("Outgoing Video Call");
+                callTypeIcon.setImageResource(R.drawable.ic_videocam);
+            } else {
+                callTypeText.setText("Outgoing Audio Call");
+                callTypeIcon.setImageResource(R.drawable.ic_call);
+            }
+            callTimeText.setText(message.getCreatedAt());
+        }
+    }
+
+    static class CallInviteReceivedViewHolder extends RecyclerView.ViewHolder {
+        TextView callTypeText, callTimeText;
+        ImageView callTypeIcon;
+        CircleImageView profileImage;
+
+        CallInviteReceivedViewHolder(View itemView) {
+            super(itemView);
+            callTypeText = itemView.findViewById(R.id.call_invite_type);
+            callTimeText = itemView.findViewById(R.id.call_invite_time);
+            callTypeIcon = itemView.findViewById(R.id.call_invite_icon);
+            profileImage = itemView.findViewById(R.id.call_invite_profile_image);
+        }
+
+        void bind(ChatMessage message, String receiverProfileUrl) {
+            String callType = message.getCallType();
+            if ("video".equalsIgnoreCase(callType)) {
+                callTypeText.setText("Incoming Video Call");
+                callTypeIcon.setImageResource(R.drawable.ic_videocam);
+            } else {
+                callTypeText.setText("Incoming Audio Call");
+                callTypeIcon.setImageResource(R.drawable.ic_call);
+            }
+            callTimeText.setText(message.getCreatedAt());
             if (profileImage != null) {
                 if (receiverProfileUrl != null && !receiverProfileUrl.isEmpty()) {
                     Glide.with(profileImage.getContext())
