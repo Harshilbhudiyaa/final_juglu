@@ -1,19 +1,22 @@
 package com.infowave.demo.adapters;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import com.bumptech.glide.Glide;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.infowave.demo.R;
+import com.infowave.demo.models.FollowState;
 import com.infowave.demo.models.PersonNearby;
+import com.infowave.demo.supabase.FollowRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,26 +25,28 @@ public class PersonNearbyAdapter extends RecyclerView.Adapter<PersonNearbyAdapte
 
     public List<PersonNearby> nearbyList;
     private final OnPersonNearbyClickListener listener;
+    private final Context context;
 
     public interface OnPersonNearbyClickListener {
         void onClick(PersonNearby person);
     }
 
-    public PersonNearbyAdapter(List<PersonNearby> nearbyList, OnPersonNearbyClickListener listener) {
+    public PersonNearbyAdapter(Context context, List<PersonNearby> nearbyList, OnPersonNearbyClickListener listener) {
+        this.context = context;
         this.nearbyList = nearbyList != null ? nearbyList : new ArrayList<>();
         this.listener = listener;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public PersonNearbyAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_person_nearby, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PersonNearbyAdapter.ViewHolder holder, int position) {
         PersonNearby person = nearbyList.get(position);
 
         holder.name.setText(person.getName());
@@ -57,7 +62,13 @@ public class PersonNearbyAdapter extends RecyclerView.Adapter<PersonNearbyAdapte
         } else {
             holder.profileImage.setImageResource(R.drawable.default_profile);
         }
+
         holder.itemView.setOnClickListener(v -> listener.onClick(person));
+
+        setButtonState(holder.connectButton, person.getFollowState());
+
+        holder.connectButton.setOnClickListener(v -> handleFollowClick(person, position));
+        holder.connectButton.setOnLongClickListener(v -> handleLongClickDecline(person, position));
     }
 
     @Override
@@ -67,21 +78,126 @@ public class PersonNearbyAdapter extends RecyclerView.Adapter<PersonNearbyAdapte
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ShapeableImageView profileImage;
-        TextView name, distance;
+        android.widget.TextView name, distance;
         MaterialButton connectButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            profileImage = itemView.findViewById(R.id.profileImage);
-            name = itemView.findViewById(R.id.name);
-            distance = itemView.findViewById(R.id.distance);
-            connectButton = itemView.findViewById(R.id.connectButton);
+            profileImage   = itemView.findViewById(R.id.profileImage);
+            name           = itemView.findViewById(R.id.name);
+            distance       = itemView.findViewById(R.id.distance);
+            connectButton  = itemView.findViewById(R.id.connectButton);
         }
     }
 
-//    @SuppressLint("NotifyDataSetChanged")
-//    public void setNearbyList(List<PersonNearby> list) {
-//        this.nearbyList = list != null ? list : new ArrayList<>();
-//        notifyDataSetChanged();
-//    }
+    // --------------- Helpers ----------------
+
+    private void setButtonState(MaterialButton btn, FollowState state) {
+        switch (state) {
+            case NONE:
+                btn.setText("Follow");
+                btn.setEnabled(true);
+                break;
+            case REQUEST_SENT:
+                btn.setText("Requested");
+                btn.setEnabled(true);
+                break;
+            case REQUEST_RECEIVED:
+                btn.setText("Accept");
+                btn.setEnabled(true);
+                break;
+            case FOLLOWING:
+                btn.setText("Following");
+                btn.setEnabled(true);
+                break;
+        }
+    }
+
+    private void handleFollowClick(PersonNearby user, int position) {
+        switch (user.getFollowState()) {
+            case NONE:
+                FollowRepository.sendFollowRequest(context, user.getId(), new FollowRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        user.setFollowState(FollowState.REQUEST_SENT);
+                        notifyItemChanged(position);
+                    }
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+
+            case REQUEST_SENT:
+                FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        user.setFollowState(FollowState.NONE);
+                        user.setFriendshipRowId(null);
+                        notifyItemChanged(position);
+                    }
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+
+            case REQUEST_RECEIVED:
+                FollowRepository.acceptRequest(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        user.setFollowState(FollowState.FOLLOWING);
+                        notifyItemChanged(position);
+                    }
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+
+            case FOLLOWING:
+                FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        user.setFollowState(FollowState.NONE);
+                        user.setFriendshipRowId(null);
+                        notifyItemChanged(position);
+                    }
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                break;
+        }
+    }
+
+    private boolean handleLongClickDecline(PersonNearby user, int position) {
+        if (user.getFollowState() == FollowState.REQUEST_RECEIVED) {
+            FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
+                @Override
+                public void onSuccess() {
+                    user.setFollowState(FollowState.NONE);
+                    user.setFriendshipRowId(null);
+                    notifyItemChanged(position);
+                    Toast.makeText(context, "Request declined", Toast.LENGTH_SHORT).show();
+                }
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void setNearbyList(List<PersonNearby> list) {
+        this.nearbyList = list != null ? list : new ArrayList<>();
+        notifyDataSetChanged();
+    }
 }

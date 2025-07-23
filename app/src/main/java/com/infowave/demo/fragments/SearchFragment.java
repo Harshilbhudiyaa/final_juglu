@@ -43,9 +43,10 @@ public class SearchFragment extends Fragment {
 
     private RecyclerView rvPeopleNearby, rvRecommended, rvSearchResults;
     private PersonNearbyAdapter nearbyAdapter;
-    private SwipeRefreshLayout swipeRefreshLayout;
     private RecommendedUserAdapter recommendedAdapter;
     private UserSearchAdapter userSearchAdapter;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
     private EditText searchInput;
     private ImageButton clearButton;
 
@@ -56,36 +57,37 @@ public class SearchFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
         // Initialize views
-        searchInput = view.findViewById(R.id.search_input);
-        clearButton = view.findViewById(R.id.clear_button);
-        rvPeopleNearby = view.findViewById(R.id.rvPeopleNearby);
-        rvRecommended = view.findViewById(R.id.rvRecommended);
-        rvSearchResults = view.findViewById(R.id.rvSearchResults);
+        searchInput        = view.findViewById(R.id.search_input);
+        clearButton        = view.findViewById(R.id.clear_button);
+        rvPeopleNearby     = view.findViewById(R.id.rvPeopleNearby);
+        rvRecommended      = view.findViewById(R.id.rvRecommended);
+        rvSearchResults    = view.findViewById(R.id.rvSearchResults);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefresh);
 
         setupSearch();
         setupAdapters();
         setupRecyclerViews();
+
         loadNearbyPeople();      // Dynamic nearby users
         loadRecommendedUsers();  // Dynamic recommended users
 
-        swipeRefreshLayout.setOnRefreshListener(this::refreshAllData);
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setOnRefreshListener(this::refreshAllData);
+        }
         return view;
     }
 
     private void refreshAllData() {
-        performLiveUserSearch(searchInput.getText().toString().trim());
+        performLiveUserSearch(searchInput != null ? searchInput.getText().toString().trim() : "");
         loadNearbyPeople();
         loadRecommendedUsers();
-        swipeRefreshLayout.setRefreshing(false); // Stop the spinner after refresh is triggered
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
     }
 
     private void setupSearch() {
         if (searchInput != null) {
             searchInput.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     if (clearButton != null) {
@@ -93,9 +95,7 @@ public class SearchFragment extends Fragment {
                     }
                     performLiveUserSearch(s.toString().trim());
                 }
-
-                @Override
-                public void afterTextChanged(Editable s) {}
+                @Override public void afterTextChanged(Editable s) {}
             });
         }
 
@@ -110,8 +110,8 @@ public class SearchFragment extends Fragment {
         if (query.isEmpty()) {
             // Hide search results, show normal content
             if (rvSearchResults != null) rvSearchResults.setVisibility(View.GONE);
-            if (rvPeopleNearby != null) rvPeopleNearby.setVisibility(View.VISIBLE);
-            if (rvRecommended != null) rvRecommended.setVisibility(View.VISIBLE);
+            if (rvPeopleNearby  != null) rvPeopleNearby.setVisibility(View.VISIBLE);
+            if (rvRecommended   != null) rvRecommended.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -125,8 +125,8 @@ public class SearchFragment extends Fragment {
                     userSearchAdapter.setResults(results);
                     rvSearchResults.setVisibility(View.VISIBLE);
                 }
-                if (rvPeopleNearby != null) rvPeopleNearby.setVisibility(View.GONE);
-                if (rvRecommended != null) rvRecommended.setVisibility(View.GONE);
+                if (rvPeopleNearby  != null) rvPeopleNearby.setVisibility(View.GONE);
+                if (rvRecommended   != null) rvRecommended.setVisibility(View.GONE);
             }
 
             @Override
@@ -138,25 +138,25 @@ public class SearchFragment extends Fragment {
     }
 
     private void setupAdapters() {
-        // Nearby adapter (dynamic)
-        nearbyAdapter = new PersonNearbyAdapter(new ArrayList<>(), person -> {
+        // Nearby adapter
+        nearbyAdapter = new PersonNearbyAdapter(getContext(), new ArrayList<>(), person -> {
             if (getContext() != null) {
                 Toast.makeText(getContext(), "Clicked: " + person.getName(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Recommended adapter (dynamic)
-        recommendedAdapter = new RecommendedUserAdapter(new ArrayList<>(), user -> {
+        // Recommended adapter
+        recommendedAdapter = new RecommendedUserAdapter(getContext(), new ArrayList<>(), user -> {
             if (getContext() != null) {
-                Toast.makeText(getContext(), "Follow clicked: " + user.getName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Open profile: " + user.getName(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // User search adapter (open profile on click)
-        userSearchAdapter = new UserSearchAdapter(new ArrayList<>(), user -> {
+        // Search results adapter
+        userSearchAdapter = new UserSearchAdapter(getContext(), new ArrayList<>(), user -> {
             if (getContext() != null && user != null) {
                 Intent i = new Intent(getContext(), FriendProfileActivity.class);
-                // i.putExtra("userId", user.getId());
+                i.putExtra("userId", user.getId());
                 startActivity(i);
             }
         });
@@ -206,7 +206,7 @@ public class SearchFragment extends Fragment {
                 url,
                 null,
                 response -> {
-                    Log.d("SEARCH_FRAGMENT", "User location response: " + response.toString());
+                    Log.d("SEARCH_FRAGMENT", "User location response: " + response);
                     if (response.length() == 0) {
                         Log.e("SEARCH_FRAGMENT", "User location not found in DB.");
                         Toast.makeText(getContext(), "Location not set. Please update your profile.", Toast.LENGTH_SHORT).show();
@@ -231,13 +231,11 @@ public class SearchFragment extends Fragment {
                                 longitude,
                                 500.0, // radius in km
                                 new SearchRepository.PeopleNearbyCallback() {
-                                    @SuppressLint("NotifyDataSetChanged")
                                     @Override
                                     public void onResults(List<PersonNearby> people) {
                                         Log.d("SEARCH_FRAGMENT", "Loaded " + people.size() + " nearby people.");
                                         if (nearbyAdapter != null) {
-                                            nearbyAdapter.nearbyList = people;
-                                            nearbyAdapter.notifyDataSetChanged();
+                                            nearbyAdapter.setNearbyList(people);
                                         }
                                     }
                                     @Override
@@ -253,7 +251,7 @@ public class SearchFragment extends Fragment {
                     }
                 },
                 error -> {
-                    Log.e("SEARCH_FRAGMENT", "Error fetching user location: " + error.toString());
+                    Log.e("SEARCH_FRAGMENT", "Error fetching user location: " + error);
                     Toast.makeText(getContext(), "Error fetching user location", Toast.LENGTH_SHORT).show();
                 }
         ) {
@@ -264,17 +262,17 @@ public class SearchFragment extends Fragment {
         };
 
         SupabaseClient.addToRequestQueue(getContext(), request);
-        if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing())
+            swipeRefreshLayout.setRefreshing(false);
     }
 
-    // Helper: fetch userId from SharedPreferences (adjust as per your codebase)
+    // Helper: fetch userId from SharedPreferences
     private String getCurrentUserId(Context context) {
         return context.getSharedPreferences("juglu_prefs", Context.MODE_PRIVATE)
                 .getString("user_id", null);
     }
 
     // Fetch "Recommended for you" users dynamically from Supabase
-    @SuppressLint("NotifyDataSetChanged")
     private void loadRecommendedUsers() {
         if (getContext() == null) return;
         Log.d("SEARCH_FRAGMENT", "Loading recommended users...");
@@ -284,8 +282,7 @@ public class SearchFragment extends Fragment {
             public void onResults(List<RecommendedUser> users) {
                 Log.d("SEARCH_FRAGMENT", "Loaded " + users.size() + " recommended users.");
                 if (recommendedAdapter != null) {
-                    recommendedAdapter.recommendedList = users;
-                    recommendedAdapter.notifyDataSetChanged();
+                    recommendedAdapter.setRecommendedList(users);
                 }
             }
 
@@ -295,7 +292,7 @@ public class SearchFragment extends Fragment {
                 Toast.makeText(getContext(), "Error loading recommended users: " + error, Toast.LENGTH_SHORT).show();
             }
         });
-        if (swipeRefreshLayout.isRefreshing()) swipeRefreshLayout.setRefreshing(false);
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing())
+            swipeRefreshLayout.setRefreshing(false);
     }
-
 }

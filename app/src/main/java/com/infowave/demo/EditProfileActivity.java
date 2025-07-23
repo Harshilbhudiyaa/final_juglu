@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.EditText;
@@ -22,8 +21,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.infowave.demo.supabase.ProfileRepository;
 import com.infowave.demo.supabase.MediaUploadRepository;
+import com.infowave.demo.supabase.ProfileRepository;
 
 import java.io.IOException;
 
@@ -61,15 +60,15 @@ public class EditProfileActivity extends AppCompatActivity {
         });
 
         editProfileImage = findViewById(R.id.edit_profile_image);
-        editFullName = findViewById(R.id.edit_full_name);
-        editUsername = findViewById(R.id.edit_username);
-        editMobile = findViewById(R.id.edit_mobile);
-        editEmail = findViewById(R.id.edit_email);
-        genderText = findViewById(R.id.gender_text);
-        privateSwitch = findViewById(R.id.switch_private);
-        editBio = findViewById(R.id.edit_bio);
-        btnSaveProfile = findViewById(R.id.btn_save_profile);
-        backIcon = findViewById(R.id.back_icon);
+        editFullName     = findViewById(R.id.edit_full_name);
+        editUsername     = findViewById(R.id.edit_username);
+        editMobile       = findViewById(R.id.edit_mobile);
+        editEmail        = findViewById(R.id.edit_email);
+        genderText       = findViewById(R.id.gender_text);
+        privateSwitch    = findViewById(R.id.switch_private);
+        editBio          = findViewById(R.id.edit_bio);
+        btnSaveProfile   = findViewById(R.id.btn_save_profile);
+        backIcon         = findViewById(R.id.back_icon);
 
         editMobile.setEnabled(false);
 
@@ -100,10 +99,10 @@ public class EditProfileActivity extends AppCompatActivity {
                 editMobile.setText(user.phone != null ? user.phone : "");
                 editEmail.setText(user.email != null ? user.email : "");
 
-                // Gender is readonly as TextView
                 genderText.setText(
-                        user.gender != null && !user.gender.isEmpty() ?
-                                capitalize(user.gender) : "Not specified"
+                        user.gender != null && !user.gender.isEmpty()
+                                ? capitalize(user.gender)
+                                : "Not specified"
                 );
 
                 privateSwitch.setChecked(user.isPrivate != null && user.isPrivate);
@@ -150,9 +149,9 @@ public class EditProfileActivity extends AppCompatActivity {
     private void saveProfile() {
         final String fullName = editFullName.getText().toString().trim();
         final String username = editUsername.getText().toString().trim();
-        final String bio = editBio.getText().toString().trim();
-        final String email = editEmail.getText().toString().trim();
-        final String gender = genderText.getText().toString().trim().toLowerCase(); // Readonly
+        final String bio      = editBio.getText().toString().trim();
+        final String email    = editEmail.getText().toString().trim();
+        final String gender   = genderText.getText().toString().trim().toLowerCase();
         final Boolean isPrivate = privateSwitch.isChecked();
 
         if (username.isEmpty()) {
@@ -186,7 +185,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess() {
                         Toast.makeText(EditProfileActivity.this, "Profile saved successfully!", Toast.LENGTH_SHORT).show();
-                        setResult(RESULT_OK); // To refresh ProfileFragment
+                        setResult(RESULT_OK);
                         finish();
                     }
                     @Override
@@ -197,7 +196,6 @@ public class EditProfileActivity extends AppCompatActivity {
                 });
     }
 
-    // Helper: capitalize first letter (for gender display)
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return "";
         return str.substring(0, 1).toUpperCase() + str.substring(1);
