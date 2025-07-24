@@ -321,11 +321,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendCallInviteAndLaunchCall(String callType) {
-        String roomName = "juglu_" + (
-                currentUserId.compareTo(otherUserId) < 0
-                        ? currentUserId + "_" + otherUserId
-                        : otherUserId + "_" + currentUserId
-        ) + "_" + System.currentTimeMillis();
+        String roomName = "juglu_" + java.util.UUID.randomUUID().toString();
 
 
         ChatRepository.sendCallInvite(
