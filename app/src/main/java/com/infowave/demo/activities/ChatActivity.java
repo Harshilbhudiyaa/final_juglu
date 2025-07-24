@@ -325,7 +325,8 @@ public class ChatActivity extends AppCompatActivity {
                 currentUserId.compareTo(otherUserId) < 0
                         ? currentUserId + "_" + otherUserId
                         : otherUserId + "_" + currentUserId
-        );
+        ) + "_" + System.currentTimeMillis();
+
 
         ChatRepository.sendCallInvite(
                 this,
