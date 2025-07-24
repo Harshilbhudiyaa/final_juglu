@@ -273,7 +273,14 @@ public class ChatActivity extends AppCompatActivity {
             URL serverURL = new URL("https://meet.jit.si");
             JitsiMeetConferenceOptions.Builder optionsBuilder = new JitsiMeetConferenceOptions.Builder()
                     .setServerURL(serverURL)
-                    .setRoom(roomName);
+                    .setRoom(roomName)
+                    // Disable lobby and prejoin, force instant join
+                    .setFeatureFlag("lobby.enabled", false)
+                    .setFeatureFlag("prejoinpage.enabled", false)
+                    .setFeatureFlag("invite.enabled", false)
+                    .setFeatureFlag("add-people.enabled", false)
+                    .setFeatureFlag("meeting-password.enabled", false);
+
             if (!isVideo) optionsBuilder.setVideoMuted(true);
 
             JitsiMeetActivity.launch(this, optionsBuilder.build());
@@ -281,6 +288,7 @@ public class ChatActivity extends AppCompatActivity {
             Toast.makeText(this, "Error starting call: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
+
 
     private String getCurrentUserId() {
         return getSharedPreferences("juglu_prefs", MODE_PRIVATE).getString("user_id", "-1");
