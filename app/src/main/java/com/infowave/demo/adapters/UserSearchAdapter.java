@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -11,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.imageview.ShapeableImageView;
 import com.infowave.demo.R;
 import com.infowave.demo.models.FollowState;
 import com.infowave.demo.models.UserSearchResult;
@@ -77,7 +77,7 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        ShapeableImageView ivProfile;
+        ImageView ivProfile;
         android.widget.TextView tvName, tvUsername, tvBio;
         MaterialButton btnFollow;
 
@@ -91,13 +91,13 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
         }
     }
 
-    // ---- public helpers ----
+    // PUBLIC
     public void setResults(List<UserSearchResult> newList) {
         this.results = newList != null ? newList : new ArrayList<>();
         notifyDataSetChanged();
     }
 
-    // ---- private helpers ----
+    // PRIVATE
     private void setButtonState(MaterialButton btn, FollowState state) {
         switch (state) {
             case NONE:
@@ -123,13 +123,11 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
         switch (user.getFollowState()) {
             case NONE:
                 FollowRepository.sendFollowRequest(context, user.getId(), new FollowRepository.SimpleCallback() {
-                    @Override
-                    public void onSuccess() {
+                    @Override public void onSuccess() {
                         user.setFollowState(FollowState.REQUEST_SENT);
                         notifyItemChanged(position);
                     }
-                    @Override
-                    public void onError(String error) {
+                    @Override public void onError(String error) {
                         Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -137,14 +135,12 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
 
             case REQUEST_SENT:
                 FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
-                    @Override
-                    public void onSuccess() {
+                    @Override public void onSuccess() {
                         user.setFollowState(FollowState.NONE);
                         user.setFriendshipRowId(null);
                         notifyItemChanged(position);
                     }
-                    @Override
-                    public void onError(String error) {
+                    @Override public void onError(String error) {
                         Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -152,13 +148,11 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
 
             case REQUEST_RECEIVED:
                 FollowRepository.acceptRequest(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
-                    @Override
-                    public void onSuccess() {
+                    @Override public void onSuccess() {
                         user.setFollowState(FollowState.FOLLOWING);
                         notifyItemChanged(position);
                     }
-                    @Override
-                    public void onError(String error) {
+                    @Override public void onError(String error) {
                         Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -166,14 +160,12 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
 
             case FOLLOWING:
                 FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
-                    @Override
-                    public void onSuccess() {
+                    @Override public void onSuccess() {
                         user.setFollowState(FollowState.NONE);
                         user.setFriendshipRowId(null);
                         notifyItemChanged(position);
                     }
-                    @Override
-                    public void onError(String error) {
+                    @Override public void onError(String error) {
                         Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -184,15 +176,13 @@ public class UserSearchAdapter extends RecyclerView.Adapter<UserSearchAdapter.Vi
     private boolean handleLongClickDecline(UserSearchResult user, int position) {
         if (user.getFollowState() == FollowState.REQUEST_RECEIVED) {
             FollowRepository.deleteFriendship(context, user.getFriendshipRowId(), new FollowRepository.SimpleCallback() {
-                @Override
-                public void onSuccess() {
+                @Override public void onSuccess() {
                     user.setFollowState(FollowState.NONE);
                     user.setFriendshipRowId(null);
                     notifyItemChanged(position);
                     Toast.makeText(context, "Request declined", Toast.LENGTH_SHORT).show();
                 }
-                @Override
-                public void onError(String error) {
+                @Override public void onError(String error) {
                     Toast.makeText(context, "Error: " + error, Toast.LENGTH_SHORT).show();
                 }
             });
