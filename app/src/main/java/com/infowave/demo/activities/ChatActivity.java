@@ -211,7 +211,7 @@ public class ChatActivity extends AppCompatActivity {
                     public void onSuccess(List<ChatMessage> result) {
                         chatAdapter.replaceMessages(result);
                         if (result != null && !result.isEmpty()) {
-                            recyclerView.scrollToPosition(result.size() - 1);
+                            //recyclerView.scrollToPosition(result.size() - 1);
                             ChatMessage lastMsg = result.get(result.size() - 1);
                             if (isCallInviteMessage(lastMsg)
                                     && lastMsg.getReceiverId().equals(currentUserId)
@@ -394,6 +394,28 @@ public class ChatActivity extends AppCompatActivity {
             else if (requestCode == REQUEST_PICK_VIDEO) {
                 android.net.Uri videoUri = data.getData();
                 if (videoUri != null) {
+                    // --------- SIZE CHECK START ---------
+                    long maxSize = 30L * 1024 * 1024; // 30 MB in bytes
+                    long fileSize = 0;
+                    try {
+                        android.database.Cursor cursor = getContentResolver().query(videoUri, null, null, null, null);
+                        if (cursor != null) {
+                            int sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE);
+                            if (sizeIndex != -1) {
+                                cursor.moveToFirst();
+                                fileSize = cursor.getLong(sizeIndex);
+                            }
+                            cursor.close();
+                        }
+                    } catch (Exception e) {
+                        fileSize = 0;
+                    }
+                    if (fileSize > maxSize) {
+                        Toast.makeText(this, "Video size must be less than 30 MB", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    // --------- SIZE CHECK END ---------
+
                     MediaUploadRepository.uploadChatVideo(this, videoUri, currentUserId, new MediaUploadRepository.ImageUploadCallback() {
                         @Override
                         public void onSuccess(String publicUrl) {
@@ -409,19 +431,10 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }
 
+
         }
     }
 
-    private String getRealPathFromURI(android.net.Uri contentUri) {
-        String[] proj = {android.provider.MediaStore.Images.Media.DATA};
-        android.database.Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor == null) return null;
-        int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String path = cursor.getString(column_index);
-        cursor.close();
-        return path;
-    }
     private void sendImageMessage(String imageUrl) {
         ChatRepository.sendMediaMessage(
                 this,
