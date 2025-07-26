@@ -69,7 +69,7 @@ public class Splash extends AppCompatActivity {
                 Intent in = new Intent(Splash.this, Register.class);
                 startActivity(in);
                 finish();
-            }
-        }, 1200); // Faster splash, reduce to 1200ms for better UX
+            }   
+        }, 1000); // Faster splash, reduce to 1200ms for better UX
     }
 }
