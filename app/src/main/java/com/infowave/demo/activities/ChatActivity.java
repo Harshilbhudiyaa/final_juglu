@@ -1,6 +1,7 @@
 package com.infowave.demo.activities;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import com.infowave.demo.R;
 import com.infowave.demo.adapters.ChatAdapter;
 import com.infowave.demo.models.ChatMessage;
 import com.infowave.demo.supabase.ChatRepository;
+import com.infowave.demo.supabase.MediaUploadRepository;
 
 import org.jitsi.meet.sdk.JitsiMeetActivity;
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions;
@@ -35,7 +37,7 @@ public class ChatActivity extends AppCompatActivity {
     TextView usernameText;
     EditText messageInput;
     ImageView sendButton;
-    ImageView audioCallButton, videoCallButton;
+    ImageView audioCallButton, videoCallButton,attachment_button;
 
     RecyclerView recyclerView;
     ChatAdapter chatAdapter;
@@ -48,6 +50,9 @@ public class ChatActivity extends AppCompatActivity {
     private static final int POLL_INTERVAL_MS = 2000;
 
     private static final int CALL_PERMISSION_REQUEST_CODE = 888;
+    private static final int REQUEST_PICK_PHOTO = 102;
+    private static final int REQUEST_PICK_VIDEO = 103;
+
     private boolean isVideoCall = true;
 
     private static final String[] CALL_PERMISSIONS = new String[]{
@@ -55,6 +60,7 @@ public class ChatActivity extends AppCompatActivity {
             Manifest.permission.RECORD_AUDIO
     };
 
+    @SuppressLint("IntentReset")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +74,7 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.chat_recycler_view);
         audioCallButton = findViewById(R.id.voice_call_button);
         videoCallButton = findViewById(R.id.video_call_button);
+        attachment_button = findViewById(R.id.attachment_button);
 
         Intent intent = getIntent();
         username = intent.getStringExtra("username");
@@ -146,6 +153,26 @@ public class ChatActivity extends AppCompatActivity {
                 requestCallPermissions(true);
             }
         });
+        attachment_button.setOnClickListener(v -> {
+            String[] options = {"Photo", "Video"};
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(ChatActivity.this);
+            builder.setTitle("Send Media")
+                    .setItems(options, (dialog, which) -> {
+                        if (which == 0) {
+                            // Photo selected: open image picker
+                            Intent attachment_intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                            attachment_intent.setType("image/*");
+                            startActivityForResult(attachment_intent, REQUEST_PICK_PHOTO);
+                        } else if (which == 1) {
+                            // Video selected: open video picker
+                            Intent attachment_intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                            attachment_intent.setType("video/*");
+                            startActivityForResult(attachment_intent, REQUEST_PICK_VIDEO);
+                        }
+                    });
+            builder.show();
+        });
+
     }
 
     @Override
@@ -323,7 +350,6 @@ public class ChatActivity extends AppCompatActivity {
     private void sendCallInviteAndLaunchCall(String callType) {
         String roomName = "juglu_" + java.util.UUID.randomUUID().toString();
 
-
         ChatRepository.sendCallInvite(
                 this,
                 currentUserId,
@@ -342,4 +368,102 @@ public class ChatActivity extends AppCompatActivity {
                 }
         );
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK && data != null) {
+            if (requestCode == REQUEST_PICK_PHOTO) {
+                android.net.Uri photoUri = data.getData();
+                if (photoUri != null) {
+                    MediaUploadRepository.uploadChatImage(this, photoUri, currentUserId, new MediaUploadRepository.ImageUploadCallback() {
+                        @Override
+                        public void onSuccess(String publicUrl) {
+                            sendImageMessage(publicUrl);
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(ChatActivity.this, "Image upload failed: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(this, "No photo selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+            else if (requestCode == REQUEST_PICK_VIDEO) {
+                android.net.Uri videoUri = data.getData();
+                if (videoUri != null) {
+                    MediaUploadRepository.uploadChatVideo(this, videoUri, currentUserId, new MediaUploadRepository.ImageUploadCallback() {
+                        @Override
+                        public void onSuccess(String publicUrl) {
+                            sendVideoMessage(publicUrl);
+                        }
+                        @Override
+                        public void onFailure(String error) {
+                            Toast.makeText(ChatActivity.this, "Video upload failed: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(this, "No video selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+        }
+    }
+
+    private String getRealPathFromURI(android.net.Uri contentUri) {
+        String[] proj = {android.provider.MediaStore.Images.Media.DATA};
+        android.database.Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
+        if (cursor == null) return null;
+        int column_index = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(column_index);
+        cursor.close();
+        return path;
+    }
+    private void sendImageMessage(String imageUrl) {
+        ChatRepository.sendMediaMessage(
+                this,
+                currentUserId,
+                otherUserId,
+                imageUrl,
+                "image", // type
+                new ChatRepository.ChatCallback<ChatMessage>() {
+                    @Override
+                    public void onSuccess(ChatMessage sentMessage) {
+                        chatAdapter.addMessage(sentMessage);
+                        recyclerView.scrollToPosition(chatAdapter.getItemCount() - 1);
+                    }
+                    @Override
+                    public void onFailure(String error) {
+                        Toast.makeText(ChatActivity.this, "Failed to send image.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+    }
+
+    private void sendVideoMessage(String videoUrl) {
+        ChatRepository.sendMediaMessage(
+                this,
+                currentUserId,
+                otherUserId,
+                videoUrl,
+                "video", // type
+                new ChatRepository.ChatCallback<ChatMessage>() {
+                    @Override
+                    public void onSuccess(ChatMessage sentMessage) {
+                        chatAdapter.addMessage(sentMessage);
+                        recyclerView.scrollToPosition(chatAdapter.getItemCount() - 1);
+                    }
+                    @Override
+                    public void onFailure(String error) {
+                        Toast.makeText(ChatActivity.this, "Failed to send video.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+    }
+
+
+
 }

@@ -35,6 +35,67 @@
             android:textColor="@android:color/black"
             android:textSize="16sp" />
 
+        <!-- Image message support -->
+        <ImageView
+            android:id="@+id/message_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="2dp"
+            android:visibility="gone"
+            android:scaleType="centerCrop"
+            android:background="@drawable/chat_bg_gradient"/>
+
+        <!-- Video message support -->
+        <FrameLayout
+            android:id="@+id/video_container"
+            android:layout_width="120dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="2dp"
+            android:visibility="gone">
+            <ImageView
+                android:id="@+id/video_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_image_placeholder"/>
+            <ImageView
+                android:id="@+id/video_play_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:src="@drawable/amp_cancel"
+                android:background="@android:color/transparent"/>
+        </FrameLayout>
+
+        <!-- Audio message support -->
+        <LinearLayout
+            android:id="@+id/audio_container"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:id="@+id/audio_play_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_playu"
+                android:background="@android:color/transparent"/>
+            <TextView
+                android:id="@+id/audio_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="12sp"
+                android:text="00:00"
+                android:paddingLeft="8dp"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/received_time_text"
             android:layout_width="wrap_content"
@@ -44,4 +105,5 @@
             android:textColor="#8A000000"
             android:paddingTop="4dp" />
     </LinearLayout>
+
 </LinearLayout>

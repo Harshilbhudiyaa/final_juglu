@@ -1,5 +1,6 @@
 package com.infowave.demo.supabase;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -32,6 +33,7 @@ public class ChatRepository {
     }
 
     // ========= 1️⃣ Send a new message =========
+    @SuppressLint("BinaryOperationInTimber")
     public static void sendMessage(
             Context context,
             String senderId,
@@ -39,20 +41,21 @@ public class ChatRepository {
             String content,
             ChatCallback<ChatMessage> callback
     ) {
-        Log.d(TAG, "sendMessage: senderId=" + senderId + ", receiverId=" + receiverId + ", content=" + content);
+        Timber.tag(TAG).d("sendMessage: senderId=" + senderId + ", receiverId=" + receiverId + ", content=" + content);
 
         String url = SupabaseClient.getBaseUrl() + "/rest/v1/messages";
+        @SuppressLint("LogNotTimber")
         JSONObject body = new JSONObject();
         try {
             body.put("sender_id", senderId);
             body.put("receiver_id", receiverId);
             body.put("content", content);
         } catch (JSONException e) {
-            Log.e(TAG, "sendMessage: JSONException in request body: " + e.getMessage());
+            Timber.tag(TAG).e("sendMessage: JSONException in request body: " + e.getMessage());
             postFailure(callback, "JSON Error: " + e.getMessage());
             return;
         }
-
+        @SuppressLint("LogNotTimber")
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
                 response -> {
                     Log.d(TAG, "sendMessage: Network response: " + response.toString());
@@ -115,7 +118,7 @@ public class ChatRepository {
             String callType, // "audio" or "video"
             ChatCallback<ChatMessage> callback
     ) {
-        Log.d(TAG, "sendCallInvite: senderId=" + senderId + ", receiverId=" + receiverId
+        Timber.tag(TAG).d("sendCallInvite: senderId=" + senderId + ", receiverId=" + receiverId
                 + ", roomName=" + roomName + ", callType=" + callType);
 
         String url = SupabaseClient.getBaseUrl() + "/rest/v1/messages";
@@ -134,7 +137,7 @@ public class ChatRepository {
             postFailure(callback, "JSON Error: " + e.getMessage());
             return;
         }
-
+        @SuppressLint({"LogNotTimber", "BinaryOperationInTimber"})
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
                 response -> {
                     Log.d(TAG, "sendCallInvite: Network response: " + response.toString());
@@ -161,7 +164,7 @@ public class ChatRepository {
                 headers.put("Prefer", "return=representation");
                 return headers;
             }
-
+            @SuppressLint("LogNotTimber")
             @Override
             protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
                 try {
@@ -196,13 +199,13 @@ public class ChatRepository {
             String otherUserId,
             ChatCallback<List<ChatMessage>> callback
     ) {
-        Log.d(TAG, "fetchMessagesBetweenUsers: currentUserId=" + currentUserId + ", otherUserId=" + otherUserId);
+        Timber.tag(TAG).d("fetchMessagesBetweenUsers: currentUserId=" + currentUserId + ", otherUserId=" + otherUserId);
 
         String url = SupabaseClient.getBaseUrl() +
                 "/rest/v1/messages?or=(and(sender_id.eq." + currentUserId +
                 ",receiver_id.eq." + otherUserId + "),and(sender_id.eq." + otherUserId +
                 ",receiver_id.eq." + currentUserId + "))&order=created_at.asc";
-
+        @SuppressLint("LogNotTimber")
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     List<ChatMessage> messages = new ArrayList<>();
@@ -243,6 +246,7 @@ public class ChatRepository {
                 + "/rest/v1/friendships?or=(user_one.eq." + currentUserId
                 + ",user_two.eq." + currentUserId + ")&status=eq.accepted";
 
+        @SuppressLint("LogNotTimber")
         JsonArrayRequest friendshipsReq = new JsonArrayRequest(Request.Method.GET, url, null,
                 friendshipsArr -> {
                     Set<String> friendIds = new HashSet<>();
@@ -314,6 +318,7 @@ public class ChatRepository {
     }
 
     // ========= 4️⃣ Fetch latest message with each friend (preview) =========
+    @SuppressLint("LogNotTimber")
     public static void fetchLastMessageWithFriend(
             Context context,
             String currentUserId,
@@ -327,7 +332,7 @@ public class ChatRepository {
                 ",receiver_id.eq." + friendUserId + "),and(sender_id.eq." + friendUserId +
                 ",receiver_id.eq." + currentUserId + "))&order=created_at.desc&limit=1";
 
-        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
+        @SuppressLint("LogNotTimber") JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, url, null,
                 response -> {
                     if (response.length() == 0) {
                         postSuccess(callback, null);
@@ -444,4 +449,84 @@ public class ChatRepository {
         public FriendProfile friendProfile;
         public ChatMessage lastMessage;
     }
+
+    // ========= Send media (image/video/audio) message =========
+    @SuppressLint("LogNotTimber")
+    public static void sendMediaMessage(
+            Context context,
+            String senderId,
+            String receiverId,
+            String mediaUrl,
+            String type, // "image", "video", "audio"
+            ChatCallback<ChatMessage> callback
+    ) {
+        Log.d(TAG, "sendMediaMessage: senderId=" + senderId + ", receiverId=" + receiverId + ", mediaUrl=" + mediaUrl + ", type=" + type);
+
+        String url = SupabaseClient.getBaseUrl() + "/rest/v1/messages";
+        JSONObject body = new JSONObject();
+        try {
+            body.put("sender_id", senderId);
+            body.put("receiver_id", receiverId);
+            body.put("content", ""); // No text content
+            body.put("type", type);  // "image", "video", "audio"
+            body.put("media_url", mediaUrl); // URL to uploaded file
+        } catch (JSONException e) {
+            Log.e(TAG, "sendMediaMessage: JSONException in request body: " + e.getMessage());
+            postFailure(callback, "JSON Error: " + e.getMessage());
+            return;
+        }
+
+        @SuppressLint("LogNotTimber") JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> {
+                    Log.d(TAG, "sendMediaMessage: Network response: " + response.toString());
+                    try {
+                        ChatMessage msg = ChatMessage.fromJson(response, senderId);
+                        postSuccess(callback, msg);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "sendMediaMessage: JSONException in onResponse: " + e.getMessage());
+                        postFailure(callback, "JSON Parse Error: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "sendMediaMessage: Volley error: " + error.toString());
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        String errorBody = new String(error.networkResponse.data);
+                        Log.e(TAG, "sendMediaMessage: Body: " + errorBody);
+                    }
+                    postFailure(callback, "Network Error: " + error.toString());
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = SupabaseClient.getHeaders(context);
+                headers.put("Prefer", "return=representation");
+                return headers;
+            }
+
+            @Override
+            protected Response<JSONObject> parseNetworkResponse(com.android.volley.NetworkResponse response) {
+                try {
+                    String jsonString = new String(response.data, com.android.volley.toolbox.HttpHeaderParser.parseCharset(response.headers, "utf-8"));
+                    if (jsonString.trim().startsWith("[")) {
+                        JSONArray arr = new JSONArray(jsonString);
+                        if (arr.length() > 0) {
+                            JSONObject obj = arr.getJSONObject(0);
+                            return Response.success(obj, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        } else {
+                            return Response.success(new JSONObject(), com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                        }
+                    } else {
+                        JSONObject jsonObject = new JSONObject(jsonString);
+                        return Response.success(jsonObject, com.android.volley.toolbox.HttpHeaderParser.parseCacheHeaders(response));
+                    }
+                } catch (Exception e) {
+                    Timber.tag(TAG).e("sendMediaMessage: parseNetworkResponse exception: %s", e.getMessage());
+                    return Response.error(new com.android.volley.ParseError(e));
+                }
+            }
+        };
+
+        SupabaseClient.getInstance(context).getRequestQueue().add(request);
+    }
+
 }

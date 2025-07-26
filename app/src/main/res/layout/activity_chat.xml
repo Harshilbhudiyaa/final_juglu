@@ -163,11 +163,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginHorizontal="8dp"
-            app:boxBackgroundMode="outline"
-            android:background="#141218"
-
-            app:boxStrokeWidth="0dp"
-            app:boxStrokeColor="@android:color/transparent">
+            app:boxBackgroundMode="none"
+            android:background="@android:color/transparent"
+            app:hintEnabled="false">
 
             <EditText
                 android:id="@+id/message_input"
@@ -177,9 +175,12 @@
                 android:hint="Type a message..."
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
                 android:textSize="16sp"
                 android:maxLines="6" />
         </com.google.android.material.textfield.TextInputLayout>
+
 
         <FrameLayout
             android:layout_width="48dp"

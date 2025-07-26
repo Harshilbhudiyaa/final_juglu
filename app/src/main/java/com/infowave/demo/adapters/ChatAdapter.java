@@ -7,9 +7,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.content.Intent;
+import com.infowave.demo.activities.FullScreenMediaActivity;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -87,8 +90,58 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message);
+
+            // MEDIA CLICK HANDLERS for sent messages
+            SentMessageViewHolder sentHolder = (SentMessageViewHolder) holder;
+            // IMAGE
+            sentHolder.messageImage.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "image");
+                v.getContext().startActivity(intent);
+            });
+            // VIDEO
+            sentHolder.videoContainer.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "video");
+                v.getContext().startActivity(intent);
+            });
+            // AUDIO
+            sentHolder.audioPlayButton.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "audio");
+                v.getContext().startActivity(intent);
+            });
+
         } else if (holder instanceof ReceivedMessageViewHolder) {
             ((ReceivedMessageViewHolder) holder).bind(message, receiverProfileUrl);
+
+            // MEDIA CLICK HANDLERS for received messages
+            ReceivedMessageViewHolder recvHolder = (ReceivedMessageViewHolder) holder;
+            // IMAGE
+            recvHolder.messageImage.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "image");
+                v.getContext().startActivity(intent);
+            });
+            // VIDEO
+            recvHolder.videoContainer.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "video");
+                v.getContext().startActivity(intent);
+            });
+            // AUDIO
+            recvHolder.audioPlayButton.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "audio");
+                v.getContext().startActivity(intent);
+            });
+
         } else if (holder instanceof CallInviteSentViewHolder) {
             ((CallInviteSentViewHolder) holder).bind(message);
             holder.itemView.setOnClickListener(v -> {
@@ -109,6 +162,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             });
         }
     }
+
 
     private String getRoomFromContent(ChatMessage message) {
         try {
@@ -133,6 +187,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
+    @SuppressLint("LogNotTimber")
     public void addMessage(ChatMessage message) {
         mainHandler.post(() -> {
             messages.add(message);
@@ -141,6 +196,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         });
     }
 
+    @SuppressLint("LogNotTimber")
     public void addMessages(List<ChatMessage> newMessages) {
         if (newMessages == null || newMessages.isEmpty()) return;
         mainHandler.post(() -> {
@@ -151,6 +207,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         });
     }
 
+    @SuppressLint({"LogNotTimber", "NotifyDataSetChanged"})
     public void replaceMessages(List<ChatMessage> newMessages) {
         mainHandler.post(() -> {
             messages.clear();
@@ -160,6 +217,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         });
     }
 
+    @SuppressLint({"NotifyDataSetChanged", "LogNotTimber"})
     public void clearMessages() {
         mainHandler.post(() -> {
             messages.clear();
@@ -167,28 +225,86 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.d(TAG, "clearMessages: All messages cleared.");
         });
     }
-
+    // ================= SENT MESSAGE VIEWHOLDER ====================
     static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, timeText;
         LinearLayout messageLayout;
+        ImageView messageImage;
+        FrameLayout videoContainer;
+        ImageView videoThumbnail, videoPlayIcon;
+        LinearLayout audioContainer;
+        ImageView audioPlayButton;
+        TextView audioDuration;
 
         SentMessageViewHolder(View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.sent_message_text);
             timeText = itemView.findViewById(R.id.sent_time_text);
             messageLayout = itemView.findViewById(R.id.sent_message_layout);
+
+            messageImage = itemView.findViewById(R.id.message_image);
+            videoContainer = itemView.findViewById(R.id.video_container);
+            videoThumbnail = itemView.findViewById(R.id.video_thumbnail);
+            videoPlayIcon = itemView.findViewById(R.id.video_play_icon);
+            audioContainer = itemView.findViewById(R.id.audio_container);
+            audioPlayButton = itemView.findViewById(R.id.audio_play_button);
+            audioDuration = itemView.findViewById(R.id.audio_duration);
         }
 
         void bind(ChatMessage message) {
-            messageText.setText(message.getMessage());
+            // Hide all media by default
+            messageText.setVisibility(View.GONE);
+            messageImage.setVisibility(View.GONE);
+            videoContainer.setVisibility(View.GONE);
+            audioContainer.setVisibility(View.GONE);
+
+            if ("image".equalsIgnoreCase(message.getType())) {
+                messageImage.setVisibility(View.VISIBLE);
+                Glide.with(messageImage.getContext())
+                        .load(message.getMediaUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(messageImage);
+                // Optional: full screen
+                messageImage.setOnClickListener(v -> {
+                    // TODO: Start FullScreenImageActivity if you have one
+                });
+            } else if ("video".equalsIgnoreCase(message.getType())) {
+                videoContainer.setVisibility(View.VISIBLE);
+                Glide.with(videoThumbnail.getContext())
+                        .load(message.getMediaUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(videoThumbnail);
+                // Show play icon
+                videoPlayIcon.setVisibility(View.VISIBLE);
+                videoContainer.setOnClickListener(v -> {
+                    // TODO: Start FullScreenVideoActivity if you have one
+                });
+            } else if ("audio".equalsIgnoreCase(message.getType())) {
+                audioContainer.setVisibility(View.VISIBLE);
+                // Play audio logic here (optional: show duration)
+                audioPlayButton.setOnClickListener(v -> {
+                    // TODO: Play audio logic
+                });
+            } else {
+                // Default to text
+                messageText.setVisibility(View.VISIBLE);
+                messageText.setText(message.getMessage());
+            }
             timeText.setText(message.getCreatedAt());
         }
     }
 
+    // =============== RECEIVED MESSAGE VIEWHOLDER ==================
     static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, timeText;
         CircleImageView profileImage;
         LinearLayout messageLayout;
+        ImageView messageImage;
+        FrameLayout videoContainer;
+        ImageView videoThumbnail, videoPlayIcon;
+        LinearLayout audioContainer;
+        ImageView audioPlayButton;
+        TextView audioDuration;
 
         ReceivedMessageViewHolder(View itemView) {
             super(itemView);
@@ -196,11 +312,54 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             timeText = itemView.findViewById(R.id.received_time_text);
             profileImage = itemView.findViewById(R.id.message_profile_image);
             messageLayout = itemView.findViewById(R.id.received_message_layout);
+
+            messageImage = itemView.findViewById(R.id.message_image);
+            videoContainer = itemView.findViewById(R.id.video_container);
+            videoThumbnail = itemView.findViewById(R.id.video_thumbnail);
+            videoPlayIcon = itemView.findViewById(R.id.video_play_icon);
+            audioContainer = itemView.findViewById(R.id.audio_container);
+            audioPlayButton = itemView.findViewById(R.id.audio_play_button);
+            audioDuration = itemView.findViewById(R.id.audio_duration);
         }
 
         void bind(ChatMessage message, String receiverProfileUrl) {
-            messageText.setText(message.getMessage());
+            // Hide all media by default
+            messageText.setVisibility(View.GONE);
+            messageImage.setVisibility(View.GONE);
+            videoContainer.setVisibility(View.GONE);
+            audioContainer.setVisibility(View.GONE);
+
+            if ("image".equalsIgnoreCase(message.getType())) {
+                messageImage.setVisibility(View.VISIBLE);
+                Glide.with(messageImage.getContext())
+                        .load(message.getMediaUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(messageImage);
+                messageImage.setOnClickListener(v -> {
+                    // TODO: Start FullScreenImageActivity if you have one
+                });
+            } else if ("video".equalsIgnoreCase(message.getType())) {
+                videoContainer.setVisibility(View.VISIBLE);
+                Glide.with(videoThumbnail.getContext())
+                        .load(message.getMediaUrl())
+                        .placeholder(R.drawable.ic_profile_placeholder)
+                        .into(videoThumbnail);
+                videoPlayIcon.setVisibility(View.VISIBLE);
+                videoContainer.setOnClickListener(v -> {
+                    // TODO: Start FullScreenVideoActivity if you have one
+                });
+            } else if ("audio".equalsIgnoreCase(message.getType())) {
+                audioContainer.setVisibility(View.VISIBLE);
+                audioPlayButton.setOnClickListener(v -> {
+                    // TODO: Play audio logic
+                });
+            } else {
+                messageText.setVisibility(View.VISIBLE);
+                messageText.setText(message.getMessage());
+            }
             timeText.setText(message.getCreatedAt());
+
+            // Profile image
             if (profileImage != null) {
                 if (receiverProfileUrl != null && !receiverProfileUrl.isEmpty()) {
                     Glide.with(profileImage.getContext())
@@ -214,6 +373,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+
     static class CallInviteSentViewHolder extends RecyclerView.ViewHolder {
         TextView callTypeText, callTimeText;
         ImageView callTypeIcon;
@@ -225,6 +385,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             callTypeIcon = itemView.findViewById(R.id.call_invite_icon);
         }
 
+        @SuppressLint("SetTextI18n")
         void bind(ChatMessage message) {
             String callType = message.getCallType();
             if ("video".equalsIgnoreCase(callType)) {
@@ -251,6 +412,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             profileImage = itemView.findViewById(R.id.call_invite_profile_image);
         }
 
+        @SuppressLint("SetTextI18n")
         void bind(ChatMessage message, String receiverProfileUrl) {
             String callType = message.getCallType();
             if ("video".equalsIgnoreCase(callType)) {

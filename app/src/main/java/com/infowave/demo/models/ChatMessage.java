@@ -4,16 +4,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ChatMessage {
-    private String id;            // Supabase row id (nullable)
+    private String id;
     private String senderId;
     private String receiverId;
-    protected String content;     // Message content
-    private String createdAt;     // UTC timestamp from DB
-    private boolean isReceived;   // UI helper
-    private int profileImage;     // (UI only, optional/local)
+    protected String content;    // message text or json payload for call
+    private String createdAt;
+    private boolean isReceived;
+    private int profileImage;
 
-    // Constructor for UI/adapters
-    public ChatMessage(String id, String senderId, String receiverId, String content, String createdAt, boolean isReceived, int profileImage) {
+    // NEW: Media fields
+    private String type;      // "text", "image", "video", "audio"
+    private String mediaUrl;  // link to media file, or null
+
+    // ==== Constructors ====
+
+    public ChatMessage(String id, String senderId, String receiverId, String content, String createdAt, boolean isReceived, int profileImage, String type, String mediaUrl) {
         this.id = id;
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -21,14 +26,21 @@ public class ChatMessage {
         this.createdAt = createdAt;
         this.isReceived = isReceived;
         this.profileImage = profileImage;
+        this.type = type;
+        this.mediaUrl = mediaUrl;
     }
 
-    // Minimal constructor (legacy support)
+    // Backward-compatible constructor for pure text/call messages
+    public ChatMessage(String id, String senderId, String receiverId, String content, String createdAt, boolean isReceived, int profileImage) {
+        this(id, senderId, receiverId, content, createdAt, isReceived, profileImage, "text", null);
+    }
+
+    // Minimal constructor (legacy)
     public ChatMessage(String senderId, String content, String createdAt, boolean isReceived, int profileImage) {
-        this(null, senderId, null, content, createdAt, isReceived, profileImage);
+        this(null, senderId, null, content, createdAt, isReceived, profileImage, "text", null);
     }
 
-    // From JSON (API response)
+    // --- From JSON (API) ---
     public static ChatMessage fromJson(JSONObject obj, String currentUserId) throws JSONException {
         String id = obj.optString("id", null);
         String senderId = obj.optString("sender_id");
@@ -36,8 +48,12 @@ public class ChatMessage {
         String content = obj.optString("content");
         String createdAt = obj.optString("created_at");
         boolean isReceived = !senderId.equals(currentUserId);
-        // Profile image: UI only, set as 0 or implement your logic
-        return new ChatMessage(id, senderId, receiverId, content, createdAt, isReceived, 0);
+
+        // Detect type and media url
+        String type = obj.optString("type", "text");
+        String mediaUrl = obj.optString("media_url", null);
+
+        return new ChatMessage(id, senderId, receiverId, content, createdAt, isReceived, 0, type, mediaUrl);
     }
 
     // ====== Getters ======
@@ -49,6 +65,10 @@ public class ChatMessage {
     public boolean isReceived() { return isReceived; }
     public int getProfileImage() { return profileImage; }
     public String getMessage() { return content; }
+
+    // === Media support ===
+    public String getType() { return type != null ? type : "text"; }
+    public String getMediaUrl() { return mediaUrl; }
 
     // --- Helper: Is this a call-invite message? ---
     public boolean isCallInvite() {

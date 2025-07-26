@@ -1,0 +1,41 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/fullscreen_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:background="#000"
+        android:visibility="gone"/>
+
+    <VideoView
+        android:id="@+id/fullscreen_video_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <!-- For audio: show icon and play/pause button center -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        android:id="@+id/audio_layout">
+        <ImageView
+            android:id="@+id/fullscreen_audio_icon"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/autofill_inline_suggestion_chip_background"
+            android:background="#000"
+            android:layout_gravity="center"/>
+        <ImageView
+            android:id="@+id/fullscreen_audio_play"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_playu"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+</FrameLayout>

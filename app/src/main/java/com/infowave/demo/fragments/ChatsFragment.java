@@ -103,10 +103,46 @@ public class ChatsFragment extends Fragment {
             ChatMessage lastMsg = preview.lastMessage;
 
             holder.userName.setText(person.fullName != null && !person.fullName.isEmpty() ? person.fullName : person.username);
-            holder.lastMessage.setText(lastMsg != null && lastMsg.getContent() != null ? lastMsg.getContent() : "");
-            holder.time.setText(lastMsg != null && lastMsg.getCreatedAt() != null ? lastMsg.getCreatedAt() : "");
 
-            // Load actual profile image
+            // --- Set last message preview based on type ---
+            if (lastMsg != null) {
+                String previewText;
+                String type = lastMsg.getType() != null ? lastMsg.getType() : "text";
+                switch (type) {
+                    case "image":
+                        previewText = "\uD83D\uDCF7 Photo";
+                        break;
+                    case "video":
+                        previewText = "\uD83C\uDFA5 Video";
+                        break;
+                    case "audio":
+                        previewText = "\uD83C\uDFB5 Audio";
+                        break;
+                    case "call":
+                        // Handle call type, show video/audio + incoming/outgoing
+                        boolean isOutgoing = lastMsg.getSenderId() != null && lastMsg.getSenderId().equals(currentUserId);
+                        String callType = lastMsg.getCallType() != null ? lastMsg.getCallType() : "audio";
+                        if ("video".equalsIgnoreCase(callType)) {
+                            previewText = (isOutgoing ? "📹 Outgoing Video Call" : "📹 Incoming Video Call");
+                        } else {
+                            previewText = (isOutgoing ? "📞 Outgoing Audio Call" : "📞 Incoming Audio Call");
+                        }
+                        break;
+                    case "text":
+                    default:
+                        // fallback to text
+                        previewText = (lastMsg.getMessage() != null && !lastMsg.getMessage().trim().isEmpty())
+                                ? lastMsg.getMessage()
+                                : (lastMsg.getContent() != null ? lastMsg.getContent() : "");
+                }
+                holder.lastMessage.setText(previewText);
+                holder.time.setText(lastMsg.getCreatedAt() != null ? lastMsg.getCreatedAt() : "");
+            } else {
+                holder.lastMessage.setText("");
+                holder.time.setText("");
+            }
+
+            // --- Profile image logic ---
             if (person.profileImage != null && !person.profileImage.isEmpty()) {
                 Glide.with(context)
                         .load(person.profileImage)
@@ -117,7 +153,6 @@ public class ChatsFragment extends Fragment {
             }
 
             // --- Unread dot logic, extend as per your backend status ---
-            // holder.unreadDot.setVisibility(hasUnread(person.id) ? View.VISIBLE : View.GONE);
             holder.unreadDot.setVisibility(View.GONE);
 
             holder.itemView.setOnClickListener(v -> {
@@ -128,6 +163,7 @@ public class ChatsFragment extends Fragment {
                 context.startActivity(intent);
             });
         }
+
 
         @Override
         public int getItemCount() { return chatList.size(); }
