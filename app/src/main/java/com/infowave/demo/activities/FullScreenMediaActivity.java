@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.infowave.demo.R;
+import com.github.chrisbanes.photoview.PhotoView;
+
 
 public class FullScreenMediaActivity extends AppCompatActivity {
 
@@ -31,7 +33,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_full_screen_media);
 
         // Find all views
-        imageView = findViewById(R.id.fullscreen_image);
+        PhotoView imageView = findViewById(R.id.fullscreen_image);
         videoView = findViewById(R.id.fullscreen_video_view);
         audioLayout = findViewById(R.id.audio_layout);
         audioIcon = findViewById(R.id.fullscreen_audio_icon);

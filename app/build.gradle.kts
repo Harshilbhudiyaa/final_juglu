@@ -80,6 +80,7 @@ dependencies {
     implementation("org.jitsi.react:jitsi-meet-sdk:8.1.2") {
         isTransitive = true
     }
+    implementation ("com.github.chrisbanes:PhotoView:2.3.0")
 
 
 

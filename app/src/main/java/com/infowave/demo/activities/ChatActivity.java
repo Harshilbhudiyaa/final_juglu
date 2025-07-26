@@ -52,6 +52,8 @@ public class ChatActivity extends AppCompatActivity {
     private static final int CALL_PERMISSION_REQUEST_CODE = 888;
     private static final int REQUEST_PICK_PHOTO = 102;
     private static final int REQUEST_PICK_VIDEO = 103;
+    private boolean isFirstLoad = true;
+
 
     private boolean isVideoCall = true;
 
@@ -200,7 +202,6 @@ public class ChatActivity extends AppCompatActivity {
             pollHandler.removeCallbacks(pollRunnable);
         }
     }
-
     private void loadChatHistory() {
         ChatRepository.fetchMessagesBetweenUsers(
                 this,
@@ -211,7 +212,12 @@ public class ChatActivity extends AppCompatActivity {
                     public void onSuccess(List<ChatMessage> result) {
                         chatAdapter.replaceMessages(result);
                         if (result != null && !result.isEmpty()) {
-                            //recyclerView.scrollToPosition(result.size() - 1);
+                            // Only scroll on first load
+                            if (isFirstLoad) {
+                                recyclerView.scrollToPosition(result.size() - 1);
+                                isFirstLoad = false;
+                            }
+                            // Call invite handling...
                             ChatMessage lastMsg = result.get(result.size() - 1);
                             if (isCallInviteMessage(lastMsg)
                                     && lastMsg.getReceiverId().equals(currentUserId)
@@ -228,6 +234,7 @@ public class ChatActivity extends AppCompatActivity {
                 }
         );
     }
+
 
     // Detects call invite type for adapter and incoming dialog
     private boolean isCallInviteMessage(ChatMessage msg) {
@@ -476,7 +483,6 @@ public class ChatActivity extends AppCompatActivity {
                 }
         );
     }
-
 
 
 }
