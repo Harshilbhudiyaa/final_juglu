@@ -83,9 +83,4 @@ dependencies {
     implementation ("com.github.chrisbanes:PhotoView:2.3.0")
 
 
-
-
-//    implementation ("io.appwrite:sdk-for-android:8.1.0")
-
-//    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 }

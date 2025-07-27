@@ -4,9 +4,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,9 +51,17 @@ public class ChatActivity extends AppCompatActivity {
     private Handler pollHandler = new Handler(Looper.getMainLooper());
     private Runnable pollRunnable;
     private static final int POLL_INTERVAL_MS = 2000;
+    private MediaRecorder mediaRecorder;
+    private String audioFilePath;
+    private boolean isRecording = false;
 
     private static final int CALL_PERMISSION_REQUEST_CODE = 888;
     private static final int REQUEST_PICK_PHOTO = 102;
+    private Handler waveformHandler = new Handler();
+    private Runnable waveformRunnable;
+    private boolean isFakeWaveformAnimating = false;
+    private View[] waveformBars;
+
     private static final int REQUEST_PICK_VIDEO = 103;
     private boolean isFirstLoad = true;
 
@@ -62,7 +73,7 @@ public class ChatActivity extends AppCompatActivity {
             Manifest.permission.RECORD_AUDIO
     };
 
-    @SuppressLint("IntentReset")
+    @SuppressLint({"IntentReset", "ClickableViewAccessibility"})
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +88,20 @@ public class ChatActivity extends AppCompatActivity {
         audioCallButton = findViewById(R.id.voice_call_button);
         videoCallButton = findViewById(R.id.video_call_button);
         attachment_button = findViewById(R.id.attachment_button);
+        ImageView audioRecordButton = findViewById(R.id.audio_record_button);
+        LinearLayout fakeWaveformContainer = findViewById(R.id.fake_waveform_container);
+        View bar1 = findViewById(R.id.bar1);
+        View bar2 = findViewById(R.id.bar2);
+        View bar3 = findViewById(R.id.bar3);
+        View bar4 = findViewById(R.id.bar4);
+        View bar5 = findViewById(R.id.bar5);
+        View bar6 = findViewById(R.id.bar6);
+        View bar7 = findViewById(R.id.bar7);
+        View bar8 = findViewById(R.id.bar8);
+        waveformBars = new View[]{bar1, bar2, bar3, bar4, bar5, bar6, bar7, bar8};
+
+
+
 
         Intent intent = getIntent();
         username = intent.getStringExtra("username");
@@ -175,7 +200,150 @@ public class ChatActivity extends AppCompatActivity {
             builder.show();
         });
 
+
+        audioRecordButton.setOnTouchListener(new View.OnTouchListener() {
+            float startX, startY;
+            boolean isCancelled = false;
+
+            @SuppressLint("ClickableViewAccessibility")
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startX = event.getX();
+                        startY = event.getY();
+                        isCancelled = false;
+                        startAudioRecording();
+                        // Optional: show recording UI
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        float dx = Math.abs(event.getX() - startX);
+                        float dy = Math.abs(event.getY() - startY);
+                        if ((dx > 120 || dy > 120) && !isCancelled) {
+                            cancelAudioRecording();
+                            // Optional: hide recording UI
+                            isCancelled = true;
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        // Optional: hide recording UI
+                        if (!isCancelled) {
+                            stopAudioRecordingAndSend();
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_CANCEL:
+                        // Optional: hide recording UI
+                        if (!isCancelled) {
+                            cancelAudioRecording();
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+
     }
+    private void startFakeWaveformAnimation() {
+        isFakeWaveformAnimating = true;
+        LinearLayout fakeWaveform = findViewById(R.id.fake_waveform_container);
+        fakeWaveform.setVisibility(View.VISIBLE);
+        waveformRunnable = new Runnable() {
+            @Override
+            public void run() {
+                int[] minDpArr = {12, 18, 10, 24, 14, 8, 20, 10}; // for more natural look
+                int[] maxDpArr = {36, 32, 28, 34, 28, 24, 36, 20};
+                for (int i = 0; i < waveformBars.length; i++) {
+                    int minDp = minDpArr[i];
+                    int maxDp = maxDpArr[i];
+                    int heightDp = minDp + (int) (Math.random() * (maxDp - minDp));
+                    int heightPx = (int) (heightDp * getResources().getDisplayMetrics().density);
+                    waveformBars[i].getLayoutParams().height = heightPx;
+                    waveformBars[i].requestLayout();
+                }
+                if (isFakeWaveformAnimating) {
+                    waveformHandler.postDelayed(this, 60); // smoother
+                }
+            }
+        };
+        waveformHandler.post(waveformRunnable);
+    }
+
+    private void stopFakeWaveformAnimation() {
+        isFakeWaveformAnimating = false;
+        waveformHandler.removeCallbacksAndMessages(null);
+        findViewById(R.id.fake_waveform_container).setVisibility(View.GONE);
+    }
+
+    private void startAudioRecording() {
+        try {
+            audioFilePath = getExternalCacheDir().getAbsolutePath() + "/audio_" + System.currentTimeMillis() + ".m4a";
+            mediaRecorder = new MediaRecorder();
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setOutputFile(audioFilePath);
+            mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+            isRecording = true;
+
+            // Show full-width waveform, hide input
+            messageInput.setVisibility(View.GONE);
+            findViewById(R.id.fake_waveform_container).setVisibility(View.VISIBLE);
+            startFakeWaveformAnimation();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Recording failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopAudioRecordingAndSend() {
+        try {
+            if (mediaRecorder != null && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+                isRecording = false;
+
+                // Hide waveform, restore input
+                stopFakeWaveformAnimation();
+                findViewById(R.id.fake_waveform_container).setVisibility(View.GONE);
+                messageInput.setVisibility(View.VISIBLE);
+
+                sendAudioMessage(audioFilePath);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Stop recording failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void cancelAudioRecording() {
+        try {
+            if (mediaRecorder != null && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+                isRecording = false;
+
+                // Hide waveform, restore input
+                stopFakeWaveformAnimation();
+                findViewById(R.id.fake_waveform_container).setVisibility(View.GONE);
+                messageInput.setVisibility(View.VISIBLE);
+
+                if (audioFilePath != null) {
+                    new java.io.File(audioFilePath).delete();
+                }
+                Toast.makeText(this, "Recording cancelled", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     @Override
     protected void onResume() {
@@ -484,5 +652,35 @@ public class ChatActivity extends AppCompatActivity {
         );
     }
 
+    private void sendAudioMessage(String audioPath) {
+        MediaUploadRepository.uploadChatAudio(this, audioPath, currentUserId, new MediaUploadRepository.ImageUploadCallback() {
+            @Override
+            public void onSuccess(String publicUrl) {
+                // Send audio message in chat
+                ChatRepository.sendMediaMessage(
+                        ChatActivity.this,
+                        currentUserId,
+                        otherUserId,
+                        publicUrl,
+                        "audio", // type
+                        new ChatRepository.ChatCallback<ChatMessage>() {
+                            @Override
+                            public void onSuccess(ChatMessage sentMessage) {
+                                chatAdapter.addMessage(sentMessage);
+                                recyclerView.scrollToPosition(chatAdapter.getItemCount() - 1);
+                            }
+                            @Override
+                            public void onFailure(String error) {
+                                Toast.makeText(ChatActivity.this, "Failed to send audio.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                );
+            }
+            @Override
+            public void onFailure(String error) {
+                Toast.makeText(ChatActivity.this, "Audio upload failed: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
 }

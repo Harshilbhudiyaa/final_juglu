@@ -1,42 +1,71 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
+    <!-- Image (zoomable) -->
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/fullscreen_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#000"
         android:scaleType="fitCenter"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
-
+    <!-- Video -->
     <VideoView
         android:id="@+id/fullscreen_video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
-    <!-- For audio: show icon and play/pause button center -->
+    <!-- Audio -->
     <LinearLayout
+        android:id="@+id/audio_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:visibility="gone"
-        android:id="@+id/audio_layout">
+        android:background="#000"
+        android:visibility="gone">
+
         <ImageView
             android:id="@+id/fullscreen_audio_icon"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/autofill_inline_suggestion_chip_background"
-            android:background="#000"
-            android:layout_gravity="center"/>
+            android:src="@drawable/ic_audio_waveform"
+            android:layout_gravity="center"
+            app:tint="#FFFFFF" />
+
         <ImageView
             android:id="@+id/fullscreen_audio_play"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:src="@drawable/ic_playu"
+            android:tint="#FFFFFF"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp"
+            tools:ignore="UseAppTint" />
+
+        <SeekBar
+            android:id="@+id/fullscreen_audio_seek"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:progressTint="#FFFFFF"
+            android:thumbTint="#FFFFFF"
+            android:backgroundTint="#444444"/>
+
+
+        <TextView
+            android:id="@+id/fullscreen_audio_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center" />
     </LinearLayout>
 </FrameLayout>

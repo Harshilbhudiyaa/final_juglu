@@ -281,11 +281,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 });
             } else if ("audio".equalsIgnoreCase(message.getType())) {
                 audioContainer.setVisibility(View.VISIBLE);
-                // Play audio logic here (optional: show duration)
+
+                // Optionally set a play icon and clear duration (if not available)
+                audioPlayButton.setImageResource(R.drawable.ic_playu); // Replace with your actual play icon
+                audioDuration.setText(""); // Or set duration if you want
+
+                // Click launches the full screen audio player
                 audioPlayButton.setOnClickListener(v -> {
-                    // TODO: Play audio logic
+                    Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                    Log.d("AudioPlay", "URL: " + message.getMediaUrl());
+                    intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                    intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "audio");
+                    v.getContext().startActivity(intent);
                 });
-            } else {
+            }
+            else {
                 // Default to text
                 messageText.setVisibility(View.VISIBLE);
                 messageText.setText(message.getMessage());
@@ -350,10 +360,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 });
             } else if ("audio".equalsIgnoreCase(message.getType())) {
                 audioContainer.setVisibility(View.VISIBLE);
+
+                // Optionally set a play icon and clear duration (if not available)
+                audioPlayButton.setImageResource(R.drawable.ic_playu); // Replace with your actual play icon
+                audioDuration.setText(""); // Or set duration if you want
+
+                // Click launches the full screen audio player
                 audioPlayButton.setOnClickListener(v -> {
-                    // TODO: Play audio logic
+                    Intent intent = new Intent(v.getContext(), FullScreenMediaActivity.class);
+                    Log.d("AudioPlay", "URL: " + message.getMediaUrl());
+
+                    intent.putExtra(FullScreenMediaActivity.EXTRA_URL, message.getMediaUrl());
+                    intent.putExtra(FullScreenMediaActivity.EXTRA_TYPE, "audio");
+                    v.getContext().startActivity(intent);
                 });
-            } else {
+            }
+            else {
                 messageText.setVisibility(View.VISIBLE);
                 messageText.setText(message.getMessage());
             }

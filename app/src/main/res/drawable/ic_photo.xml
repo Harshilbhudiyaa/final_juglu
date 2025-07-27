@@ -1,0 +1,8 @@
+<!-- res/drawable/ic_photo.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path
+        android:fillColor="#5F6368"
+        android:pathData="M20 5h-3.17l-1.84-2.45A2.008 2.008 0 0 0 13.16 2h-2.32c-.59 0-1.14.26-1.5.7L7.17 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-8 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+</vector>

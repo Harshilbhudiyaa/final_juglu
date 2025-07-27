@@ -217,5 +217,55 @@ public class MediaUploadRepository {
         }
     }
 
+    public static void uploadChatAudio(Context context, String audioPath, String userId, ImageUploadCallback callback) {
+        try {
+            java.io.File audioFile = new java.io.File(audioPath);
+            if (!audioFile.exists()) {
+                callback.onFailure("Audio file does not exist!");
+                return;
+            }
+            byte[] bytes = getBytes(new java.io.FileInputStream(audioFile));
+
+            String extension = "m4a"; // Or derive from filename if needed
+            String fileName = "audio/chat_" + userId + "_" + System.currentTimeMillis() + "." + extension;
+            String mimeType = "audio/mp4"; // For .m4a, this is generally fine
+
+            RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), bytes);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", fileName, requestFile);
+
+            SupabaseApiService apiService = getApiService();
+            String jwt = SupabaseClient.getJwtFromPrefs(context);
+            if (jwt == null || jwt.isEmpty()) jwt = SupabaseClient.getAnonKey();
+
+            // Use your API to upload to "chat-media" bucket
+            Call<ResponseBody> call = apiService.uploadFileToStorage(
+                    "chat-media", fileName, body, "Bearer " + jwt, true
+            );
+
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        String baseUrl = SupabaseClient.getBaseUrl();
+                        if (!baseUrl.endsWith("/")) baseUrl += "/";
+                        String publicUrl = baseUrl + "storage/v1/object/public/chat-media/" + fileName;
+                        callback.onSuccess(publicUrl);
+                    } else {
+                        String errorMsg = "";
+                        try { if (response.errorBody() != null) errorMsg = response.errorBody().string(); }
+                        catch (Exception ex) { errorMsg = ex.getMessage(); }
+                        callback.onFailure("Audio upload failed: HTTP " + response.code() + ", " + errorMsg);
+                    }
+                }
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    callback.onFailure("Network/Retrofit error: " + t.getMessage());
+                }
+            });
+
+        } catch (Exception e) {
+            callback.onFailure("Audio upload failed: " + e.getMessage());
+        }
+    }
 
 }
